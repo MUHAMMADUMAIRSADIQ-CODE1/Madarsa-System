@@ -388,9 +388,9 @@ export default function AdmissionForm() {
           <>
             <h3 className="font-heading font-semibold text-lg text-text-dark">Review Your Application</h3>
             <div className="space-y-4">
-              <div className="bg-bg-light rounded-xl p-5 space-y-3">
+              <div className="bg-bg-light rounded-xl p-4 sm:p-5 space-y-3">
                 <h4 className="font-medium text-sm text-text-dark">Student Information</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <ReviewItem label="Full Name" value={form.studentName} />
                   <ReviewItem label="Father Name" value={form.fatherName} />
                   <ReviewItem label="Guardian Name" value={form.guardianName} />
@@ -398,9 +398,9 @@ export default function AdmissionForm() {
                   <ReviewItem label="Date of Birth" value={form.dateOfBirth} />
                 </div>
               </div>
-              <div className="bg-bg-light rounded-xl p-5 space-y-3">
+              <div className="bg-bg-light rounded-xl p-4 sm:p-5 space-y-3">
                 <h4 className="font-medium text-sm text-text-dark">Contact Information</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <ReviewItem label="Email" value={form.email} />
                   <ReviewItem label="Phone" value={form.phone} />
                   <ReviewItem label="WhatsApp" value={form.whatsapp} />
@@ -415,18 +415,18 @@ export default function AdmissionForm() {
                 <ReviewItem label="Current Qualification" value={form.currentQualification} />
                 <ReviewItem label="Previous Quran Education" value={form.previousQuranEducation} />
               </div>
-              <div className="bg-bg-light rounded-xl p-5 space-y-3">
+              <div className="bg-bg-light rounded-xl p-4 sm:p-5 space-y-3">
                 <h4 className="font-medium text-sm text-text-dark">Course Selection</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <ReviewItem label="Course" value={courses.find((c) => (c._id || c.id) === form.selectedCourse)?.title || form.selectedCourse} />
                   <ReviewItem label="Preferred Batch" value={form.preferredBatch} />
                   <ReviewItem label="Preferred Timing" value={form.preferredTiming} />
                   <ReviewItem label="Learning Mode" value={form.learningMode} />
                 </div>
               </div>
-              <div className="bg-bg-light rounded-xl p-5 space-y-3">
+              <div className="bg-bg-light rounded-xl p-4 sm:p-5 space-y-3">
                 <h4 className="font-medium text-sm text-text-dark">Documents</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <ReviewItem label="Student Photo" value={form.studentPhoto instanceof File ? form.studentPhoto.name : 'Not provided'} />
                   <ReviewItem label="CNIC Front" value={form.cnicFront instanceof File ? form.cnicFront.name : 'Not provided'} />
                   <ReviewItem label="CNIC Back" value={form.cnicBack instanceof File ? form.cnicBack.name : 'Not provided'} />

@@ -16,7 +16,7 @@ export default function AdminUserManagementSection() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
         {users.map((userGroup) => (
           <div
             key={userGroup.id}
@@ -39,7 +39,7 @@ export default function AdminUserManagementSection() {
       {/* Quick Actions */}
       <div className="bg-bg-light rounded-xl p-6">
         <h3 className="font-semibold text-lg text-text-dark mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             'View All Users',
             'Assign Roles',

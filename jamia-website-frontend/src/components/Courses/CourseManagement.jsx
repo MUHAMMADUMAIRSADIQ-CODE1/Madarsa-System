@@ -640,8 +640,8 @@ export default function AdminCourseManagementSection() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8">
+            <table className="w-full min-w-[600px]">
               <thead className="border-b-2 border-border-light">
                 <tr>
                   <th className="text-left p-3 font-semibold text-text-dark text-sm">Title</th>

@@ -167,7 +167,7 @@ export default function AdminAttendanceSection() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: 'Total Records', value: stats.total, color: 'bg-primary/10 text-primary' },
           { label: 'Present', value: stats.present, color: 'bg-green-100 text-green-800' },
@@ -182,9 +182,9 @@ export default function AdminAttendanceSection() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1">
+      <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-6">
+          <div className="flex-1 min-w-[200px]">
             <input
               type="text"
               placeholder="Search by ID, student name, or batch..."
@@ -193,15 +193,15 @@ export default function AdminAttendanceSection() {
               className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
             />
           </div>
-          <select value={filters.status} onChange={e => handleFilterChange('status', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none">
+          <select value={filters.status} onChange={e => handleFilterChange('status', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none min-w-[120px]">
             <option value="">All Status</option>
             <option value="present">Present</option>
             <option value="absent">Absent</option>
             <option value="late">Late</option>
             <option value="excused">Excused</option>
           </select>
-          <input type="date" value={filters.dateFrom} onChange={e => handleFilterChange('dateFrom', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none" placeholder="From" />
-          <input type="date" value={filters.dateTo} onChange={e => handleFilterChange('dateTo', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none" placeholder="To" />
+          <input type="date" value={filters.dateFrom} onChange={e => handleFilterChange('dateFrom', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none min-w-[130px]" placeholder="From" />
+          <input type="date" value={filters.dateTo} onChange={e => handleFilterChange('dateTo', e.target.value)} className="px-4 py-3 rounded-xl border border-border-light outline-none min-w-[130px]" placeholder="To" />
         </div>
 
         {loading ? (
@@ -219,8 +219,8 @@ export default function AdminAttendanceSection() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="overflow-x-auto -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8">
+              <table className="w-full min-w-[700px]">
                 <thead className="border-b-2 border-border-light">
                   <tr>
                     <th className="text-left p-3 font-semibold text-text-dark text-sm">Attendance ID</th>

@@ -76,26 +76,26 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 lg:h-24">
+          <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
             {/* Logo */}
             <Link
               to="/"
-              className="flex items-center gap-3 group"
+              className="flex items-center gap-2 sm:gap-3 group min-w-0"
             >
-              <div className="relative w-10 h-10 lg:w-12 lg:h-12 flex-shrink-0">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 flex-shrink-0">
                 {logoUrl ? (
                   <img src={logoUrl} alt={`${academyName} Logo`} className="w-full h-full object-contain" loading="lazy" decoding="async" />
                 ) : (
-                  <div className="w-full h-full rounded-lg bg-primary flex items-center justify-center text-white font-bold text-lg">
+                  <div className="w-full h-full rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm sm:text-lg">
                     {shortName.charAt(0)}
                   </div>
                 )}
               </div>
-              <div className="flex flex-col">
-                <span className="font-heading text-lg lg:text-xl font-bold leading-tight text-primary transition-colors duration-500">
+              <div className="flex flex-col min-w-0">
+                <span className="font-heading text-sm sm:text-lg lg:text-xl font-bold leading-tight text-primary transition-colors duration-500 truncate">
                   {academyName}
                 </span>
-                <span className="text-[10px] lg:text-xs font-medium tracking-[0.2em] uppercase text-gold transition-colors duration-500">
+                <span className="text-[9px] sm:text-[10px] lg:text-xs font-medium tracking-[0.2em] uppercase text-gold transition-colors duration-500 truncate">
                   {shortName}
                 </span>
               </div>
@@ -180,13 +180,13 @@ export default function Navbar() {
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2.5 -mr-2.5 rounded-lg transition-colors duration-300"
+              className="lg:hidden p-2 -mr-2 rounded-lg transition-colors duration-300 flex-shrink-0"
               aria-label="Open menu"
             >
-              <div className="w-6 h-5 flex flex-col justify-between">
-                <span className="block h-0.5 w-6 rounded-full bg-text-dark transition-colors duration-500" />
-                <span className="block h-0.5 w-5 rounded-full bg-text-dark transition-colors duration-500" />
-                <span className="block h-0.5 w-6 rounded-full bg-text-dark transition-colors duration-500" />
+              <div className="w-5 h-4 sm:w-6 sm:h-5 flex flex-col justify-between">
+                <span className="block h-0.5 w-5 sm:w-6 rounded-full bg-text-dark transition-colors duration-500" />
+                <span className="block h-0.5 w-4 sm:w-5 rounded-full bg-text-dark transition-colors duration-500" />
+                <span className="block h-0.5 w-5 sm:w-6 rounded-full bg-text-dark transition-colors duration-500" />
               </div>
             </button>
           </div>

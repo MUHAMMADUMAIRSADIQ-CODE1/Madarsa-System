@@ -4,7 +4,7 @@ export default function AdminWelcomeSection() {
   const stats = adminDashboardData.dashboard.statistics;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
       {[
         { label: 'Total Students', value: stats.totalStudents, icon: '👥', color: 'from-blue-500 to-blue-600' },
         { label: 'Total Teachers', value: stats.totalTeachers, icon: '👨‍🏫', color: 'from-green-500 to-green-600' },
@@ -14,14 +14,14 @@ export default function AdminWelcomeSection() {
       ].map((stat, idx) => (
         <div
           key={idx}
-          className={`bg-gradient-to-br ${stat.color} rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow`}
+          className={`bg-gradient-to-br ${stat.color} rounded-2xl p-5 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow`}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white/80 text-sm font-medium">{stat.label}</p>
-              <p className="text-3xl font-bold mt-2">{stat.value}</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-white/80 text-xs sm:text-sm font-medium truncate">{stat.label}</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 sm:mt-2">{stat.value}</p>
             </div>
-            <span className="text-5xl opacity-20">{stat.icon}</span>
+            <span className="text-3xl sm:text-5xl opacity-20 flex-shrink-0">{stat.icon}</span>
           </div>
         </div>
       ))}

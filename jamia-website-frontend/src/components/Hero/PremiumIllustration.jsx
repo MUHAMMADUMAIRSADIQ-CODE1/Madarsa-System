@@ -12,7 +12,7 @@ export default function PremiumIllustration({ src, alt }) {
     <img
       src={getImageUrl(src)}
       alt={alt || 'Premium Illustration'}
-      className="w-full h-auto max-h-[45vh] sm:max-h-[48vh] lg:max-h-[52vh] xl:max-h-[55vh] object-cover rounded-2xl"
+      className="w-full h-auto max-h-[40vh] sm:max-h-[48vh] lg:max-h-[52vh] xl:max-h-[55vh] object-cover rounded-2xl"
       loading="lazy"
       decoding="async"
     />

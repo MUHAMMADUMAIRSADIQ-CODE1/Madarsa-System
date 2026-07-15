@@ -4,7 +4,7 @@ export default function WelcomeSection() {
   const { user } = useAuth();
   
   return (
-    <div className="bg-gradient-to-r from-primary via-primary-dark to-primary-dark rounded-2xl p-8 sm:p-12 text-white shadow-xl overflow-hidden relative">
+    <div className="bg-gradient-to-r from-primary via-primary-dark to-primary-dark rounded-2xl p-6 sm:p-8 md:p-12 text-white shadow-xl overflow-hidden relative">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 opacity-10">
         <svg className="w-96 h-96" viewBox="0 0 400 400" fill="none">
@@ -15,7 +15,7 @@ export default function WelcomeSection() {
       </div>
 
       <div className="relative z-10">
-        <h1 className="font-heading text-4xl sm:text-5xl font-bold mb-2">
+        <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl font-bold mb-2">
           Assalamu Alaikum, {user?.name?.split(' ')[0]}
         </h1>
         <p className="text-lg text-green-100 mb-6 opacity-90">
@@ -23,7 +23,7 @@ export default function WelcomeSection() {
         </p>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8">
           <div className="bg-white/10 backdrop-blur rounded-lg p-4">
             <p className="text-green-100 text-sm font-medium">Current Course</p>
             <p className="text-xl font-bold mt-2">Quran</p>

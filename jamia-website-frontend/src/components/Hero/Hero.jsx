@@ -102,7 +102,7 @@ export default function Hero() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full py-6 sm:py-8 lg:py-0">
         <div className="grid md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 lg:gap-10 xl:gap-14 md:items-center">
-          <div className="order-1 md:order-2 flex items-center justify-center animate-fade-in-up stagger-3">
+          <div className="order-1 md:order-2 flex items-center justify-center animate-fade-in-up stagger-3 w-full">
             <PremiumIllustration src={imageUrl} alt={imageAlt} />
           </div>
 
@@ -176,7 +176,7 @@ export default function Hero() {
               <p className="text-xs font-medium uppercase tracking-[0.15em] text-text-light mb-3">
                 Trusted by Students Worldwide
               </p>
-              <div className="flex items-center gap-5">
+              <div className="flex flex-wrap items-center gap-3 sm:gap-5">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div
@@ -193,7 +193,7 @@ export default function Hero() {
                 <div>
                   <div className="flex items-center gap-1 mb-0.5">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} width="12" height="12" viewBox="0 0 14 14" fill="#C9A84C" xmlns="http://www.w3.org/2000/svg">
+                      <svg key={i} width="10" height="10" className="sm:w-3 sm:h-3" viewBox="0 0 14 14" fill="#C9A84C" xmlns="http://www.w3.org/2000/svg">
                         <path d="M7 1l1.8 3.6 4 .6-2.9 2.8.7 4L7 10.5l-3.6 1.9.7-4L1.2 5.2l4-.6L7 1z" />
                       </svg>
                     ))}

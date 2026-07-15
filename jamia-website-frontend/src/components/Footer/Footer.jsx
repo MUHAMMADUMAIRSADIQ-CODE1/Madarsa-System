@@ -96,7 +96,7 @@ export default function Footer() {
       <div className="h-1 bg-gradient-to-r from-primary via-gold to-primary" />
 
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 pt-14 lg:pt-16 pb-8">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12">
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
@@ -158,11 +158,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/40">
-          <p>{copyright}</p>
+          <p className="text-center sm:text-left">{copyright}</p>
           {contactBlock.email && (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
               <a href={`mailto:${contactBlock.email}`} className="hover:text-gold transition-colors">{contactBlock.email}</a>
-              {contactBlock.phone && <span>{contactBlock.phone}</span>}
+              {contactBlock.phone && <span className="text-white/30 sm:text-white/40">{contactBlock.phone}</span>}
             </div>
           )}
         </div>

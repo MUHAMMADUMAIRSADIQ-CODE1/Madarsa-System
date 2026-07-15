@@ -67,20 +67,20 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-white shadow-xl overflow-y-auto transition-transform duration-300 z-40 lg:z-0 lg:relative lg:shadow-lg ${
+        className={`fixed left-0 top-0 h-screen w-64 sm:w-72 bg-white shadow-xl overflow-y-auto transition-transform duration-300 z-40 lg:z-0 lg:relative lg:shadow-lg ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white p-6 border-b border-border-light z-10">
+        <div className="sticky top-0 bg-white p-5 sm:p-6 border-b border-border-light z-10">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex-1">
-              <h2 className="font-heading font-bold text-text-dark">Menu</h2>
+            <div className="flex-1 min-w-0">
+              <h2 className="font-heading font-bold text-text-dark truncate">Menu</h2>
               <p className="text-xs text-text-light">Student Portal</p>
             </div>
             <button
               onClick={onClose}
-              className="lg:hidden p-2 hover:bg-primary-light rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-primary-light rounded-lg transition-colors flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -142,7 +142,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
 
         {/* User Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border-light bg-white">
+        <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-border-light bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold">
               {user?.name?.charAt(0) || 'S'}

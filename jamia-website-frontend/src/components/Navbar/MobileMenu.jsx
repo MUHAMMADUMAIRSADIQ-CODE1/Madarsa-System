@@ -93,7 +93,7 @@ export default function MobileMenu({ isOpen, onClose }) {
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border-light flex-shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border-light flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white font-heading font-bold text-sm">
               JT
@@ -115,7 +115,7 @@ export default function MobileMenu({ isOpen, onClose }) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto px-6 py-6" aria-label="Mobile navigation">
+        <nav className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6" aria-label="Mobile navigation">
           <ul className="space-y-1">
             {navLinks.map((link, i) => {
               const isActive = link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path));
@@ -140,7 +140,7 @@ export default function MobileMenu({ isOpen, onClose }) {
         </nav>
 
         {/* Auth Actions */}
-        <div className="flex-shrink-0 px-6 pt-4 pb-8 border-t border-border-light space-y-3">
+        <div className="flex-shrink-0 px-4 sm:px-6 pt-4 pb-6 sm:pb-8 border-t border-border-light space-y-3">
           {isAuthenticated ? (
             <>
               {user?.name && (
