@@ -1,0 +1,53 @@
+{
+  "name": "jamia-tul-uloom-muhammadiya-api",
+  "version": "1.0.0",
+  "description": "Backend API for Jamia Tul Uloom Muhammadiya - Online Islamic Academy Platform",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "cross-env NODE_ENV=test jest --setupFiles dotenv/config --detectOpenHandles",
+    "test:watch": "cross-env NODE_ENV=test jest --setupFiles dotenv/config --watchAll",
+    "test:coverage": "cross-env NODE_ENV=test jest --setupFiles dotenv/config --coverage",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "islamic-academy",
+    "lms",
+    "madarsa",
+    "education",
+    "jamia",
+    "express",
+    "mongodb"
+  ],
+  "author": "Jamia Tul Uloom Muhammadiya",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.5.1",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "firebase-admin": "^13.0.2",
+    "helmet": "^8.0.0",
+    "http-status": "^2.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb-memory-server": "^11.2.0",
+    "mongoose": "^8.9.5",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "eslint": "^9.18.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0"
+  }
+}
