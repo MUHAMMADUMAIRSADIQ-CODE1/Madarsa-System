@@ -1,8 +1,8 @@
 const app = require('./app');
 const env = require('./config/env');
 const { connectDB, disconnectDB } = require('./config/db');
-const { initializeFirebase } = require('./config/firebase');
 const { initializeCloudinary } = require('./config/cloudinary');
+const { seedAdmin } = require('./services/admin.service');
 const logger = require('./utils/logger');
 
 let server;
@@ -12,9 +12,9 @@ async function initializeServer() {
     await connectDB();
 
     try {
-      initializeFirebase();
-    } catch (firebaseError) {
-      logger.warn('Firebase initialization skipped:', firebaseError.message);
+      await seedAdmin();
+    } catch (adminError) {
+      logger.warn('Admin seeding skipped:', adminError.message);
     }
 
     try {

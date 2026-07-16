@@ -1,15 +1,1 @@
-const {
-  initializeFirebase,
-  getFirebaseApp,
-  getAuth,
-  getFirestore,
-  getStorage,
-} = require('../config/firebase');
-
-module.exports = {
-  initializeFirebase,
-  getFirebaseApp,
-  getAuth,
-  getFirestore,
-  getStorage,
-};
+// Firebase removed. See auth.service.js for the new authentication implementation.

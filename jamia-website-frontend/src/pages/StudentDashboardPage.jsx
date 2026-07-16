@@ -14,7 +14,7 @@ import { studentDashboardData } from '../data/studentDashboardData';
 export default function StudentDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateProfile, logout } = useAuth();
+  const { user, updateProfile, changePassword, changeEmail, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(null);
@@ -34,12 +34,34 @@ export default function StudentDashboardPage() {
   });
   const [passwordError, setPasswordError] = useState(null);
   const [passwordSuccess, setPasswordSuccess] = useState(null);
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+
+  const [emailForm, setEmailForm] = useState({
+    newEmail: '',
+    password: '',
+  });
+  const [emailError, setEmailError] = useState(null);
+  const [emailSuccess, setEmailSuccess] = useState(null);
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
 
   const activeSection = location.pathname.split('/').pop();
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  // Force re-login countdown after password/email change
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      logout();
+      navigate('/login');
+      return;
+    }
+    const timer = setTimeout(() => setRedirectCountdown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, logout, navigate]);
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
@@ -73,17 +95,57 @@ export default function StudentDashboardPage() {
     e.preventDefault();
     setPasswordError(null);
     setPasswordSuccess(null);
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
     }
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
       return;
     }
-    setPasswordSuccess('Password changed successfully (simulated)');
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    setTimeout(() => setPasswordSuccess(null), 3000);
+
+    setPasswordSubmitting(true);
+    try {
+      const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordSuccess(result?.message || 'Password changed successfully. Please log in again.');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setRedirectCountdown(3);
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to change password');
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const { name, value } = e.target;
+    setEmailForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailError(null);
+    setEmailSuccess(null);
+
+    if (!emailForm.newEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setEmailSubmitting(true);
+    try {
+      const result = await changeEmail(emailForm.newEmail, emailForm.password);
+      if (result) {
+        setEmailSuccess(`Email changed to ${emailForm.newEmail}. Please log in again.`);
+        setEmailForm({ newEmail: '', password: '' });
+        setRedirectCountdown(3);
+      }
+    } catch (err) {
+      setEmailError(err.message || 'Failed to change email');
+    } finally {
+      setEmailSubmitting(false);
+    }
   };
 
   const goToSection = (section) => {
@@ -362,14 +424,35 @@ export default function StudentDashboardPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-text-dark mb-1">New Password</label>
-                      <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} required minLength={6} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-text-dark mb-1">Confirm New Password</label>
-                      <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required minLength={6} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
                     </div>
-                    <button type="submit" className="w-full py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors text-sm">
-                      Update Password
+                    <button type="submit" disabled={passwordSubmitting} className="w-full py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                      {passwordSubmitting ? 'Updating...' : 'Update Password'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Change Email */}
+                <div className="bg-white rounded-2xl shadow-lg p-6">
+                  <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Change Email</h3>
+                  <p className="text-sm text-text-light mb-4">Current email: <strong>{user?.email}</strong></p>
+                  {emailSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{emailSuccess}</div>}
+                  {emailError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{emailError}</div>}
+                  <form onSubmit={handleEmailSubmit} className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">New Email Address</label>
+                      <input type="email" name="newEmail" value={emailForm.newEmail} onChange={handleEmailChange} required placeholder="new@email.com" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
+                      <input type="password" name="password" value={emailForm.password} onChange={handleEmailChange} required placeholder="Enter password to confirm" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    </div>
+                    <button type="submit" disabled={emailSubmitting} className="w-full py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                      {emailSubmitting ? 'Updating...' : 'Change Email'}
                     </button>
                   </form>
                 </div>

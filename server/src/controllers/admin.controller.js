@@ -3,6 +3,7 @@ const {
   UserService,
   SettingService,
   AuditService,
+  AdminService,
 } = require('../services');
 const User = require('../models/User.model');
 const CmsContent = require('../models/CmsContent.model');
@@ -13,6 +14,8 @@ const getDashboard = asyncHandler(async (_req, res) => {
     totalAdmins,
     totalTeachers,
     totalStudents,
+    pendingTeachers,
+    pendingStudents,
     cmsStats,
     recentAuditLogs,
   ] = await Promise.all([
@@ -20,6 +23,8 @@ const getDashboard = asyncHandler(async (_req, res) => {
     User.countDocuments({ role: 'admin', isActive: true }),
     User.countDocuments({ role: 'teacher', isActive: true }),
     User.countDocuments({ role: 'student', isActive: true }),
+    User.countDocuments({ role: 'teacher', status: 'pending', isActive: true }),
+    User.countDocuments({ role: 'student', status: 'pending', isActive: true }),
     CmsContent.aggregate([
       { $match: { isDeleted: false } },
       {
@@ -42,6 +47,9 @@ const getDashboard = asyncHandler(async (_req, res) => {
         admins: totalAdmins,
         teachers: totalTeachers,
         students: totalStudents,
+        pendingTeachers,
+        pendingStudents,
+        totalPending: pendingTeachers + pendingStudents,
       },
       cms: {
         total: cmsStats[0]?.total || 0,
@@ -125,6 +133,54 @@ const getSettingsByGroup = asyncHandler(async (req, res) => {
   );
 });
 
+const getPendingUsers = asyncHandler(async (req, res) => {
+  const { page, limit, role, search } = req.query;
+  const result = await AdminService.getPendingUsers({ page, limit, role, search });
+
+  res.status(200).json(
+    ApiResponse.success('Pending users fetched successfully', result)
+  );
+});
+
+const approveUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await AdminService.approveUser(req.user.id, userId);
+
+  AuditService.log({
+    user: req.user.id,
+    action: 'approve_user',
+    module: 'admin',
+    resourceId: userId,
+    resourceType: 'User',
+    description: `Approved user: ${user.email} (${user.role})`,
+    metadata: { approvedUser: userId, role: user.role, email: user.email },
+  });
+
+  res.status(200).json(
+    ApiResponse.success('User approved successfully', user)
+  );
+});
+
+const rejectUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const user = await AdminService.rejectUser(req.user.id, userId, reason);
+
+  AuditService.log({
+    user: req.user.id,
+    action: 'reject_user',
+    module: 'admin',
+    resourceId: userId,
+    resourceType: 'User',
+    description: `Rejected user: ${user.email} (${user.role}) - Reason: ${reason || 'Not specified'}`,
+    metadata: { rejectedUser: userId, role: user.role, email: user.email, reason: reason || '' },
+  });
+
+  res.status(200).json(
+    ApiResponse.success('User rejected successfully', user)
+  );
+});
+
 module.exports = {
   getDashboard,
   getAuditLogs,
@@ -132,4 +188,7 @@ module.exports = {
   getPermissions,
   updateSettings,
   getSettingsByGroup,
+  getPendingUsers,
+  approveUser,
+  rejectUser,
 };

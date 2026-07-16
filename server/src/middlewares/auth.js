@@ -91,43 +91,6 @@ const optionalAuth = async (req, _res, next) => {
   }
 };
 
-const firebaseAuth = async (req, _res, next) => {
-  try {
-    const token = extractToken(req);
-
-    if (!token) {
-      throw new ApiError(
-        httpStatus.UNAUTHORIZED,
-        messages.UNAUTHORIZED
-      );
-    }
-
-    const admin = require('firebase-admin');
-    const decodedToken = await admin.auth().verifyIdToken(token);
-
-    req.user = {
-      uid: decodedToken.uid,
-      email: decodedToken.email,
-      name: decodedToken.name,
-      picture: decodedToken.picture,
-      firebase: decodedToken,
-    };
-    req.userId = decodedToken.uid;
-    next();
-  } catch (error) {
-    if (error.code === 'auth/id-token-expired') {
-      return next(
-        new ApiError(httpStatus.UNAUTHORIZED, messages.TOKEN_EXPIRED)
-      );
-    }
-    if (error.code?.startsWith('auth/')) {
-      return next(
-        new ApiError(httpStatus.UNAUTHORIZED, messages.TOKEN_INVALID)
-      );
-    }
-    next(error);
-  }
-};
 
 const isAdmin = authorize(roles.ADMIN);
 const isTeacher = authorize(roles.TEACHER);
@@ -139,7 +102,6 @@ module.exports = {
   authenticate,
   authorize,
   optionalAuth,
-  firebaseAuth,
   isAdmin,
   isTeacher,
   isStudent,

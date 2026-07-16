@@ -37,19 +37,26 @@ router.post(
   authController.resetPassword
 );
 
-router.post(
-  '/verify-email',
-  authLimiter,
-  validate(authValidator.verifyEmailRules),
-  authController.verifyEmail
-);
-
 router.get('/me', authenticate, authController.getMe);
 
 router.post(
   '/refresh-token',
   validate(authValidator.refreshTokenRules),
   authController.refreshToken
+);
+
+router.post(
+  '/change-password',
+  authenticate,
+  validate(authValidator.changePasswordRules),
+  authController.changePassword
+);
+
+router.post(
+  '/change-email',
+  authenticate,
+  validate(authValidator.changeEmailRules),
+  authController.changeEmail
 );
 
 module.exports = router;

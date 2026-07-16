@@ -20,6 +20,8 @@ const AdmissionForm = lazy(() => import('./components/Admissions/AdmissionForm')
 const AdmissionStatus = lazy(() => import('./components/Admissions/AdmissionStatus'));
 const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/Auth/SignupPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage'));
 const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
 const TeacherDashboardPage = lazy(() => import('./pages/TeacherDashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
@@ -64,7 +66,8 @@ export default function App() {
           <Route path="/admission-status" element={<AdmissionStatus />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/forgot-password" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
         {/* Student Routes */}

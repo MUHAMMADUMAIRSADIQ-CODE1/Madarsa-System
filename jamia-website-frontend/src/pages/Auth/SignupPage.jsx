@@ -12,7 +12,7 @@ export default function SignupPage() {
     phone: '',
     country: 'Pakistan',
     city: '',
-    gender: 'Male',
+    gender: 'male',
     password: '',
     confirmPassword: '',
     agreeTerms: false,
@@ -92,17 +92,10 @@ export default function SignupPage() {
       const { confirmPassword, agreeTerms, ...userData } = formData;
       const result = await signup({ ...userData, role });
 
-      if (role === 'student') {
-        setSuccessMessage('✓ Account created successfully! Redirecting to dashboard...');
-        setTimeout(() => {
-          navigate('/student/dashboard');
-        }, 2000);
-      } else {
-        setSuccessMessage('✓ Account created! Pending admin approval. You will be notified via email.');
-        setTimeout(() => {
-          navigate('/');
-        }, 3000);
-      }
+      setSuccessMessage('✓ Account created! Your account is pending admin approval. You will be notified via email once approved.');
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -264,9 +257,9 @@ export default function SignupPage() {
                 onChange={handleChange}
                 className="w-full px-5 py-3.5 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all"
               >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
               </select>
             </div>
 

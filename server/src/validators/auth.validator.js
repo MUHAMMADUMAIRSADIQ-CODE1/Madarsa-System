@@ -32,29 +32,10 @@ const signupRules = [
 ];
 
 const loginRules = [
-  body('email')
-    .optional()
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail()
-    .toLowerCase(),
+  email(),
   body('password')
-    .optional()
     .notEmpty()
     .withMessage('Password is required'),
-  body('idToken')
-    .optional()
-    .notEmpty()
-    .withMessage('ID token is required'),
-  body().custom((_, { req }) => {
-    if (!req.body.email && !req.body.idToken) {
-      throw new Error('Email or idToken is required');
-    }
-    if (req.body.email && !req.body.password && !req.body.idToken) {
-      throw new Error('Password is required when using email');
-    }
-    return true;
-  }),
 ];
 
 const forgotPasswordRules = [
@@ -62,20 +43,15 @@ const forgotPasswordRules = [
 ];
 
 const resetPasswordRules = [
-  body('oobCode')
+  body('token')
     .notEmpty()
-    .withMessage('Reset code is required'),
+    .withMessage('Reset token is required'),
+  email(),
   body('newPassword')
     .notEmpty()
     .withMessage('New password is required')
     .isLength({ min: 8 })
     .withMessage('New password must be at least 8 characters'),
-];
-
-const verifyEmailRules = [
-  body('oobCode')
-    .notEmpty()
-    .withMessage('Verification code is required'),
 ];
 
 const refreshTokenRules = [
@@ -85,11 +61,30 @@ const refreshTokenRules = [
     .withMessage('Refresh token is required'),
 ];
 
+const changePasswordRules = [
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .notEmpty()
+    .withMessage('New password is required')
+    .isLength({ min: 8 })
+    .withMessage('New password must be at least 8 characters'),
+];
+
+const changeEmailRules = [
+  email('newEmail'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required'),
+];
+
 module.exports = {
   signupRules,
   loginRules,
   forgotPasswordRules,
   resetPasswordRules,
-  verifyEmailRules,
   refreshTokenRules,
+  changePasswordRules,
+  changeEmailRules,
 };

@@ -14,6 +14,8 @@ const AboutService = require('./about.service');
 const ContactService = require('./contact.service');
 const SettingsService = require('./settings.service');
 const FooterService = require('./footer.service');
+const AdminService = require('./admin.service');
+const EmailService = require('./email.service');
 
 module.exports = {
   AuthService,
@@ -32,4 +34,6 @@ module.exports = {
   ContactService,
   SettingsService,
   FooterService,
+  AdminService,
+  EmailService,
 };

@@ -1,5 +1,5 @@
-import { createContext, useState, useContext, useEffect } from 'react';
-import { authData } from '../data/authData';
+import { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -12,48 +12,37 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
       try {
         const parsed = JSON.parse(savedUser);
         setUser(parsed);
         setIsAuthenticated(true);
       } catch (err) {
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
       }
     }
     setInitializing(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await api.post('/auth/login', { email, password });
 
-      const foundUser = authData.users.find(
-        u => u.email === email && u.password === password
-      );
+      const { user: userData, tokens } = response.data;
 
-      if (!foundUser) {
-        throw new Error('Invalid email or password');
-      }
-
-      if (!foundUser.verified) {
-        throw new Error('Please verify your email first');
-      }
-
-      if (foundUser.role === 'teacher' && !foundUser.approved) {
-        throw new Error('Your account is pending admin approval');
-      }
-
-      const { password: _, ...userWithoutPassword } = foundUser;
-      
-      setUser(userWithoutPassword);
+      setUser(userData);
       setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', tokens.accessToken);
+      localStorage.setItem('refreshToken', tokens.refreshToken);
 
-      return userWithoutPassword;
+      return userData;
     } catch (err) {
       const errorMessage = err.message || 'Login failed. Please try again.';
       setError(errorMessage);
@@ -61,40 +50,15 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signup = async (userData) => {
+  const signup = useCallback(async (userData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (authData.users.some(u => u.email === userData.email)) {
-        throw new Error('Email already registered');
-      }
-
-      const newUser = {
-        id: `${userData.role}-${Date.now()}`,
-        ...userData,
-        verified: userData.role === 'student' ? false : true,
-        approved: userData.role === 'student' ? true : false,
-        createdAt: new Date().toISOString().split('T')[0],
-        profileImage: null,
-        enrolledCourses: [],
-      };
-
-      authData.users.push(newUser);
-
-      if (userData.role === 'student') {
-        const { password: _, ...userWithoutPassword } = newUser;
-        setUser(userWithoutPassword);
-        setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        return userWithoutPassword;
-      }
-
-      return newUser;
+      const response = await api.post('/auth/signup', userData);
+      return response.data.user;
     } catch (err) {
       const errorMessage = err.message || 'Signup failed. Please try again.';
       setError(errorMessage);
@@ -102,24 +66,32 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      // Silently fail - we still want to clear local state
+    }
+
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
-  };
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+  }, []);
 
-  const updateProfile = async (updatedData) => {
+  const updateProfile = useCallback(async (updatedData) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const response = await api.patch('/users/profile', updatedData);
+      const updatedUser = response.data?.user || response.data;
 
-      const updatedUser = { ...user, ...updatedData };
-      setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
 
       return updatedUser;
     } catch (err) {
@@ -129,7 +101,50 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  const changePassword = useCallback(async (currentPassword, newPassword) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.message || 'Password change failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const changeEmail = useCallback(async (newEmail, password) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.post('/auth/change-email', {
+        newEmail,
+        password,
+      });
+      const updatedUser = response.data?.user || response.data;
+
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+
+      return updatedUser;
+    } catch (err) {
+      const errorMessage = err.message || 'Email change failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   const value = {
     user,
@@ -141,6 +156,8 @@ export function AuthProvider({ children }) {
     signup,
     logout,
     updateProfile,
+    changePassword,
+    changeEmail,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -49,7 +49,29 @@ export default function TeacherDashboardPage() {
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [markingAttendance, setMarkingAttendance] = useState(false);
   const [attendanceFormData, setAttendanceFormData] = useState({ student: '', course: '', status: 'present', classDate: '', remarks: '' });
-  const { user } = useAuth();
+  const { user, changePassword, changeEmail, logout } = useAuth();
+
+  // Force re-login countdown
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
+
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(null);
+  const [passwordError, setPasswordError] = useState(null);
+
+  // Email change state
+  const [emailForm, setEmailForm] = useState({
+    newEmail: '',
+    password: '',
+  });
+  const [emailSubmitting, setEmailSubmitting] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState(null);
+  const [emailError, setEmailError] = useState(null);
 
   const activeSection = location.pathname.split('/').pop();
 
@@ -130,6 +152,18 @@ export default function TeacherDashboardPage() {
     }
   }, []);
 
+  // Force re-login countdown after password/email change
+  useEffect(() => {
+    if (redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      logout();
+      navigate('/login');
+      return;
+    }
+    const timer = setTimeout(() => setRedirectCountdown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [redirectCountdown, logout, navigate]);
+
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
@@ -141,6 +175,68 @@ export default function TeacherDashboardPage() {
       if (activeSection === 'attendance') fetchTeacherAttendance(profile._id, attendanceDate);
     }
   }, [activeSection, profile?._id, studentPage, attendanceDate, fetchCourses, fetchStudents, fetchTeacherAttendance]);
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+
+    setPasswordSubmitting(true);
+    try {
+      const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
+      setPasswordSuccess(result?.message || 'Password changed successfully. Please log in again.');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setRedirectCountdown(3);
+    } catch (err) {
+      setPasswordError(err.message || 'Failed to change password');
+    } finally {
+      setPasswordSubmitting(false);
+    }
+  };
+
+  const handleEmailChange = (e) => {
+    const { name, value } = e.target;
+    setEmailForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailError(null);
+    setEmailSuccess(null);
+
+    if (!emailForm.newEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setEmailSubmitting(true);
+    try {
+      const result = await changeEmail(emailForm.newEmail, emailForm.password);
+      if (result) {
+        setEmailSuccess(`Email changed to ${emailForm.newEmail}. Please log in again.`);
+        setEmailForm({ newEmail: '', password: '' });
+        setRedirectCountdown(3);
+      }
+    } catch (err) {
+      setEmailError(err.message || 'Failed to change email');
+    } finally {
+      setEmailSubmitting(false);
+    }
+  };
 
   const handleMarkAttendance = async (e) => {
     e.preventDefault();
@@ -511,51 +607,73 @@ export default function TeacherDashboardPage() {
 
       case 'settings':
         return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Settings</h1>
-            <div className="max-w-2xl space-y-8">
-              <div>
-                <h2 className="text-lg font-bold text-text-dark mb-4">Notifications</h2>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Email notifications for new assignments', enabled: true },
-                    { label: 'Email notifications for student submissions', enabled: true },
-                    { label: 'SMS notifications for urgent messages', enabled: false },
-                    { label: 'Weekly summary report', enabled: true },
-                  ].map((setting, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-border-light">
-                      <span className="text-sm text-text-body">{setting.label}</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" defaultChecked={setting.enabled} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-lg font-bold text-text-dark mb-4">Account</h2>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-border-light">
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+              <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Settings</h1>
+              <div className="max-w-2xl">
+                {/* Change Password */}
+                <div className="mb-8">
+                  <h2 className="text-lg font-bold text-text-dark mb-4">Change Password</h2>
+                  {passwordSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{passwordSuccess}</div>}
+                  {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{passwordError}</div>}
+                  <form onSubmit={handlePasswordSubmit} className="space-y-3 max-w-md">
                     <div>
-                      <p className="font-semibold text-text-dark">Change Password</p>
-                      <p className="text-sm text-text-light">Update your account password</p>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
+                      <input type="password" name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} required className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
                     </div>
-                    <button className="px-4 py-2 border-2 border-primary text-primary rounded-lg font-semibold hover:bg-primary-light transition-colors text-sm">
-                      Update
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">New Password</label>
+                      <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Confirm New Password</label>
+                      <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    </div>
+                    <button type="submit" disabled={passwordSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                      {passwordSubmitting ? 'Updating...' : 'Update Password'}
                     </button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-border-light">
+                  </form>
+                </div>
+
+                {/* Change Email */}
+                <div className="mb-8 border-t border-border-light pt-8">
+                  <h2 className="text-lg font-bold text-text-dark mb-4">Change Email</h2>
+                  <p className="text-sm text-text-light mb-4">Current email: <strong>{user?.email}</strong></p>
+                  {emailSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{emailSuccess}</div>}
+                  {emailError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{emailError}</div>}
+                  <form onSubmit={handleEmailSubmit} className="space-y-3 max-w-md">
                     <div>
-                      <p className="font-semibold text-text-dark">Language</p>
-                      <p className="text-sm text-text-light">Interface language preference</p>
+                      <label className="block text-sm font-medium text-text-dark mb-1">New Email Address</label>
+                      <input type="email" name="newEmail" value={emailForm.newEmail} onChange={handleEmailChange} required placeholder="new@email.com" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
                     </div>
-                    <select className="px-4 py-2 rounded-lg border border-border-light text-sm">
-                      <option>English</option>
-                      <option>Arabic</option>
-                      <option>Urdu</option>
-                    </select>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
+                      <input type="password" name="password" value={emailForm.password} onChange={handleEmailChange} required placeholder="Enter password to confirm" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    </div>
+                    <button type="submit" disabled={emailSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                      {emailSubmitting ? 'Updating...' : 'Change Email'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Notifications */}
+                <div className="border-t border-border-light pt-8">
+                  <h2 className="text-lg font-bold text-text-dark mb-4">Notifications</h2>
+                  <div className="space-y-4">
+                    {[
+                      { label: 'Email notifications for new assignments', enabled: true },
+                      { label: 'Email notifications for student submissions', enabled: true },
+                      { label: 'SMS notifications for urgent messages', enabled: false },
+                      { label: 'Weekly summary report', enabled: true },
+                    ].map((setting, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-border-light">
+                        <span className="text-sm text-text-body">{setting.label}</span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" defaultChecked={setting.enabled} className="sr-only peer" />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

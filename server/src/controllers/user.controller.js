@@ -1,5 +1,5 @@
 const BaseController = require('./BaseController');
-const { UserService } = require('../services');
+const { UserService, AuthService } = require('../services');
 const { ApiResponse, asyncHandler } = require('../utils');
 const { messages } = require('../constants');
 
@@ -24,13 +24,13 @@ class UserController extends BaseController {
 
   changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body;
-    const user = await this.service.changePassword(
+    const result = await AuthService.changePassword(
       req.user.id,
       currentPassword,
       newPassword
     );
     res.status(200).json(
-      ApiResponse.success('Password changed successfully', user)
+      ApiResponse.success(result.message)
     );
   });
 

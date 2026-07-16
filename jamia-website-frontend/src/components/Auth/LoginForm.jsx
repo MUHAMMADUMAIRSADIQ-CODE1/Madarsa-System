@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 export default function LoginForm({ onSignupClick }) {
   const navigate = useNavigate();
   const { login, isLoading, error } = useAuth();
-  const [email, setEmail] = useState('ahmed@example.com');
-  const [password, setPassword] = useState('Student@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -190,13 +190,7 @@ export default function LoginForm({ onSignupClick }) {
           </p>
         </div>
 
-        {/* Test Credentials Info */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
-          <p className="font-semibold mb-1">Demo Credentials:</p>
-          <p>Student: ahmed@example.com / Student@123</p>
-          <p>Teacher: teacher@example.com / Teacher@123</p>
-          <p>Admin: admin@example.com / Admin@123</p>
-        </div>
+
       </div>
     </div>
   );

@@ -17,9 +17,6 @@ if (fs.existsSync(envPath)) {
 const requiredEnvVars = [
   'MONGODB_URI',
   'JWT_SECRET',
-  'FIREBASE_PROJECT_ID',
-  'FIREBASE_CLIENT_EMAIL',
-  'FIREBASE_PRIVATE_KEY',
 ];
 
 const missingEnvVars = requiredEnvVars.filter(
@@ -50,13 +47,20 @@ const env = {
     issuer: process.env.JWT_ISSUER || 'jamia-tul-uloom-muhammadiya',
   },
 
-  firebase: {
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
-    databaseUrl: process.env.FIREBASE_DATABASE_URL,
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    webApiKey: process.env.FIREBASE_WEB_API_KEY,
+  admin: {
+    name: process.env.ADMIN_NAME || 'Admin',
+    email: process.env.ADMIN_EMAIL,
+    password: process.env.ADMIN_PASSWORD,
+  },
+
+  email: {
+    host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
+    port: parseInt(process.env.EMAIL_PORT, 10) || 587,
+    secure: process.env.EMAIL_SECURE === 'true',
+    user: process.env.EMAIL_USER || '',
+    pass: process.env.EMAIL_PASS || '',
+    from: process.env.EMAIL_FROM || 'noreply@jamiatululoom.com',
+    fromName: process.env.EMAIL_FROM_NAME || 'Jamia Tul Uloom Muhammadiya',
   },
 
   cloudinary: {

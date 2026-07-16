@@ -12,6 +12,10 @@ router.use(isAdmin);
 
 router.get('/dashboard', adminController.getDashboard);
 
+router.get('/pending-users', adminController.getPendingUsers);
+router.patch('/approve-user/:userId', adminController.approveUser);
+router.patch('/reject-user/:userId', adminController.rejectUser);
+
 router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/audit-logs/stats', adminController.getAuditLogStats);
 

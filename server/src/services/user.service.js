@@ -12,10 +12,6 @@ class UserService extends BaseService {
     return this.getOne({ email: email.toLowerCase() });
   }
 
-  async getByFirebaseUid(firebaseUid) {
-    return this.getOne({ firebaseUid });
-  }
-
   async updateProfile(userId, data) {
     const allowedFields = [
       'fullName',
@@ -54,18 +50,6 @@ class UserService extends BaseService {
 
   async getUsersByRole(role) {
     return this.getAll({ role, status: USER_STATUS.ACTIVE });
-  }
-
-  async findByFirebaseUidOrEmail(firebaseUid, email) {
-    let user = await this.getByFirebaseUid(firebaseUid);
-    if (!user) {
-      user = await this.getByEmail(email);
-      if (user) {
-        user.firebaseUid = firebaseUid;
-        await user.save({ validateBeforeSave: false });
-      }
-    }
-    return user;
   }
 }
 

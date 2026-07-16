@@ -5,11 +5,6 @@ const { roles, USER_STATUS } = require('../constants');
 
 const userSchema = createBaseSchema(
   {
-    firebaseUid: {
-      type: String,
-      sparse: true,
-      index: true,
-    },
     email: {
       type: String,
       required: [true, 'Email is required'],
@@ -45,13 +40,11 @@ const userSchema = createBaseSchema(
     firstName: {
       type: String,
       trim: true,
-      minlength: 2,
       maxlength: 50,
     },
     lastName: {
       type: String,
       trim: true,
-      minlength: 2,
       maxlength: 50,
     },
     profileImage: {
@@ -113,6 +106,25 @@ const userSchema = createBaseSchema(
       type: Date,
       select: false,
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    approvedAt: {
+      type: Date,
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    rejectedAt: {
+      type: Date,
+    },
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     meta: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,
@@ -122,7 +134,6 @@ const userSchema = createBaseSchema(
   {
     indexes: [
       { fields: { email: 1 }, unique: true },
-      { fields: { firebaseUid: 1 }, sparse: true },
       { fields: { role: 1, status: 1 } },
     ],
   }
@@ -185,6 +196,10 @@ userSchema.methods.toPublicJSON = function () {
     isActive: this.isActive,
     isEmailVerified: this.isEmailVerified,
     lastLogin: this.lastLogin,
+    rejectionReason: this.rejectionReason,
+    approvedAt: this.approvedAt,
+    rejectedAt: this.rejectedAt,
+    rejectedBy: this.rejectedBy,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };
