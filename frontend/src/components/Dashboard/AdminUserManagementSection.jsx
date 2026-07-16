@@ -1,6 +1,7 @@
-<<<<<<< HEAD:jamia-website-frontend/src/components/Dashboard/AdminUserManagementSection.jsx
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
+import { adminDashboardData } from '../../data/adminDashboardData';
+import { FiUsers, FiUser, FiSettings } from 'react-icons/fi';
 
 const ROLE_LABELS = {
   student: 'Student',
@@ -16,6 +17,12 @@ const ROLE_ICONS = {
   student: '🎓',
   teacher: '👨‍🏫',
 };
+
+const dashboardStatCards = [
+  { id: 1, name: 'Students', count: adminDashboardData.dashboard.statistics.totalStudents, icon: FiUsers },
+  { id: 2, name: 'Teachers', count: adminDashboardData.dashboard.statistics.totalTeachers, icon: FiUser },
+  { id: 3, name: 'Admins', count: 3, icon: FiSettings },
+];
 
 export default function AdminUserManagementSection() {
   const [users, setUsers] = useState([]);
@@ -71,7 +78,6 @@ export default function AdminUserManagementSection() {
   }, [page, fetchPendingUsers]);
 
   // When search or roleFilter changes, reset to page 1
-  // The page change triggers a fetch through the first effect
   useEffect(() => {
     setPage(1);
   }, [search, roleFilter]);
@@ -143,27 +149,37 @@ export default function AdminUserManagementSection() {
     setRejectionReason('');
     setError(null);
   };
-=======
-import { adminDashboardData } from '../../data/adminDashboardData';
-import { FiUsers, FiUser, FiSettings } from 'react-icons/fi';
-
-export default function AdminUserManagementSection() {
-  const users = [
-    { id: 1, name: 'Students', count: adminDashboardData.dashboard.statistics.totalStudents, icon: FiUsers, color: 'bg-blue' },
-    { id: 2, name: 'Teachers', count: adminDashboardData.dashboard.statistics.totalTeachers, icon: FiUser, color: 'bg-green' },
-    { id: 3, name: 'Admins', count: 3, icon: FiSettings, color: 'bg-purple' },
-  ];
->>>>>>> 67fd0de996a092b981c130c2f150f0ee867679a1:frontend/src/components/Dashboard/AdminUserManagementSection.jsx
 
   return (
     <div className="space-y-8">
+      {/* Dashboard Overview Cards */}
+      <div>
+        <h2 className="font-heading text-xl font-bold text-text-dark mb-4">Dashboard Overview</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {dashboardStatCards.map((card) => (
+            <div
+              key={card.id}
+              className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <span className="p-3 bg-primary/10 text-primary rounded-xl"><card.icon size={28} /></span>
+                <div>
+                  <p className="text-sm text-text-light">{card.name}</p>
+                  <p className="text-2xl font-bold text-primary">{card.count}</p>
+                </div>
+              </div>
+              <span className="text-5xl opacity-20">🎓</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Header */}
       <div>
         <h1 className="font-heading text-3xl font-bold text-text-dark">Pending User Management</h1>
         <p className="text-text-light mt-1">Review and manage pending student and teacher registrations</p>
       </div>
 
-<<<<<<< HEAD:jamia-website-frontend/src/components/Dashboard/AdminUserManagementSection.jsx
       {/* Success Message */}
       {successMsg && (
         <div className="px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
@@ -190,27 +206,13 @@ export default function AdminUserManagementSection() {
         </div>
       )}
 
-      {/* Statistics Cards */}
+      {/* Pending Users Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-sm font-medium">Pending Students</p>
               <p className="text-3xl font-bold mt-2">{stats.pendingStudents}</p>
-=======
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
-        {users.map((userGroup) => (
-          <div
-            key={userGroup.id}
-            className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <span className="p-3 bg-primary/10 text-primary rounded-xl"><userGroup.icon size={28} /></span>
-              <div>
-                <p className="text-sm text-text-light">{userGroup.name}</p>
-                <p className="text-2xl font-bold text-primary">{userGroup.count}</p>
-              </div>
->>>>>>> 67fd0de996a092b981c130c2f150f0ee867679a1:frontend/src/components/Dashboard/AdminUserManagementSection.jsx
             </div>
             <span className="text-5xl opacity-20">🎓</span>
           </div>

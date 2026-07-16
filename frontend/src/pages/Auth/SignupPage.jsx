@@ -91,36 +91,21 @@ export default function SignupPage() {
 
     try {
       const { confirmPassword, agreeTerms, ...userData } = formData;
-      const result = await signup({ ...userData, role });
 
-<<<<<<< HEAD:jamia-website-frontend/src/pages/Auth/SignupPage.jsx
-      setSuccessMessage('✓ Account created! Your account is pending admin approval. You will be notified via email once approved.');
+      await signup({ ...userData, role });
+
+      setSuccessMessage(
+        <span className="flex items-center gap-2">
+          <FiCheckCircle className="text-green-500" size={20} />
+          Account created successfully! Your account is pending admin approval.
+          You will be notified via email once approved.
+        </span>
+      );
+
       setTimeout(() => {
         navigate('/');
       }, 3000);
-=======
-      if (role === 'student') {
-        setSuccessMessage(
-          <span className="flex items-center gap-2">
-            <FiCheckCircle className="text-green-500" size={20} />
-            Account created successfully! Redirecting to dashboard...
-          </span>
-        );
-        setTimeout(() => {
-          navigate('/student/dashboard');
-        }, 2000);
-      } else {
-        setSuccessMessage(
-          <span className="flex items-center gap-2">
-            <FiCheckCircle className="text-green-500" size={20} />
-            Account created! Pending admin approval. You will be notified via email.
-          </span>
-        );
-        setTimeout(() => {
-          navigate('/');
-        }, 3000);
-      }
->>>>>>> 67fd0de996a092b981c130c2f150f0ee867679a1:frontend/src/pages/Auth/SignupPage.jsx
+
     } catch (err) {
       setErrors({ submit: err.message });
     } finally {
@@ -150,11 +135,10 @@ export default function SignupPage() {
             <button
               key={r.value}
               onClick={() => setRole(r.value)}
-              className={`p-4 rounded-2xl border-2 transition-all duration-300 text-center ${
-                role === r.value
+              className={`p-4 rounded-2xl border-2 transition-all duration-300 text-center ${role === r.value
                   ? 'border-primary bg-primary-light'
                   : 'border-border-light hover:border-primary'
-              }`}
+                }`}
             >
               <p className="font-heading font-bold text-lg text-text-dark">{r.label}</p>
               <p className="text-sm text-text-light">{r.description}</p>
@@ -188,11 +172,10 @@ export default function SignupPage() {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Your full name"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.fullName
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.fullName
                     ? 'border-red-400 focus:ring-red-100'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
             </div>
@@ -208,11 +191,10 @@ export default function SignupPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.email
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.email
                     ? 'border-red-400'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
             </div>
@@ -228,11 +210,10 @@ export default function SignupPage() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="+1-555-123-4567"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.phone
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.phone
                     ? 'border-red-400'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
             </div>
@@ -262,11 +243,10 @@ export default function SignupPage() {
                 value={formData.city}
                 onChange={handleChange}
                 placeholder="Your city"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.city
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.city
                     ? 'border-red-400'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
             </div>
@@ -299,11 +279,10 @@ export default function SignupPage() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Min 8 chars, uppercase & number"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.password
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.password
                     ? 'border-red-400'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
             </div>
@@ -319,11 +298,10 @@ export default function SignupPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm password"
-                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${
-                  errors.confirmPassword
+                className={`w-full px-5 py-3.5 rounded-xl border-2 transition-all outline-none ${errors.confirmPassword
                     ? 'border-red-400'
                     : 'border-border-light focus:border-primary focus:ring-primary/10'
-                } focus:ring-2`}
+                  } focus:ring-2`}
               />
               {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}
             </div>
@@ -350,11 +328,10 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 mb-6 ${
-              isSubmitting || isLoading
+            className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 mb-6 ${isSubmitting || isLoading
                 ? 'bg-text-light text-white cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20'
-            }`}
+              }`}
           >
             {isSubmitting || isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
