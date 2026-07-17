@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { adminDashboardData } from '../../data/adminDashboardData';
-import { FiUsers, FiUser, FiSettings } from 'react-icons/fi';
+import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle } from 'react-icons/fi';
 
 const ROLE_LABELS = {
   student: 'Student',
@@ -14,8 +14,8 @@ const ROLE_COLORS = {
 };
 
 const ROLE_ICONS = {
-  student: '🎓',
-  teacher: '👨‍🏫',
+  student: FiAward,
+  teacher: FiUserCheck,
 };
 
 const dashboardStatCards = [
@@ -93,7 +93,7 @@ export default function AdminUserManagementSection() {
     setActionLoading(true);
     try {
       await api.patch(`/admin/approve-user/${selectedUser._id}`);
-      setSuccessMsg(`✓ ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been approved successfully`);
+      setSuccessMsg(`${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been approved successfully`);
       setShowApproveModal(false);
       setSelectedUser(null);
       fetchPendingUsers(page);
@@ -113,7 +113,7 @@ export default function AdminUserManagementSection() {
     setActionLoading(true);
     try {
       await api.patch(`/admin/reject-user/${selectedUser._id}`, { reason: rejectionReason.trim() });
-      setSuccessMsg(`✗ ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been rejected`);
+      setSuccessMsg(`<FiX className="inline-block mr-1" size={16} /> ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been rejected`);
       setShowRejectModal(false);
       setSelectedUser(null);
       setRejectionReason('');
@@ -159,16 +159,15 @@ export default function AdminUserManagementSection() {
           {dashboardStatCards.map((card) => (
             <div
               key={card.id}
-              className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all"
+              className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all relative overflow-hidden"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <span className="p-3 bg-primary/10 text-primary rounded-xl"><card.icon size={28} /></span>
-                <div>
+              <div className="flex items-center gap-4">
+                <span className="p-3 bg-primary/10 text-primary rounded-xl flex-shrink-0"><card.icon size={28} /></span>
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-text-light">{card.name}</p>
                   <p className="text-2xl font-bold text-primary">{card.count}</p>
                 </div>
               </div>
-              <span className="text-5xl opacity-20">🎓</span>
             </div>
           ))}
         </div>
@@ -183,7 +182,7 @@ export default function AdminUserManagementSection() {
       {/* Success Message */}
       {successMsg && (
         <div className="px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
-          <span className="text-emerald-500 text-lg">✓</span>
+          <FiCheck className="text-emerald-500 text-lg" size={20} />
           <span>{successMsg}</span>
           <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-500 hover:text-emerald-700">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,7 +195,7 @@ export default function AdminUserManagementSection() {
       {/* Error Message */}
       {error && (
         <div className="px-5 py-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium animate-fade-in flex items-center gap-3">
-          <span className="text-red-500 text-lg">⚠</span>
+          <FiAlertTriangle className="text-red-500 text-lg" size={20} />
           <span>{error}</span>
           <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +213,7 @@ export default function AdminUserManagementSection() {
               <p className="text-blue-100 text-sm font-medium">Pending Students</p>
               <p className="text-3xl font-bold mt-2">{stats.pendingStudents}</p>
             </div>
-            <span className="text-5xl opacity-20">🎓</span>
+            <FiAward className="text-5xl opacity-20" size={48} />
           </div>
         </div>
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -223,7 +222,7 @@ export default function AdminUserManagementSection() {
               <p className="text-purple-100 text-sm font-medium">Pending Teachers</p>
               <p className="text-3xl font-bold mt-2">{stats.pendingTeachers}</p>
             </div>
-            <span className="text-5xl opacity-20">👨‍🏫</span>
+            <FiUserCheck className="text-5xl opacity-20" size={48} />
           </div>
         </div>
         <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -232,7 +231,7 @@ export default function AdminUserManagementSection() {
               <p className="text-amber-100 text-sm font-medium">Total Pending</p>
               <p className="text-3xl font-bold mt-2">{stats.totalPending}</p>
             </div>
-            <span className="text-5xl opacity-20">⏳</span>
+            <FiClock className="text-5xl opacity-20" size={48} />
           </div>
         </div>
       </div>
@@ -254,9 +253,9 @@ export default function AdminUserManagementSection() {
           {/* Role Filter Tabs */}
           <div className="flex rounded-xl border border-border-light overflow-hidden">
             {[
-              { value: '', label: 'All', icon: '📋' },
-              { value: 'student', label: 'Students', icon: '🎓' },
-              { value: 'teacher', label: 'Teachers', icon: '👨‍🏫' },
+              { value: '', label: 'All', icon: FiClipboard },
+              { value: 'student', label: 'Students', icon: FiAward },
+              { value: 'teacher', label: 'Teachers', icon: FiUserCheck },
             ].map((tab) => (
               <button
                 key={tab.value}
@@ -267,7 +266,7 @@ export default function AdminUserManagementSection() {
                     : 'bg-white text-text-body hover:bg-bg-light'
                 }`}
               >
-                <span>{tab.icon}</span>
+                <tab.icon size={16} />
                 <span>{tab.label}</span>
               </button>
             ))}
@@ -281,8 +280,8 @@ export default function AdminUserManagementSection() {
             <p className="text-text-light mt-4">Loading pending users...</p>
           </div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16">
-            <span className="text-6xl block mb-4">✅</span>
+          <div className="text-center py-10">
+            <FiCheckCircle className="text-6xl block mb-2 mx-auto text-emerald-500" />
             <h3 className="text-xl font-bold text-text-dark mb-2">All Clear!</h3>
             <p className="text-text-light">No pending users to review at this time.</p>
           </div>
@@ -318,7 +317,7 @@ export default function AdminUserManagementSection() {
                       <td className="p-3 text-sm text-text-body">{user.email}</td>
                       <td className="p-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${ROLE_COLORS[user.role] || 'bg-gray-100 text-gray-800'}`}>
-                          {ROLE_ICONS[user.role] || '📌'} {ROLE_LABELS[user.role] || user.role}
+                          {ROLE_ICONS[user.role] ? (() => { const Icon = ROLE_ICONS[user.role]; return <Icon size={14} /> })() : '📌'} {ROLE_LABELS[user.role] || user.role}
                         </span>
                       </td>
                       <td className="p-3 text-sm text-text-body">
@@ -439,9 +438,9 @@ export default function AdminUserManagementSection() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-text-dark">{selectedUser.fullName}</h3>
-                  <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border mt-1 ${ROLE_COLORS[selectedUser.role] || 'bg-gray-100 text-gray-800'}`}>
-                    {ROLE_ICONS[selectedUser.role] || '📌'} {ROLE_LABELS[selectedUser.role] || selectedUser.role}
-                  </span>
+<span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border mt-1 ${ROLE_COLORS[selectedUser.role] || 'bg-gray-100 text-gray-800'}`}>
+                      {ROLE_ICONS[selectedUser.role] ? (() => { const Icon = ROLE_ICONS[selectedUser.role]; return <Icon size={14} /> })() : '📌'} {ROLE_LABELS[selectedUser.role] || selectedUser.role}
+                    </span>
                 </div>
               </div>
 
@@ -493,15 +492,15 @@ export default function AdminUserManagementSection() {
             <div className="p-6 sm:p-8 border-t border-border-light flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => { setShowDetailModal(false); openApproveModal(selectedUser); }}
-                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
               >
-                ✓ Approve
+                <FiCheck size={18} /> Approve
               </button>
               <button
                 onClick={() => { setShowDetailModal(false); openRejectModal(selectedUser); }}
-                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+                className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
               >
-                ✗ Reject
+                <FiX size={18} /> Reject
               </button>
               <button
                 onClick={closeAllModals}
@@ -535,9 +534,9 @@ export default function AdminUserManagementSection() {
                 <button
                   onClick={handleApprove}
                   disabled={actionLoading}
-                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
-                  {actionLoading ? 'Approving...' : '✓ Confirm Approval'}
+                  {actionLoading ? 'Approving...' : <> <FiCheck size={18} /> Confirm Approval </>}
                 </button>
                 <button
                   onClick={closeAllModals}
@@ -586,9 +585,9 @@ export default function AdminUserManagementSection() {
                 <button
                   onClick={handleReject}
                   disabled={actionLoading || !rejectionReason.trim()}
-                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
-                  {actionLoading ? 'Rejecting...' : '✗ Confirm Rejection'}
+                  {actionLoading ? 'Rejecting...' : <> <FiX size={18} /> Confirm Rejection </>}
                 </button>
                 <button
                   onClick={closeAllModals}

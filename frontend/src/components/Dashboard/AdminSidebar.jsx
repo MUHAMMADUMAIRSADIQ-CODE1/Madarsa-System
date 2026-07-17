@@ -21,7 +21,11 @@ export default function AdminSidebar({ isOpen, onClose, items }) {
   const accountItems = items.filter(item => item.section === 'account');
 
   const handleClick = (sectionId) => {
-    navigate(`/admin/${sectionId}`);
+    if (sectionId === 'home') {
+      navigate('/');
+    } else {
+      navigate(`/admin/${sectionId}`);
+    }
     onClose();
   };
 
