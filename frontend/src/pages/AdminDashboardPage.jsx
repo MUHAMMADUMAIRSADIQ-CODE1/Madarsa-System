@@ -20,6 +20,7 @@ import AdminProfileVerificationSection from '../components/Dashboard/AdminProfil
 import { useAuth } from '../context/AuthContext';
 
 const adminSidebarItems = [
+  { id: 'home', label: 'Back to Home', icon: 'home', section: 'main' },
   { id: 'dashboard', label: 'Dashboard', icon: 'home', section: 'main' },
   { id: 'hero', label: 'Hero Section', icon: 'file', section: 'main' },
   { id: 'about', label: 'About', icon: 'file', section: 'main' },

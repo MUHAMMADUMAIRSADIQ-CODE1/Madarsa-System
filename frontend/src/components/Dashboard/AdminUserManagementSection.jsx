@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { adminDashboardData } from '../../data/adminDashboardData';
-import { FiUsers, FiUser, FiSettings, FiX, FiCheck, FiEye, FiRefreshCw } from 'react-icons/fi';
+import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle } from 'react-icons/fi';
 
 const ROLE_LABELS = {
   student: 'Student',
@@ -14,8 +14,8 @@ const ROLE_COLORS = {
 };
 
 const ROLE_ICONS = {
-  student: '🎓',
-  teacher: '👨‍🏫',
+  student: FiAward,
+  teacher: FiUserCheck,
 };
 
 const TABS = [
@@ -357,16 +357,15 @@ export default function AdminUserManagementSection() {
           {dashboardStatCards.map((card) => (
             <div
               key={card.id}
-              className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all"
+              className="p-6 border-2 border-border-light rounded-xl hover:border-primary hover:shadow-md transition-all relative overflow-hidden"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <span className="p-3 bg-primary/10 text-primary rounded-xl"><card.icon size={28} /></span>
-                <div>
+              <div className="flex items-center gap-4">
+                <span className="p-3 bg-primary/10 text-primary rounded-xl flex-shrink-0"><card.icon size={28} /></span>
+                <div className="min-w-0 flex-1">
                   <p className="text-sm text-text-light">{card.name}</p>
                   <p className="text-2xl font-bold text-primary">{card.count}</p>
                 </div>
               </div>
-              <span className="text-5xl opacity-20">🎓</span>
             </div>
           ))}
         </div>
@@ -381,7 +380,7 @@ export default function AdminUserManagementSection() {
       {/* Success Message */}
       {successMsg && (
         <div className="px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
-          <span className="text-emerald-500 text-lg">✓</span>
+          <FiCheck className="text-emerald-500 text-lg" size={20} />
           <span>{successMsg}</span>
           <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-500 hover:text-emerald-700">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,7 +393,7 @@ export default function AdminUserManagementSection() {
       {/* Error Message */}
       {error && (
         <div className="px-5 py-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium animate-fade-in flex items-center gap-3">
-          <span className="text-red-500 text-lg">⚠</span>
+          <FiAlertTriangle className="text-red-500 text-lg" size={20} />
           <span>{error}</span>
           <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -766,6 +765,12 @@ export default function AdminUserManagementSection() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleApprove} disabled={actionLoading} className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors">
                   {actionLoading ? 'Approving...' : '✓ Confirm Approval'}
+                <button
+                  onClick={handleApprove}
+                  disabled={actionLoading}
+                  className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  {actionLoading ? 'Approving...' : <> <FiCheck size={18} /> Confirm Approval </>}
                 </button>
                 <button onClick={closeAllModals} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
               </div>
@@ -802,6 +807,12 @@ export default function AdminUserManagementSection() {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleReject} disabled={actionLoading || !rejectionReason.trim()} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
                   {actionLoading ? 'Rejecting...' : '✗ Confirm Rejection'}
+                <button
+                  onClick={handleReject}
+                  disabled={actionLoading || !rejectionReason.trim()}
+                  className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  {actionLoading ? 'Rejecting...' : <> <FiX size={18} /> Confirm Rejection </>}
                 </button>
                 <button onClick={closeAllModals} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
               </div>
