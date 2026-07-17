@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const { ApiResponse, asyncHandler, ApiError, logger } = require('../utils');
 const { httpStatus, messages, roles, USER_STATUS } = require('../constants');
-const { AuthService, UserService, AuditService } = require('../services');
+const { AuthService, UserService, StudentService, TeacherService, AuditService } = require('../services');
 const User = require('../models/User.model');
 const emailService = require('../services/email.service');
 
@@ -38,11 +38,42 @@ const signup = asyncHandler(async (req, res) => {
 
   const user = await UserService.create(userData);
 
-  // Send welcome email
-  const { subject, html } = emailService.getWelcomeEmail(fullName, userRole);
+  // Send registration pending email
+  const { subject, html } = emailService.getRegistrationPendingEmail(fullName, userRole);
   await emailService.sendEmail({ to: email, subject, html });
 
   // Audit log
+  // Create corresponding Student or Teacher profile record
+  try {
+    if (userRole === roles.STUDENT) {
+      await StudentService.create({
+        user: user._id,
+        studentName: fullName,
+        email,
+        phone: phone || '',
+        country: country || '',
+        city: city || '',
+        gender: gender || '',
+        createdBy: user._id,
+        updatedBy: user._id,
+      });
+    } else if (userRole === roles.TEACHER) {
+      await TeacherService.create({
+        user: user._id,
+        fullName,
+        email,
+        phone: phone || '',
+        country: country || '',
+        city: city || '',
+        gender: gender || '',
+        createdBy: user._id,
+        updatedBy: user._id,
+      });
+    }
+  } catch (profileError) {
+    logger.error(`Failed to create ${userRole} profile for ${email}:`, profileError.message);
+  }
+
   AuditService.log({
     user: user._id,
     action: 'signup',
@@ -204,6 +235,13 @@ const changePassword = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success(result.message));
 });
 
+const completeProfile = asyncHandler(async (req, res) => {
+  const user = await AuthService.completeProfile(req.user.id);
+  res.status(200).json(
+    ApiResponse.success('Profile marked as complete successfully', user)
+  );
+});
+
 const changeEmail = asyncHandler(async (req, res) => {
   const { newEmail, password } = req.body;
 
@@ -224,4 +262,5 @@ module.exports = {
   refreshToken,
   changePassword,
   changeEmail,
+  completeProfile,
 };

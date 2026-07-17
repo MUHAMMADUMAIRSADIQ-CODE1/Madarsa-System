@@ -148,16 +148,25 @@ class StudentService extends BaseService {
   }
 
   async getStudentStats() {
-    const [total, active, inactive, graduated, suspended, transferred] = await Promise.all([
+    const User = require('../models/User.model');
+    const { roles, USER_STATUS } = require('../constants');
+
+    const [total, active, inactive, graduated, suspended, transferred,
+      pendingUsers, activeUsers, rejectedUsers, blockedUsers] = await Promise.all([
       this.count({ isDeleted: false }),
       this.count({ status: 'active', isDeleted: false }),
       this.count({ status: 'inactive', isDeleted: false }),
       this.count({ status: 'graduated', isDeleted: false }),
       this.count({ status: 'suspended', isDeleted: false }),
       this.count({ status: 'transferred', isDeleted: false }),
+      User.countDocuments({ role: roles.STUDENT, status: USER_STATUS.PENDING }),
+      User.countDocuments({ role: roles.STUDENT, status: USER_STATUS.ACTIVE }),
+      User.countDocuments({ role: roles.STUDENT, status: USER_STATUS.REJECTED }),
+      User.countDocuments({ role: roles.STUDENT, status: USER_STATUS.BLOCKED }),
     ]);
 
-    return { total, active, inactive, graduated, suspended, transferred };
+    return { total, active, inactive, graduated, suspended, transferred,
+      pendingUsers, activeUsers, rejectedUsers, blockedUsers };
   }
 }
 

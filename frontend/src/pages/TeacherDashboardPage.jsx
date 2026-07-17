@@ -1,42 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import TeacherWelcomeSection from '../components/Dashboard/TeacherWelcomeSection';
 import TeacherTodaysClassesSection from '../components/Dashboard/TeacherTodaysClassesSection';
 import TeacherCoursesSection from '../components/Dashboard/TeacherCoursesSection';
 import TeacherStudentsSection from '../components/Dashboard/TeacherStudentsSection';
 import TeacherAssignmentsSection from '../components/Dashboard/TeacherAssignmentsSection';
+import TeacherScheduleSection from '../components/Dashboard/TeacherScheduleSection';
+import TeacherCourseMaterialsSection from '../components/Dashboard/TeacherCourseMaterialsSection';
+import TeacherResultsSection from '../components/Dashboard/TeacherResultsSection';
+import TeacherAnnouncementsSection from '../components/Dashboard/TeacherAnnouncementsSection';
+import TeacherMessagesSection from '../components/Dashboard/TeacherMessagesSection';
+import TeacherNotificationsSection from '../components/Dashboard/TeacherNotificationsSection';
 import { useAuth } from '../context/AuthContext';
 import { teacherDashboardData } from '../data/teacherDashboardData';
 import teacherPortalService from '../services/teacherPortalService';
+import teacherAcademicService from '../services/teacherAcademicService';
 import attendanceService from '../services/attendanceService';
-import { FiUsers, FiBook, FiFileText, FiCheckCircle, FiX } from 'react-icons/fi';
 import {
-  FiHome, FiBookOpen, FiVideo, FiClipboard, FiCalendar,
-  FiBarChart2, FiMail, FiBell, FiUser, FiSettings, FiLogOut
+  FiUsers, FiBook, FiBookOpen, FiFileText, FiCheckCircle, FiCalendar, FiAward,
+  FiMessageCircle, FiBarChart2, FiMail, FiBell, FiClock, FiArrowLeft, FiRefreshCw
 } from 'react-icons/fi';
-
-const teacherSidebarItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'home', section: 'main' },
-  { id: 'courses', label: 'My Courses', icon: 'book', section: 'main' },
-  { id: 'students', label: 'My Students', icon: 'users', section: 'main' },
-  { id: 'live-classes', label: 'Live Classes', icon: 'video', section: 'main' },
-  { id: 'assignments', label: 'Assignments', icon: 'tasks', section: 'main' },
-  { id: 'attendance', label: 'Attendance', icon: 'calendar', section: 'main' },
-  { id: 'results', label: 'Student Results', icon: 'chart', section: 'main' },
-  { id: 'messages', label: 'Messages', icon: 'mail', section: 'main', badge: 3 },
-  { id: 'schedule', label: 'Schedule', icon: 'calendar-alt', section: 'main' },
-  { id: 'announcements', label: 'Announcements', icon: 'bell', section: 'main' },
-  { id: 'notifications', label: 'Notifications', icon: 'notifications', section: 'main' },
-  { id: 'profile', label: 'Profile', icon: 'user', section: 'account' },
-  { id: 'settings', label: 'Settings', icon: 'settings', section: 'account' },
-];
 
 export default function TeacherDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profile, setProfile] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [courses, setCourses] = useState([]);
@@ -78,11 +66,9 @@ export default function TeacherDashboardPage() {
   const [emailSuccess, setEmailSuccess] = useState(null);
   const [emailError, setEmailError] = useState(null);
 
-  const activeSection = location.pathname.split('/').pop();
-
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
+  // Active section from route path
+  const section = location.pathname.split('/').pop();
+  const activeSection = section || 'dashboard';
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -157,6 +143,9 @@ export default function TeacherDashboardPage() {
     }
   }, []);
 
+  // Analytics state
+  const [analytics, setAnalytics] = useState(null);
+
   // Force re-login countdown after password/email change
   useEffect(() => {
     if (redirectCountdown === null) return;
@@ -178,6 +167,11 @@ export default function TeacherDashboardPage() {
       if (activeSection === 'courses') fetchCourses(profile._id);
       if (activeSection === 'students') fetchStudents(profile._id, studentPage);
       if (activeSection === 'attendance') fetchTeacherAttendance(profile._id, attendanceDate);
+      if (activeSection === 'dashboard') {
+        teacherAcademicService.getDashboardAnalytics(profile._id)
+          .then(res => setAnalytics(res?.data || res))
+          .catch(() => {});
+      }
     }
   }, [activeSection, profile?._id, studentPage, attendanceDate, fetchCourses, fetchStudents, fetchTeacherAttendance]);
 
@@ -280,233 +274,366 @@ export default function TeacherDashboardPage() {
     }
   };
 
-  const renderSection = () => {
-    switch (activeSection) {
-      case 'dashboard':
-        return (
-          <div className="space-y-8">
-            <TeacherWelcomeSection />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <TeacherTodaysClassesSection />
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+
+  // Course Detail View state
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [courseDetail, setCourseDetail] = useState(null);
+  const [courseDetailLoading, setCourseDetailLoading] = useState(false);
+  const [showCourseDetail, setShowCourseDetail] = useState(false);
+  const [showMaterials, setShowMaterials] = useState(false);
+
+  // ==================== SECTION RENDERERS ====================
+
+  const renderPlaceholder = (title, description, Icon) => (
+    <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="p-3 bg-primary/10 rounded-xl">
+          <Icon className="w-6 h-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-text-dark">{title}</h1>
+          <p className="text-text-light mt-1">This section is coming soon</p>
+        </div>
+      </div>
+      <div className="border-2 border-dashed border-border-light rounded-2xl p-12 text-center">
+        <Icon className="w-16 h-16 text-border-light mx-auto mb-4" />
+        <p className="text-text-light font-medium">{description}</p>
+        <p className="text-text-light text-sm mt-2">Stay tuned for updates</p>
+      </div>
+    </div>
+  );
+
+  const handleViewCourse = async (course) => {
+    setSelectedCourse(course);
+    setCourseDetailLoading(true);
+    setShowCourseDetail(true);
+    setShowMaterials(false);
+    try {
+      const teacherId = profile?._id || user?._id || user?.id;
+      if (!teacherId || !course._id) return;
+      const res = await teacherAcademicService.getCourseDetails(teacherId, course._id);
+      const responseData = res?.data || res;
+      setCourseDetail(responseData);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch course details');
+    } finally {
+      setCourseDetailLoading(false);
+    }
+  };
+
+  const renderCourseDetail = () => {
+    const course = selectedCourse;
+    const detail = courseDetail;
+
+    return (
+      <div className="space-y-8">
+        {/* Back Button */}
+        <button
+          onClick={() => { setShowCourseDetail(false); setSelectedCourse(null); setCourseDetail(null); }}
+          className="flex items-center gap-2 text-text-light hover:text-text-dark transition-colors"
+        >
+          <FiArrowLeft className="w-5 h-5" />
+          <span className="font-medium">Back to Courses</span>
+        </button>
+
+        {/* Course Info Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="font-heading text-3xl font-bold text-text-dark">
+                  {detail?.course?.title || course?.title}
+                </h1>
+                {detail?.course?.code && (
+                  <span className="px-2.5 py-1 bg-primary/10 text-primary rounded-lg text-xs font-mono font-bold">
+                    {detail.course.code}
+                  </span>
+                )}
               </div>
-              <div>
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="font-heading text-lg font-bold text-text-dark mb-6">Quick Stats</h3>
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Active Students', value: dashboardData?.totalStudents || '127', icon: FiUsers },
-                      { label: 'My Courses', value: dashboardData?.totalCourses || '4', icon: FiBook },
-                      { label: 'Pending Assignments', value: '15', icon: FiFileText },
-                      { label: 'Avg Attendance', value: '91%', icon: FiCheckCircle },
-                    ].map((stat, idx) => {
-                      const Icon = stat.icon;
-                      return (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-bg-light rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="p-2 bg-primary/10 text-primary rounded-lg"><Icon className="w-5 h-5" /></span>
-                            <span className="text-sm text-text-light">{stat.label}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-primary">{stat.value}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <TeacherCoursesSection />
-          </div>
-        );
-
-      case 'courses':
-        return <TeacherCoursesSection />;
-
-      case 'students':
-        return <TeacherStudentsSection />;
-
-      case 'assignments':
-        return <TeacherAssignmentsSection />;
-
-      case 'attendance':
-        return (
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                <div>
-                  <h1 className="font-heading text-3xl font-bold text-text-dark">Attendance</h1>
-                  <p className="text-text-light mt-1">
-                    {attendanceStats.total} records | {attendanceStats.percentage}% attendance rate
-                  </p>
-                </div>
-                <input
-                  type="date"
-                  value={attendanceDate}
-                  onChange={e => setAttendanceDate(e.target.value)}
-                  className="px-4 py-3 rounded-xl border border-border-light outline-none"
-                />
+              {detail?.course?.shortDescription && (
+                <p className="text-text-body mb-4">{detail.course.shortDescription}</p>
+              )}
+              {detail?.course?.fullDescription && (
+                <p className="text-sm text-text-light whitespace-pre-line mb-4">{detail.course.fullDescription}</p>
+              )}
+              <div className="flex flex-wrap gap-4 text-sm">
+                {detail?.course?.level && (
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium capitalize">{detail.course.level}</span>
+                )}
+                {detail?.course?.batch && (
+                  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-medium">Batch: {detail.course.batch}</span>
+                )}
+                {detail?.course?.section && (
+                  <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full font-medium">Section: {detail.course.section}</span>
+                )}
+                {detail?.course?.academicYear && (
+                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full font-medium">{detail.course.academicYear}</span>
+                )}
+                {detail?.course?.language && (
+                  <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full font-medium">{detail.course.language}</span>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                {[
-                  { label: 'Total', value: attendanceStats.total, color: 'text-primary bg-primary/10' },
-                  { label: 'Present', value: attendanceStats.present, color: 'text-green-700 bg-green-100' },
-                  { label: 'Absent', value: attendanceStats.absent, color: 'text-red-700 bg-red-100' },
-                  { label: 'Late', value: attendanceStats.late, color: 'text-yellow-700 bg-yellow-100' },
-                  { label: 'Excused', value: attendanceStats.excused, color: 'text-blue-700 bg-blue-100' },
-                ].map((card, idx) => (
-                  <div key={idx} className={`rounded-xl p-4 border ${card.color}`}>
-                    <p className="text-xs font-medium opacity-75">{card.label}</p>
-                    <p className="text-2xl font-bold mt-1">{card.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {attendanceRecords.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b-2 border-border-light">
-                      <tr>
-                        <th className="text-left p-3 font-semibold text-text-dark text-sm">Attendance ID</th>
-                        <th className="text-left p-3 font-semibold text-text-dark text-sm">Student</th>
-                        <th className="text-left p-3 font-semibold text-text-dark text-sm">Course</th>
-                        <th className="text-left p-3 font-semibold text-text-dark text-sm">Time</th>
-                        <th className="text-center p-3 font-semibold text-text-dark text-sm">Status</th>
-                        <th className="text-left p-3 font-semibold text-text-dark text-sm">Remarks</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-light">
-                      {attendanceRecords.map((record) => (
-                        <tr key={record._id} className="hover:bg-bg-light">
-                          <td className="p-3 font-mono text-xs text-primary font-semibold">{record.attendanceId || '-'}</td>
-                          <td className="p-3">
-                            <p className="font-semibold text-text-dark text-sm">{record.student?.studentName || 'N/A'}</p>
-                            <p className="text-xs text-text-light">{record.student?.studentId}</p>
-                          </td>
-                          <td className="p-3 text-sm text-text-body">{record.course?.title || 'N/A'}</td>
-                          <td className="p-3 text-sm text-text-body">{record.classTime || '-'}</td>
-                          <td className="p-3 text-center">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                              record.status === 'present' ? 'bg-green-100 text-green-800' :
-                              record.status === 'absent' ? 'bg-red-100 text-red-800' :
-                              record.status === 'late' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>{record.status}</span>
-                          </td>
-                          <td className="p-3 text-sm text-text-light">{record.remarks || '-'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-text-light">No attendance records found for this date</p>
+              {/* Schedule */}
+              {detail?.course?.schedule && (
+                <div className="mt-4 flex items-center gap-4 text-sm text-text-light">
+                  {detail.course.schedule.day && <span>Day: {detail.course.schedule.day}</span>}
+                  {detail.course.schedule.startTime && <span>Time: {detail.course.schedule.startTime}{detail.course.schedule.endTime ? ` - ${detail.course.schedule.endTime}` : ''}</span>}
+                  {detail.course.schedule.room && <span>Room: {detail.course.schedule.room}</span>}
                 </div>
               )}
+
+              <div className="mt-4 text-sm text-text-light">
+                <span>{detail?.totalStudents || 0} Students enrolled</span>
+                <span className="mx-3">|</span>
+                <span>Capacity: {detail?.course?.maxStudents || 'Unlimited'}</span>
+              </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-primary/20">
-              <h2 className="font-heading text-xl font-bold text-text-dark mb-6">Mark Attendance</h2>
-              <form onSubmit={handleMarkAttendance} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Student ID</label>
-                  <input type="text" value={attendanceFormData.student} onChange={e => setAttendanceFormData({ ...attendanceFormData, student: e.target.value })} required placeholder="MongoDB Student ID" className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Course ID</label>
-                  <input type="text" value={attendanceFormData.course} onChange={e => setAttendanceFormData({ ...attendanceFormData, course: e.target.value })} required placeholder="MongoDB Course ID" className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Status</label>
-                  <select value={attendanceFormData.status} onChange={e => setAttendanceFormData({ ...attendanceFormData, status: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
-                    <option value="present">Present</option>
-                    <option value="absent">Absent</option>
-                    <option value="late">Late</option>
-                    <option value="excused">Excused</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Date</label>
-                  <input type="date" value={attendanceFormData.classDate} onChange={e => setAttendanceFormData({ ...attendanceFormData, classDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Remarks</label>
-                  <input type="text" value={attendanceFormData.remarks} onChange={e => setAttendanceFormData({ ...attendanceFormData, remarks: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
-                </div>
-                <div className="md:col-span-3">
-                  <button type="submit" disabled={markingAttendance} className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">
-                    {markingAttendance ? 'Marking...' : 'Mark Attendance'}
-                  </button>
-                </div>
-              </form>
+            <div className="flex gap-3 flex-shrink-0">
+              <button
+                onClick={() => setShowMaterials(true)}
+                className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm whitespace-nowrap"
+              >
+                <FiBookOpen className="w-4 h-4 inline mr-1.5" />
+                Materials
+              </button>
             </div>
           </div>
-        );
+        </div>
 
-      case 'results':
-        return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Student Results</h1>
-            <div className="space-y-6">
-              {teacherDashboardData.results.map((result) => (
-                <div key={result.id} className="border-2 border-border-light rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="font-semibold text-lg text-text-dark">{result.student}</p>
-                      <p className="text-sm text-text-light">{result.course}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-3xl font-bold text-primary">{result.average.toFixed(1)}</p>
-                      <p className="text-xs text-text-light">Average Score</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {result.assessments.map((assessment, idx) => (
-                      <div key={idx} className="flex items-center justify-between">
-                        <span className="text-sm text-text-body">{assessment.name}</span>
-                        <span className="text-sm font-semibold text-primary">
-                          {assessment.score}/{assessment.total}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Attendance Records', value: detail?.attendanceSummary?.total || 0, color: 'text-primary bg-primary/10' },
+            { label: 'Present', value: detail?.attendanceSummary?.present || 0, color: 'text-green-700 bg-green-100' },
+            { label: 'Absent', value: detail?.attendanceSummary?.absent || 0, color: 'text-red-700 bg-red-100' },
+            { label: 'Attendance Rate', value: detail?.attendanceSummary?.total > 0 ? `${Math.round(((detail.attendanceSummary.present + detail.attendanceSummary.late) / detail.attendanceSummary.total) * 100)}%` : '0%', color: 'text-blue-700 bg-blue-100' },
+          ].map((stat, idx) => (
+            <div key={idx} className={`rounded-xl p-4 ${stat.color}`}>
+              <p className="text-xs font-medium opacity-75">{stat.label}</p>
+              <p className="text-2xl font-bold mt-1">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Students Table */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <h2 className="font-heading text-xl font-bold text-text-dark mb-4">
+            Enrolled Students ({detail?.students?.length || 0})
+          </h2>
+          {detail?.students?.length > 0 ? (
+            <div className="overflow-x-auto -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8">
+              <table className="w-full min-w-[500px]">
+                <thead className="border-b-2 border-border-light">
+                  <tr>
+                    <th className="text-left p-3 font-semibold text-text-dark text-sm">Name</th>
+                    <th className="text-left p-3 font-semibold text-text-dark text-sm">Student ID</th>
+                    <th className="text-left p-3 font-semibold text-text-dark text-sm hidden sm:table-cell">Email</th>
+                    <th className="text-center p-3 font-semibold text-text-dark text-sm">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-light">
+                  {detail.students.map((student) => (
+                    <tr key={student._id} className="hover:bg-bg-light transition-colors">
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                            {student.studentName?.charAt(0) || '?'}
+                          </div>
+                          <p className="font-semibold text-text-dark text-sm">{student.studentName}</p>
+                        </div>
+                      </td>
+                      <td className="p-3 text-sm text-text-body font-mono">{student.studentId || '-'}</td>
+                      <td className="p-3 text-sm text-text-body hidden sm:table-cell">{student.email || '-'}</td>
+                      <td className="p-3 text-center">
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          student.status === 'active' ? 'bg-green-100 text-green-800' :
+                          student.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {student.status || 'active'}
                         </span>
-                      </div>
-                    ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-text-light text-center py-8">No students enrolled yet</p>
+          )}
+        </div>
+
+        {/* Assignments Summary */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+          <h2 className="font-heading text-xl font-bold text-text-dark mb-4">
+            Assignments ({detail?.assignments?.length || 0})
+          </h2>
+          {detail?.assignments?.length > 0 ? (
+            <div className="space-y-3">
+              {detail.assignments.map((assignment) => (
+                <div key={assignment._id} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
+                  <div>
+                    <p className="font-semibold text-text-dark text-sm">{assignment.title}</p>
+                    <p className="text-xs text-text-light mt-0.5">
+                      Due: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No date'}
+                      <span className="mx-2">|</span>
+                      {assignment.totalSubmissions || 0} submissions
+                    </p>
                   </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${assignment.isPublished ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    {assignment.isPublished ? 'Published' : 'Draft'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-text-light text-center py-8">No assignments for this course</p>
+          )}
+        </div>
+
+        {/* Live Classes */}
+        {detail?.liveClasses?.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+            <h2 className="font-heading text-xl font-bold text-text-dark mb-4">Live Classes</h2>
+            <div className="space-y-3">
+              {detail.liveClasses.map((cls) => (
+                <div key={cls._id} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
+                  <div>
+                    <p className="font-semibold text-text-dark text-sm">{cls.title}</p>
+                    <p className="text-xs text-text-light mt-0.5">
+                      {cls.scheduledAt ? new Date(cls.scheduledAt).toLocaleString() : ''}
+                      {cls.duration && ` (${cls.duration} min)`}
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    cls.status === 'live' ? 'bg-green-100 text-green-800' :
+                    cls.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                    cls.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {cls.status}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-        );
+        )}
+      </div>
+    );
+  };
 
-      case 'live-classes':
-      case 'messages':
-      case 'schedule':
-      case 'announcements':
-        return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">
-              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
-            </h1>
-            <div className="text-center py-12">
-              <p className="text-text-light">Coming soon...</p>
+  const renderDashboard = () => {
+    const a = analytics || {};
+    const statItems = [
+      { label: 'My Courses', value: a.totalCourses || dashboardData?.totalCourses || '-', icon: FiBook, color: 'text-blue-600 bg-blue-100' },
+      { label: 'Students', value: a.totalStudents || '-', icon: FiUsers, color: 'text-green-600 bg-green-100' },
+      { label: 'Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle, color: 'text-purple-600 bg-purple-100' },
+      { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText, color: 'text-orange-600 bg-orange-100' },
+      { label: 'Announcements', value: a.totalAnnouncements || '-', icon: FiBell, color: 'text-red-600 bg-red-100' },
+      { label: 'Upcoming', value: a.upcomingClasses || '0', icon: FiCalendar, color: 'text-indigo-600 bg-indigo-100' },
+    ];
+
+    return (
+    <div className="space-y-8">
+      <TeacherWelcomeSection />
+
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {statItems.map((stat, idx) => {
+          const Icon = stat.icon;
+          return (
+            <div key={idx} className={`rounded-xl p-4 ${stat.color}`}>
+              <Icon className="w-5 h-5 mb-2 opacity-80" />
+              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-xs font-medium opacity-75 mt-0.5">{stat.label}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <TeacherTodaysClassesSection />
+        </div>
+        <div>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="font-heading text-lg font-bold text-text-dark mb-6">Quick Stats</h3>
+            <div className="space-y-4">
+              {[
+                { label: 'Active Students', value: a.totalStudents || dashboardData?.totalStudents || '-', icon: FiUsers },
+                { label: 'My Courses', value: a.totalCourses || dashboardData?.totalCourses || '-', icon: FiBook },
+                { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText },
+                { label: 'Avg Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle },
+              ].map((stat, idx) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-bg-light rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <span className="p-2 bg-primary/10 text-primary rounded-lg"><Icon className="w-5 h-5" /></span>
+                      <span className="text-sm text-text-light">{stat.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-primary">{stat.value}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        );
 
-      case 'notifications':
-        return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Notifications</h1>
-            <div className="space-y-4">
+          {/* Quick Actions */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+            <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <button
+                onClick={() => navigateTo('/teacher/courses')}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
+              >
+                <FiBook className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-text-body">View My Courses</span>
+              </button>
+              <button
+                onClick={() => navigateTo('/teacher/attendance')}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
+              >
+                <FiCheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-sm font-medium text-text-body">Take Attendance</span>
+              </button>
+              <button
+                onClick={() => navigateTo('/teacher/schedule')}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
+              >
+                <FiCalendar className="w-5 h-5 text-blue-500" />
+                <span className="text-sm font-medium text-text-body">View Schedule</span>
+              </button>
+              <button
+                onClick={() => navigateTo('/teacher/messages')}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
+              >
+                <FiMail className="w-5 h-5 text-orange-500" />
+                <span className="text-sm font-medium text-text-body">Open Messages</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+            <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Recent Activity</h3>
+            <div className="space-y-3">
               {teacherDashboardData.dashboard.recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-4 p-4 rounded-xl border border-border-light hover:border-primary transition-all">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
+                <div
+                  key={activity.id}
+                  className="flex items-start gap-3 p-3 rounded-xl border border-border-light hover:border-primary transition-all"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FiClock className="w-4 h-4 text-primary" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm text-text-body">{activity.text}</p>
                     <p className="text-xs text-text-light mt-1">{activity.time}</p>
                   </div>
@@ -514,337 +641,378 @@ export default function TeacherDashboardPage() {
               ))}
             </div>
           </div>
-        );
 
-      case 'profile':
-        return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">My Profile</h1>
-
-            {saveMessage && (
-              <div className={`mb-6 p-4 rounded-xl text-sm font-semibold ${
-                saveMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-                {saveMessage.text}
-              </div>
-            )}
-
-            <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
-              <div className="flex items-center gap-6 mb-8">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-2xl font-bold">
-                  {profile?.fullName?.charAt(0) || 'T'}
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-text-dark">{profile?.fullName || 'Teacher'}</h2>
-                  <p className="text-sm text-text-light">{profile?.email}</p>
-                  <p className="text-sm text-text-light mt-1">{profile?.qualification}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Phone</label>
-                  <input
-                    type="text"
-                    value={profileForm.phone || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp</label>
-                  <input
-                    type="text"
-                    value={profileForm.whatsapp || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Country</label>
-                  <input
-                    type="text"
-                    value={profileForm.country || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-text-dark mb-2">City</label>
-                  <input
-                    type="text"
-                    value={profileForm.city || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Short Bio</label>
-                  <textarea
-                    rows={3}
-                    value={profileForm.shortBio || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, shortBio: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-text-dark mb-2">Biography</label>
-                  <textarea
-                    rows={5}
-                    value={profileForm.biography || ''}
-                    onChange={(e) => setProfileForm({ ...profileForm, biography: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 pt-4 border-t border-border-light">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
-                {saveMessage && (
-                  <span className={`text-sm font-semibold ${saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                    {saveMessage.text}
-                  </span>
-                )}
-              </div>
-            </form>
-          </div>
-        );
-
-      case 'settings':
-        return (
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-              <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Settings</h1>
-              <div className="max-w-2xl">
-                {/* Change Password */}
-                <div className="mb-8">
-                  <h2 className="text-lg font-bold text-text-dark mb-4">Change Password</h2>
-                  {passwordSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{passwordSuccess}</div>}
-                  {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{passwordError}</div>}
-                  <form onSubmit={handlePasswordSubmit} className="space-y-3 max-w-md">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
-                      <input type="password" name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} required className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">New Password</label>
-                      <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Confirm New Password</label>
-                      <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <button type="submit" disabled={passwordSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
-                      {passwordSubmitting ? 'Updating...' : 'Update Password'}
-                    </button>
-                  </form>
-                </div>
-
-                {/* Change Email */}
-                <div className="mb-8 border-t border-border-light pt-8">
-                  <h2 className="text-lg font-bold text-text-dark mb-4">Change Email</h2>
-                  <p className="text-sm text-text-light mb-4">Current email: <strong>{user?.email}</strong></p>
-                  {emailSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{emailSuccess}</div>}
-                  {emailError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{emailError}</div>}
-                  <form onSubmit={handleEmailSubmit} className="space-y-3 max-w-md">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">New Email Address</label>
-                      <input type="email" name="newEmail" value={emailForm.newEmail} onChange={handleEmailChange} required placeholder="new@email.com" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
-                      <input type="password" name="password" value={emailForm.password} onChange={handleEmailChange} required placeholder="Enter password to confirm" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <button type="submit" disabled={emailSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
-                      {emailSubmitting ? 'Updating...' : 'Change Email'}
-                    </button>
-                  </form>
-                </div>
-
-                {/* Notifications */}
-                <div className="border-t border-border-light pt-8">
-                  <h2 className="text-lg font-bold text-text-dark mb-4">Notifications</h2>
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Email notifications for new assignments', enabled: true },
-                      { label: 'Email notifications for student submissions', enabled: true },
-                      { label: 'SMS notifications for urgent messages', enabled: false },
-                      { label: 'Weekly summary report', enabled: true },
-                    ].map((setting, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-border-light">
-                        <span className="text-sm text-text-body">{setting.label}</span>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" defaultChecked={setting.enabled} className="sr-only peer" />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
-                        </label>
-                      </div>
-                    ))}
+          {/* Recent Notifications */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-lg font-bold text-text-dark">Recent Notifications</h3>
+              <button
+                onClick={() => navigateTo('/teacher/announcements')}
+                className="text-primary text-sm font-semibold hover:underline"
+              >
+                View All
+              </button>
+            </div>
+            <div className="space-y-3">
+              {teacherDashboardData.dashboard.recentActivity.slice(0, 3).map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl border border-border-light">
+                  <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-text-body">{activity.text}</p>
+                    <p className="text-xs text-text-light mt-0.5">{activity.time}</p>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
-        );
-
-      default:
-        return null;
-    }
+        </div>
+      </div>
+      <TeacherCoursesSection />
+    </div>
+  );
   };
 
-  return (
-    <div className="flex h-screen bg-bg-light overflow-hidden">
-      <TeacherSidebar
-        activeItem={activeSection}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        items={teacherSidebarItems}
-      />
+  const renderAttendance = () => (
+    <div className="space-y-8">
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-text-dark">Attendance</h1>
+            <p className="text-text-light mt-1">
+              {attendanceStats.total} records | {attendanceStats.percentage}% attendance rate
+            </p>
+          </div>
+          <input
+            type="date"
+            value={attendanceDate}
+            onChange={e => setAttendanceDate(e.target.value)}
+            className="px-4 py-3 rounded-xl border border-border-light outline-none"
+          />
+        </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <DashboardNavbar
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          {[
+            { label: 'Total', value: attendanceStats.total, color: 'text-primary bg-primary/10' },
+            { label: 'Present', value: attendanceStats.present, color: 'text-green-700 bg-green-100' },
+            { label: 'Absent', value: attendanceStats.absent, color: 'text-red-700 bg-red-100' },
+            { label: 'Late', value: attendanceStats.late, color: 'text-yellow-700 bg-yellow-100' },
+            { label: 'Excused', value: attendanceStats.excused, color: 'text-blue-700 bg-blue-100' },
+          ].map((card, idx) => (
+            <div key={idx} className={`rounded-xl p-4 border ${card.color}`}>
+              <p className="text-xs font-medium opacity-75">{card.label}</p>
+              <p className="text-2xl font-bold mt-1">{card.value}</p>
+            </div>
+          ))}
+        </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
-            {renderSection()}
+        {attendanceRecords.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="border-b-2 border-border-light">
+                <tr>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Attendance ID</th>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Student</th>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Course</th>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Time</th>
+                  <th className="text-center p-3 font-semibold text-text-dark text-sm">Status</th>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Remarks</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {attendanceRecords.map((record) => (
+                  <tr key={record._id} className="hover:bg-bg-light">
+                    <td className="p-3 font-mono text-xs text-primary font-semibold">{record.attendanceId || '-'}</td>
+                    <td className="p-3">
+                      <p className="font-semibold text-text-dark text-sm">{record.student?.studentName || 'N/A'}</p>
+                      <p className="text-xs text-text-light">{record.student?.studentId}</p>
+                    </td>
+                    <td className="p-3 text-sm text-text-body">{record.course?.title || 'N/A'}</td>
+                    <td className="p-3 text-sm text-text-body">{record.classTime || '-'}</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                        record.status === 'present' ? 'bg-green-100 text-green-800' :
+                        record.status === 'absent' ? 'bg-red-100 text-red-800' :
+                        record.status === 'late' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>{record.status}</span>
+                    </td>
+                    <td className="p-3 text-sm text-text-light">{record.remarks || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-text-light">No attendance records found for this date</p>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border-2 border-primary/20">
+        <h2 className="font-heading text-xl font-bold text-text-dark mb-6">Mark Attendance</h2>
+        <form onSubmit={handleMarkAttendance} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Student ID</label>
+            <input type="text" value={attendanceFormData.student} onChange={e => setAttendanceFormData({ ...attendanceFormData, student: e.target.value })} required placeholder="MongoDB Student ID" className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Course ID</label>
+            <input type="text" value={attendanceFormData.course} onChange={e => setAttendanceFormData({ ...attendanceFormData, course: e.target.value })} required placeholder="MongoDB Course ID" className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Status</label>
+            <select value={attendanceFormData.status} onChange={e => setAttendanceFormData({ ...attendanceFormData, status: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none">
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="late">Late</option>
+              <option value="excused">Excused</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Date</label>
+            <input type="date" value={attendanceFormData.classDate} onChange={e => setAttendanceFormData({ ...attendanceFormData, classDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-text-dark mb-2">Remarks</label>
+            <input type="text" value={attendanceFormData.remarks} onChange={e => setAttendanceFormData({ ...attendanceFormData, remarks: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" />
+          </div>
+          <div className="md:col-span-3">
+            <button type="submit" disabled={markingAttendance} className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">
+              {markingAttendance ? 'Marking...' : 'Mark Attendance'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const renderProfile = () => (
+    <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+      <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">My Profile</h1>
+
+      {saveMessage && (
+        <div className={`mb-6 p-4 rounded-xl text-sm font-semibold ${
+          saveMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+        }`}>
+          {saveMessage.text}
+        </div>
+      )}
+
+      <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
+        <div className="flex items-center gap-6 mb-8">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-2xl font-bold">
+            {profile?.fullName?.charAt(0) || 'T'}
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-text-dark">{profile?.fullName || 'Teacher'}</h2>
+            <p className="text-sm text-text-light">{profile?.email}</p>
+            <p className="text-sm text-text-light mt-1">{profile?.qualification}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Phone</label>
+            <input
+              type="text"
+              value={profileForm.phone || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp</label>
+            <input
+              type="text"
+              value={profileForm.whatsapp || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">Country</label>
+            <input
+              type="text"
+              value={profileForm.country || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-text-dark mb-2">City</label>
+            <input
+              type="text"
+              value={profileForm.city || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-text-dark mb-2">Short Bio</label>
+            <textarea
+              rows={3}
+              value={profileForm.shortBio || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, shortBio: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-text-dark mb-2">Biography</label>
+            <textarea
+              rows={5}
+              value={profileForm.biography || ''}
+              onChange={(e) => setProfileForm({ ...profileForm, biography: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 pt-4 border-t border-border-light">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          {saveMessage && (
+            <span className={`text-sm font-semibold ${saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+              {saveMessage.text}
+            </span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+
+  const renderSettings = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">Settings</h1>
+        <div className="max-w-2xl">
+          {/* Change Password */}
+          <div className="mb-8">
+            <h2 className="text-lg font-bold text-text-dark mb-4">Change Password</h2>
+            {passwordSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{passwordSuccess}</div>}
+            {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{passwordError}</div>}
+            <form onSubmit={handlePasswordSubmit} className="space-y-3 max-w-md">
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
+                <input type="password" name="currentPassword" value={passwordForm.currentPassword} onChange={handlePasswordChange} required className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">New Password</label>
+                <input type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Confirm New Password</label>
+                <input type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange} required minLength={8} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+              <button type="submit" disabled={passwordSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                {passwordSubmitting ? 'Updating...' : 'Update Password'}
+              </button>
+            </form>
+          </div>
+
+          {/* Change Email */}
+          <div className="mb-8 border-t border-border-light pt-8">
+            <h2 className="text-lg font-bold text-text-dark mb-4">Change Email</h2>
+            <p className="text-sm text-text-light mb-4">Current email: <strong>{user?.email}</strong></p>
+            {emailSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{emailSuccess}</div>}
+            {emailError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{emailError}</div>}
+            <form onSubmit={handleEmailSubmit} className="space-y-3 max-w-md">
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">New Email Address</label>
+                <input type="email" name="newEmail" value={emailForm.newEmail} onChange={handleEmailChange} required placeholder="new@email.com" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
+                <input type="password" name="password" value={emailForm.password} onChange={handleEmailChange} required placeholder="Enter password to confirm" className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+              </div>
+              <button type="submit" disabled={emailSubmitting} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors text-sm">
+                {emailSubmitting ? 'Updating...' : 'Change Email'}
+              </button>
+            </form>
+          </div>
+
+          {/* Notifications */}
+          <div className="border-t border-border-light pt-8">
+            <h2 className="text-lg font-bold text-text-dark mb-4">Notifications</h2>
+            <div className="space-y-4">
+              {[
+                { label: 'Email notifications for new assignments', enabled: true },
+                { label: 'Email notifications for student submissions', enabled: true },
+                { label: 'SMS notifications for urgent messages', enabled: false },
+                { label: 'Weekly summary report', enabled: true },
+              ].map((setting, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 rounded-xl border border-border-light">
+                  <span className="text-sm text-text-body">{setting.label}</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" defaultChecked={setting.enabled} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary" />
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
 
-function TeacherSidebar({ activeItem, isOpen, onClose, items }) {
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  // ==================== MAIN RENDER ====================
 
-  const iconComponents = {
-    home: <FiHome className="w-5 h-5" />,
-    book: <FiBookOpen className="w-5 h-5" />,
-    users: <FiUsers className="w-5 h-5" />,
-    video: <FiVideo className="w-5 h-5" />,
-    tasks: <FiClipboard className="w-5 h-5" />,
-    calendar: <FiCalendar className="w-5 h-5" />,
-    chart: <FiBarChart2 className="w-5 h-5" />,
-    mail: <FiMail className="w-5 h-5" />,
-    bell: <FiBell className="w-5 h-5" />,
-    'calendar-alt': <FiCalendar className="w-5 h-5" />,
-    user: <FiUser className="w-5 h-5" />,
-    settings: <FiSettings className="w-5 h-5" />,
-    logout: <FiLogOut className="w-5 h-5" />,
-    notifications: <FiBell className="w-5 h-5" />,
-  };
-
-  const mainItems = items.filter(item => item.section === 'main');
-  const accountItems = items.filter(item => item.section === 'account');
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
-  return (
-    <>
-      <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm lg:hidden z-30 transition-opacity ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
-        onClick={onClose}
+  // Handle course detail and materials sub-views
+  if (showMaterials && selectedCourse) {
+    return (
+      <TeacherCourseMaterialsSection
+        courseId={selectedCourse._id}
+        courseName={selectedCourse.title}
+        onBack={() => setShowMaterials(false)}
       />
+    );
+  }
 
-      <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-white shadow-xl overflow-y-auto transition-transform duration-300 z-40 lg:z-0 lg:relative lg:shadow-lg ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
-        <div className="sticky top-0 bg-white p-6 border-b border-border-light z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h2 className="font-heading font-bold text-text-dark">Menu</h2>
-              <p className="text-xs text-text-light">Teacher Portal</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 hover:bg-primary-light rounded-lg transition-colors"
-            >
-              <FiX className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+  if (showCourseDetail && selectedCourse) {
+    return renderCourseDetail();
+  }
 
-        <nav className="p-4 space-y-2">
-          {mainItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => {
-                navigate(`/teacher/${item.id}`);
-                onClose();
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                activeItem === item.id
-                  ? 'bg-primary text-white shadow-lg'
-                  : 'text-text-body hover:bg-primary-light hover:text-primary'
-              }`}
-            >
-              {iconComponents[item.icon]}
-              <span className="font-medium text-sm">{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto px-2 py-1 bg-red-500 text-white text-xs rounded-full font-semibold">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          ))}
+  switch (activeSection) {
+    case 'dashboard':
+      return renderDashboard();
 
-          <div className="my-4 border-t border-border-light" />
+    case 'courses':
+      return <TeacherCoursesSection onViewCourse={handleViewCourse} />;
 
-          <p className="px-4 py-2 text-xs font-semibold text-text-light uppercase tracking-wider">Account</p>
-          {accountItems.map(item => (
-            <button
-              key={item.id}
-              onClick={() => {
-                navigate(`/teacher/${item.id}`);
-                onClose();
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                activeItem === item.id
-                  ? 'bg-primary text-white'
-                  : 'text-text-body hover:bg-primary-light hover:text-primary'
-              }`}
-            >
-              {iconComponents[item.icon]}
-              <span className="font-medium text-sm">{item.label}</span>
-            </button>
-          ))}
+    case 'students':
+      return <TeacherStudentsSection />;
 
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 mt-4 border-t border-border-light pt-4"
-          >
-            {iconComponents.logout}
-            <span className="font-medium text-sm">Logout</span>
-          </button>
-        </nav>
+    case 'assignments':
+      return <TeacherAssignmentsSection />;
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border-light bg-white">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || 'T'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-text-dark truncate">{user?.name}</p>
-              <p className="text-xs text-text-light truncate">Teacher</p>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </>
-  );
+    case 'attendance':
+      return renderAttendance();
+
+    case 'schedule':
+      return <TeacherScheduleSection />;
+
+    case 'messages':
+      return <TeacherMessagesSection />;
+
+    case 'announcements':
+      return <TeacherAnnouncementsSection />;
+
+    case 'results':
+      return <TeacherResultsSection />;
+
+    case 'profile':
+      return renderProfile();
+
+    case 'settings':
+      return renderSettings();
+
+    default:
+      return renderDashboard();
+  }
 }

@@ -151,6 +151,25 @@ const updateCourseRules = [
     .trim()
     .isURL()
     .withMessage('Intro video URL must be a valid URL'),
+  body('seoTitle')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('SEO title must not exceed 200 characters'),
+  body('seoDescription')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('SEO description must not exceed 500 characters'),
+  body('seoKeywords')
+    .optional()
+    .isArray()
+    .withMessage('SEO keywords must be an array'),
+  body('seoKeywords.*')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Each keyword must not exceed 50 characters'),
 ];
 
 const idParamRules = [

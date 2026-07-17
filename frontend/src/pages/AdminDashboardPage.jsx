@@ -16,6 +16,7 @@ import AdminTeacherManagementSection from '../components/Teachers/TeacherManagem
 import AdminAdmissionManagementSection from '../components/Admissions/AdmissionManagement';
 import AdminStudentManagementSection from '../components/Students/StudentManagement';
 import AdminAttendanceSection from '../components/Dashboard/AdminAttendanceSection';
+import AdminProfileVerificationSection from '../components/Dashboard/AdminProfileVerificationSection';
 import { useAuth } from '../context/AuthContext';
 
 const adminSidebarItems = [
@@ -32,6 +33,7 @@ const adminSidebarItems = [
   { id: 'gallery', label: 'Gallery', icon: 'image', section: 'main' },
   { id: 'news', label: 'News & Events', icon: 'newspaper', section: 'main' },
   { id: 'users-roles', label: 'Users & Roles', icon: 'shield', section: 'main' },
+  { id: 'profile-verifications', label: 'Profile Verifications', icon: 'shield', section: 'main' },
   { id: 'website-settings', label: 'Website Settings', icon: 'settings', section: 'main' },
   { id: 'footer', label: 'Footer', icon: 'file', section: 'main' },
   { id: 'settings', label: 'Account Settings', icon: 'settings', section: 'account' },
@@ -250,6 +252,9 @@ export default function AdminDashboardPage() {
 
       case 'users-roles':
         return <AdminUserManagementSection />;
+
+      case 'profile-verifications':
+        return <AdminProfileVerificationSection />;
       
       case 'profile':
         return (

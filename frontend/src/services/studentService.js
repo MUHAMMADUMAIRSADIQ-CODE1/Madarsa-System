@@ -8,23 +8,26 @@ export const studentService = {
 
   getStudentById: (id) => api.get(`/admin/students/${id}`),
 
-  createStudent: (data) => api.post('/admin/students', data),
-
   updateStudent: (id, data) => api.put(`/admin/students/${id}`, data),
 
   deleteStudent: (id) => api.delete(`/admin/students/${id}`),
 
   restoreStudent: (id) => api.patch(`/admin/students/${id}/restore`),
 
-  activateStudent: (id) => api.patch(`/admin/students/${id}/activate`),
-
-  deactivateStudent: (id) => api.patch(`/admin/students/${id}/deactivate`),
-
   getStudentStats: () => api.get('/admin/students/stats'),
 
   enrollCourse: (id, courseId) => api.post(`/admin/students/${id}/enroll`, { courseId }),
 
   getEnrolledCourses: (id) => api.get(`/admin/students/${id}/courses`),
+
+  // User-level admin actions (block/unblock/activate/deactivate)
+  blockUser: (userId, reason) => api.patch(`/admin/block-user/${userId}`, { reason }),
+
+  unblockUser: (userId) => api.patch(`/admin/unblock-user/${userId}`),
+
+  activateUser: (userId) => api.patch(`/admin/activate-user/${userId}`),
+
+  deactivateUser: (userId, reason) => api.patch(`/admin/deactivate-user/${userId}`, { reason }),
 };
 
 export default studentService;

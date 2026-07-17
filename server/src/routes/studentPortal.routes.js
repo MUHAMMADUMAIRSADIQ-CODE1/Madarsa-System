@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const studentPortalController = require('../controllers/studentPortal.controller');
 const attendanceController = require('../controllers/attendance.controller');
-const { authenticate, isStudent } = require('../middlewares/auth');
+const { authenticate, isStudent, requireProfileComplete } = require('../middlewares/auth');
 const validate = require('../middlewares/validate');
 const { studentPortalValidator } = require('../validators');
 
@@ -10,8 +10,9 @@ const router = Router();
 router.use(authenticate);
 router.use(isStudent);
 
+// Profile completion check on all routes except profile data endpoints
 router.get('/profile', studentPortalController.getProfile);
-router.get('/dashboard/:id', studentPortalController.getDashboard);
+router.get('/dashboard/:id', requireProfileComplete, studentPortalController.getDashboard);
 
 router.get(
   '/profile/:id',

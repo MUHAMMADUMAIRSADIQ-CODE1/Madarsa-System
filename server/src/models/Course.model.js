@@ -81,6 +81,33 @@ const courseSchema = createBaseSchema(
       type: Boolean,
       default: false,
     },
+    code: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+      index: true,
+    },
+    batch: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    section: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    academicYear: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+    },
+    schedule: {
+      day: { type: String, trim: true },
+      startTime: { type: String, trim: true },
+      endTime: { type: String, trim: true },
+      room: { type: String, trim: true },
+    },
     maxStudents: {
       type: Number,
       default: 50,
@@ -91,6 +118,15 @@ const courseSchema = createBaseSchema(
       default: 0,
       min: 0,
     },
+    materials: [{
+      title: { type: String, trim: true, required: true },
+      description: { type: String, trim: true },
+      fileUrl: { type: String, required: true },
+      fileType: { type: String, enum: ['pdf', 'document', 'image', 'video', 'audio', 'other'], default: 'document' },
+      fileSize: { type: Number, default: 0 },
+      uploadedAt: { type: Date, default: Date.now },
+      uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    }],
     status: {
       type: String,
       enum: ['draft', 'published', 'archived'],

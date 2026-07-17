@@ -22,6 +22,12 @@ const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('./pages/Auth/SignupPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/Auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/Auth/ResetPasswordPage'));
+const StudentProfileComplete = lazy(() => import('./pages/Auth/StudentProfileComplete'));
+const TeacherProfileComplete = lazy(() => import('./pages/Auth/TeacherProfileComplete'));
+const PendingApprovalPage = lazy(() => import('./pages/Auth/PendingApprovalPage'));
+const RegistrationRejectedPage = lazy(() => import('./pages/Auth/RegistrationRejectedPage'));
+const ProfileUnderReviewPage = lazy(() => import('./pages/Auth/ProfileUnderReviewPage'));
+const AccountBlockedPage = lazy(() => import('./pages/Auth/AccountBlockedPage'));
 const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
 const TeacherDashboardPage = lazy(() => import('./pages/TeacherDashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
@@ -50,6 +56,29 @@ export default function App() {
     <Suspense fallback={<PageLoader />}>
       <ScrollToTop />
       <Routes>
+        {/* Teacher Dashboard Routes - must come BEFORE PublicLayout to prevent /teacher/:slug conflict */}
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<TeacherDashboardPage />} />
+          <Route path="courses" element={<TeacherDashboardPage />} />
+          <Route path="students" element={<TeacherDashboardPage />} />
+          <Route path="assignments" element={<TeacherDashboardPage />} />
+          <Route path="attendance" element={<TeacherDashboardPage />} />
+          <Route path="schedule" element={<TeacherDashboardPage />} />
+          <Route path="results" element={<TeacherDashboardPage />} />
+          <Route path="messages" element={<TeacherDashboardPage />} />
+          <Route path="announcements" element={<TeacherDashboardPage />} />
+          <Route path="profile" element={<TeacherDashboardPage />} />
+          <Route path="settings" element={<TeacherDashboardPage />} />
+        </Route>
+
         {/* Public Routes */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
@@ -70,6 +99,30 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
 
+        {/* Status Pages */}
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
+        <Route path="/registration-rejected" element={<RegistrationRejectedPage />} />
+        <Route path="/profile-under-review" element={<ProfileUnderReviewPage />} />
+        <Route path="/account-blocked" element={<AccountBlockedPage />} />
+
+        {/* Profile Completion Routes (authenticated but no profile completion required) */}
+        <Route
+          path="/student/complete-profile"
+          element={
+            <ProtectedRoute allowedRoles={['student']} requireProfileComplete={false}>
+              <StudentProfileComplete />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/complete-profile"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']} requireProfileComplete={false}>
+              <TeacherProfileComplete />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Student Routes */}
         <Route
           path="/student"
@@ -81,19 +134,6 @@ export default function App() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path=":section" element={<StudentDashboardPage />} />
-        </Route>
-
-        {/* Teacher Routes */}
-        <Route
-          path="/teacher"
-          element={
-            <ProtectedRoute allowedRoles={['teacher']}>
-              <TeacherLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path=":section" element={<TeacherDashboardPage />} />
         </Route>
 
         {/* Admin Routes */}

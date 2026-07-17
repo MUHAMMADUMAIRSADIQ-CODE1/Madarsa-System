@@ -330,10 +330,10 @@ export default function StudentDashboardPage() {
               </div>
               <div className="relative z-10 flex items-center gap-6">
                 <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-3xl font-bold">
-                  {user?.name?.charAt(0) || 'S'}
+                  {(user?.fullName || user?.name || 'S').charAt(0)}
                 </div>
                 <div>
-                  <h1 className="font-heading text-3xl font-bold">{user?.name}</h1>
+                  <h1 className="font-heading text-3xl font-bold">{user?.fullName || user?.name}</h1>
                   <p className="text-green-100 opacity-90 mt-1">{user?.email}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-semibold">Student</span>

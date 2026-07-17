@@ -30,6 +30,8 @@ export default function DashboardNavbar({ onMenuToggle }) {
       profile: 'My Profile',
       settings: role === 'admin' ? 'Account Settings' : 'Settings',
       students: role === 'teacher' ? 'My Students' : 'Students',
+      schedule: 'Schedule',
+      announcements: 'Announcements',
       'content-management': 'Website Content',
       'users-roles': 'Users & Roles',
       admissions: 'Admissions',
@@ -68,7 +70,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
           {/* Page Title */}
           <div>
             <h1 className="font-heading text-xl font-bold text-text-dark">{getPageTitle()}</h1>
-            <p className="text-xs text-text-light hidden sm:block">Welcome back, {user?.name?.split(' ')[0]}</p>
+            <p className="text-xs text-text-light hidden sm:block">Welcome back, {(user?.fullName || user?.name || 'User').split(' ')[0]}</p>
           </div>
         </div>
 
@@ -138,7 +140,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
               className="flex items-center gap-2 p-2 hover:bg-primary-light rounded-lg transition-colors"
             >
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold text-sm">
-                {user?.name?.charAt(0) || 'S'}
+                {(user?.fullName || user?.name || 'S').charAt(0)}
               </div>
               <svg className="w-4 h-4 text-text-light hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -152,7 +154,7 @@ export default function DashboardNavbar({ onMenuToggle }) {
               }`}
             >
               <div className="p-4 border-b border-border-light bg-bg-light">
-                <p className="font-semibold text-text-dark">{user?.name}</p>
+                <p className="font-semibold text-text-dark">{user?.fullName || user?.name}</p>
                 <p className="text-xs text-text-light capitalize">{user?.role}</p>
               </div>
               <div className="divide-y divide-border-light">

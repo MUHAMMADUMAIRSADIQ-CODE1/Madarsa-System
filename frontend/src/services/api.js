@@ -1,5 +1,24 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
+// Handle 403 Forbidden responses (blocked users, etc.)
+function handleForbidden(message) {
+  const blockedMessages = [
+    'account has been blocked',
+    'user blocked',
+    'your account has been blocked',
+    'not authorized',
+  ];
+  const isBlocked = blockedMessages.some(m => message?.toLowerCase().includes(m));
+  if (isBlocked) {
+    // Clear auth state - user has been blocked since their last login
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    // Redirect to the blocked page or login
+    window.location.href = '/account-blocked';
+  }
+}
+
 async function request(endpoint, options = {}) {
   const { method = 'GET', body, headers = {}, ...rest } = options;
 
@@ -41,6 +60,12 @@ async function request(endpoint, options = {}) {
     const message =
       (data && data.message) ||
       `Request failed with status ${response.status}`;
+    
+    // Handle 403 - check if user was blocked since login
+    if (response.status === 403) {
+      handleForbidden(message);
+    }
+    
     const error = new Error(message);
     error.status = response.status;
     error.data = data;

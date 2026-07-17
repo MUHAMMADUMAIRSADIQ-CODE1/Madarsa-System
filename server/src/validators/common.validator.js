@@ -7,7 +7,6 @@ const email = (field = 'email') =>
   body(field)
     .isEmail()
     .withMessage('Please provide a valid email')
-    .normalizeEmail()
     .toLowerCase();
 
 const password = (field = 'password') =>

@@ -80,6 +80,20 @@ const CMS_AUDIT_ACTIONS = Object.freeze({
   WAITLIST: 'WAITLIST',
   REVIEW: 'REVIEW',
   CONVERT: 'CONVERT',
+  // Auth actions
+  SIGNUP: 'signup',
+  CHANGE_PASSWORD: 'change_password',
+  CHANGE_EMAIL: 'change_email',
+  FORGOT_PASSWORD: 'forgot_password',
+  RESET_PASSWORD: 'reset_password',
+  APPROVE_USER: 'approve_user',
+  REJECT_USER: 'reject_user',
+  RE_APPROVE_USER: 're_approve_user',
+  COMPLETE_PROFILE: 'complete_profile',
+  BLOCK_USER: 'block_user',
+  UNBLOCK_USER: 'unblock_user',
+  DEACTIVATE_USER: 'deactivate_user',
+  ACTIVATE_USER: 'activate_user',
 });
 
 const CMS_MODULES = Object.freeze({
@@ -94,6 +108,8 @@ const CMS_MODULES = Object.freeze({
   ADMISSIONS: 'admissions',
   PERMISSIONS: 'permissions',
   AUDIT: 'audit',
+  AUTH: 'auth',
+  ADMIN: 'admin',
 });
 
 function hasAdminPermission(adminRole, scope) {

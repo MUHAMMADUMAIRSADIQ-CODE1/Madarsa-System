@@ -14,6 +14,8 @@ const adminRoutes = require('./admin.routes');
 const studentPortalRoutes = require('./studentPortal.routes');
 const teacherPortalRoutes = require('./teacherPortal.routes');
 const attendanceRoutes = require('./attendance.routes');
+const uploadRoutes = require('./upload.routes');
+const teacherAcademicRoutes = require('./teacherAcademic.routes');
 
 const router = Router();
 
@@ -34,6 +36,8 @@ const routeConfigs = [
   { path: API_ROUTES.STUDENT_PORTAL, route: studentPortalRoutes },
   { path: API_ROUTES.TEACHER_PORTAL, route: teacherPortalRoutes },
   { path: API_ROUTES.ATTENDANCE, route: attendanceRoutes },
+  { path: API_ROUTES.UPLOAD, route: uploadRoutes },
+  { path: `${API_ROUTES.TEACHER_PORTAL}/academic`, route: teacherAcademicRoutes },
 ];
 
 routeConfigs.forEach(({ path, route }) => {

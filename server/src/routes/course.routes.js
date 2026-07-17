@@ -7,6 +7,22 @@ const { courseValidator } = require('../validators');
 
 const router = Router();
 
+/**
+ * Middleware to parse JSON-stringified array/object fields from multipart FormData.
+ * Multer parses all non-file FormData fields as strings, so seoKeywords (sent as JSON.stringify(array))
+ * arrives as a string instead of an array. This middleware converts it back before validation.
+ */
+function parseFormDataJsonFields(req, _res, next) {
+  if (req.body && typeof req.body.seoKeywords === 'string') {
+    try {
+      req.body.seoKeywords = JSON.parse(req.body.seoKeywords);
+    } catch (_) {
+      // If JSON parsing fails, leave as-is — validation will catch the error
+    }
+  }
+  next();
+}
+
 router.use(authenticate);
 router.use(isAdmin);
 
@@ -39,6 +55,7 @@ router.post(
     { name: 'thumbnail', maxCount: 1 },
     { name: 'banner', maxCount: 1 },
   ]),
+  parseFormDataJsonFields,
   validate(courseValidator.createCourseRules),
   courseController.create
 );
@@ -49,6 +66,7 @@ router.put(
     { name: 'thumbnail', maxCount: 1 },
     { name: 'banner', maxCount: 1 },
   ]),
+  parseFormDataJsonFields,
   validate(courseValidator.updateCourseRules),
   validate(courseValidator.idParamRules),
   courseController.update

@@ -103,6 +103,27 @@ export function AuthProvider({ children }) {
     }
   }, [user]);
 
+  const completeProfile = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.patch('/auth/complete-profile');
+      const updatedUser = response.data?.user || response.data;
+
+      setUser(prev => ({ ...prev, ...updatedUser }));
+      localStorage.setItem('user', JSON.stringify({ ...user, ...updatedUser }));
+
+      return updatedUser;
+    } catch (err) {
+      const errorMessage = err.message || 'Failed to complete profile';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
   const changePassword = useCallback(async (currentPassword, newPassword) => {
     setIsLoading(true);
     setError(null);
@@ -156,6 +177,7 @@ export function AuthProvider({ children }) {
     signup,
     logout,
     updateProfile,
+    completeProfile,
     changePassword,
     changeEmail,
   };

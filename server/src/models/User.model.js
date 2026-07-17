@@ -125,6 +125,72 @@ const userSchema = createBaseSchema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+    profileComplete: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    completionPercentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    profileCompletedAt: {
+      type: Date,
+    },
+    profileVerified: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    profileVerificationStatus: {
+      type: String,
+      enum: ['not_submitted', 'pending', 'verified', 'rejected', 'changes_requested'],
+      default: 'not_submitted',
+      index: true,
+    },
+    profileVerificationSubmittedAt: {
+      type: Date,
+    },
+    profileVerificationApprovedAt: {
+      type: Date,
+    },
+    profileVerificationApprovedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    profileVerificationRejectedAt: {
+      type: Date,
+    },
+    profileVerificationRejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    profileVerificationRejectionReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    blockedAt: {
+      type: Date,
+    },
+    blockedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    blockReason: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    activatedAt: {
+      type: Date,
+    },
+    activatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     meta: {
       type: Map,
       of: mongoose.Schema.Types.Mixed,
@@ -200,6 +266,22 @@ userSchema.methods.toPublicJSON = function () {
     approvedAt: this.approvedAt,
     rejectedAt: this.rejectedAt,
     rejectedBy: this.rejectedBy,
+    profileComplete: this.profileComplete,
+    completionPercentage: this.completionPercentage,
+    profileCompletedAt: this.profileCompletedAt,
+    profileVerified: this.profileVerified,
+    profileVerificationStatus: this.profileVerificationStatus,
+    profileVerificationSubmittedAt: this.profileVerificationSubmittedAt,
+    profileVerificationApprovedAt: this.profileVerificationApprovedAt,
+    profileVerificationApprovedBy: this.profileVerificationApprovedBy,
+    profileVerificationRejectedAt: this.profileVerificationRejectedAt,
+    profileVerificationRejectedBy: this.profileVerificationRejectedBy,
+    profileVerificationRejectionReason: this.profileVerificationRejectionReason,
+    blockedAt: this.blockedAt,
+    blockedBy: this.blockedBy,
+    blockReason: this.blockReason,
+    activatedAt: this.activatedAt,
+    activatedBy: this.activatedBy,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

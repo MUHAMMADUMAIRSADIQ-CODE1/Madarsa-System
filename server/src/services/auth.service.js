@@ -94,6 +94,52 @@ class AuthService {
     }
   }
 
+  async completeProfile(userId) {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(httpStatus.NOT_FOUND, messages.USER_NOT_FOUND);
+    }
+
+    user.profileComplete = true;
+    user.completionPercentage = 100;
+    user.profileCompletedAt = new Date();
+    user.profileVerificationStatus = 'pending';
+    user.profileVerified = false;
+    user.profileVerificationSubmittedAt = new Date();
+    user.profileVerificationRejectedAt = undefined;
+    user.profileVerificationRejectedBy = undefined;
+    user.profileVerificationRejectionReason = undefined;
+    user.profileVerificationApprovedAt = undefined;
+    user.profileVerificationApprovedBy = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    // Send profile submitted for verification email
+    try {
+      const { subject, html } = emailService.getProfileSubmittedEmail(user.fullName);
+      await emailService.sendEmail({ to: user.email, subject, html });
+    } catch (emailError) {
+      logger.error('Failed to send profile submission email:', emailError);
+    }
+
+    // Audit log
+    try {
+      const AuditService = require('./audit.service');
+      AuditService.log({
+        user: userId,
+        action: 'complete_profile',
+        module: 'auth',
+        resourceId: userId,
+        resourceType: 'User',
+        description: `Profile completed and submitted for verification by ${user.email}`,
+        metadata: { email: user.email, role: user.role },
+      });
+    } catch (auditError) {
+      logger.error('Failed to create audit log:', auditError);
+    }
+
+    return user.toPublicJSON();
+  }
+
   async getUserProfile(userId) {
     const user = await User.findById(userId);
     if (!user) {

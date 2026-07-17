@@ -1,6 +1,8 @@
 const { StudentService, AuditService } = require('../services');
 const { ApiResponse, asyncHandler, helpers } = require('../utils');
 const { CMS_AUDIT_ACTIONS, CMS_MODULES } = require('../constants/cms');
+const User = require('../models/User.model');
+const { roles, USER_STATUS } = require('../constants');
 
 const getAll = asyncHandler(async (req, res) => {
   const { page, limit, skip } = helpers.parsePagination(req.query);
@@ -14,13 +16,30 @@ const getAll = asyncHandler(async (req, res) => {
   if (req.query.course) query.selectedCourse = req.query.course;
   if (req.query.gender) query.gender = req.query.gender;
 
-  const result = await StudentService.getAll(query, { page, limit, skip, sort, populate: 'selectedCourse admissionReference' });
+  // Support filtering by user approval status (pending, active, rejected, blocked)
+  if (req.query.userStatus) {
+    const validStatuses = Object.values(USER_STATUS);
+    const statuses = req.query.userStatus.split(',').filter(s => validStatuses.includes(s));
+    if (statuses.length > 0) {
+      const userFilter = { role: roles.STUDENT, status: { $in: statuses } };
+      const matchingUsers = await User.find(userFilter).select('_id').lean();
+      const userIds = matchingUsers.map(u => u._id);
+      if (userIds.length > 0) {
+        query.user = { $in: userIds };
+      } else {
+        // No matching users, return empty
+        query._id = null;
+      }
+    }
+  }
+
+  const result = await StudentService.getAll(query, { page, limit, skip, sort, populate: 'user selectedCourse admissionReference' });
 
   res.status(200).json(ApiResponse.success('Students fetched successfully', result));
 });
 
 const getById = asyncHandler(async (req, res) => {
-  const student = await StudentService.getById(req.params.id, { populate: 'selectedCourse admissionReference' });
+  const student = await StudentService.getById(req.params.id, { populate: 'user selectedCourse admissionReference' });
   res.status(200).json(ApiResponse.success('Student fetched successfully', student));
 });
 
@@ -162,7 +181,8 @@ const getEnrolledCourses = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  getAll, getById, create, update,
+  getAll, getById,
+  update,
   deleteStudent, restoreStudent,
   activateStudent, deactivateStudent,
   getStats, enrollCourse, getEnrolledCourses,

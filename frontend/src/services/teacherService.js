@@ -32,8 +32,6 @@ export const teacherService = {
 
   getTeacherById: (id) => api.get(`/admin/teachers/${id}`),
 
-  createTeacher: (data) => api.upload('/admin/teachers', buildFormData(data)),
-
   updateTeacher: (id, data) => api.put(`/admin/teachers/${id}`, buildFormData(data)),
 
   publishTeacher: (id) => api.patch(`/admin/teachers/${id}/publish`),
@@ -53,6 +51,15 @@ export const teacherService = {
   assignCourse: (id, courseId) => api.post(`/admin/teachers/${id}/assign-course`, { courseId }),
 
   removeCourse: (id, courseId) => api.post(`/admin/teachers/${id}/remove-course`, { courseId }),
+
+  // User-level admin actions
+  blockUser: (userId, reason) => api.patch(`/admin/block-user/${userId}`, { reason }),
+
+  unblockUser: (userId) => api.patch(`/admin/unblock-user/${userId}`),
+
+  activateUser: (userId) => api.patch(`/admin/activate-user/${userId}`),
+
+  deactivateUser: (userId, reason) => api.patch(`/admin/deactivate-user/${userId}`, { reason }),
 };
 
 export default teacherService;

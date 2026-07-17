@@ -5,7 +5,13 @@ const { httpStatus, messages } = require('../constants');
 const ALLOWED_UPDATE_FIELDS = [
   'phone', 'whatsapp', 'address', 'city', 'country', 'guardianPhone',
   'guardianEmail', 'preferredBatch', 'preferredTiming', 'notes',
-  'studentPhoto',
+  'studentPhoto', 'studentName', 'fatherName', 'motherName',
+  'guardianName', 'dateOfBirth', 'gender', 'nationality',
+  'religion', 'bloodGroup', 'postalCode', 'emergencyContact',
+  'emergencyPhone', 'previousEducation', 'currentQualification',
+  'bio', 'languages', 'skills', 'cnicPassport', 'cnicFront',
+  'cnicBack', 'passport', 'socialLinks', 'guardianRelation',
+  'educationalCertificates', 'additionalDocuments',
 ];
 
 class StudentPortalService {
