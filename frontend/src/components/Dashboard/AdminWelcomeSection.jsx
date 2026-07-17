@@ -17,12 +17,14 @@ export default function AdminWelcomeSection() {
           key={idx}
           className={`bg-gradient-to-br ${stat.color} rounded-2xl p-5 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow`}
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
               <p className="text-white/80 text-xs sm:text-sm font-medium truncate">{stat.label}</p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold mt-1 sm:mt-2">{stat.value}</p>
             </div>
-            <span className="text-3xl sm:text-5xl opacity-20 flex-shrink-0"><stat.icon size={48} /></span>
+            <div className="flex-shrink-0 opacity-20">
+              <stat.icon size={40} className="w-8 h-8 sm:w-12 sm:h-12" />
+            </div>
           </div>
         </div>
       ))}
