@@ -1,7 +1,15 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function ProtectedRoute({ children, allowedRoles }) {
+function getRedirect(user) {
+  if (!user) return '/login';
+  const dashboard = user.role === 'admin' ? '/admin/dashboard'
+    : user.role === 'teacher' ? '/teacher/dashboard'
+    : '/student/dashboard';
+  return dashboard;
+}
+
+export default function ProtectedRoute({ children, allowedRoles, requireProfileComplete = true }) {
   const { isAuthenticated, user, initializing } = useAuth();
   const location = useLocation();
 
@@ -20,10 +28,55 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   }
 
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    const dashboard = user?.role === 'admin' ? '/admin/dashboard'
-      : user?.role === 'teacher' ? '/teacher/dashboard'
-      : '/student/dashboard';
-    return <Navigate to={dashboard} replace />;
+    return <Navigate to={getRedirect(user)} replace />;
+  }
+
+  // Admins bypass all profile checks
+  if (user?.role === 'admin') {
+    return children;
+  }
+
+  // ============= DASHBOARD PROTECTION =============
+  // Check user status first
+  if (user?.status === 'pending') {
+    return <Navigate to="/pending-approval" replace />;
+  }
+
+  if (user?.status === 'rejected') {
+    return <Navigate to="/registration-rejected" replace />;
+  }
+
+  if (user?.status === 'blocked' || user?.isActive === false) {
+    return <Navigate to="/account-blocked" replace />;
+  }
+
+  // If requireProfileComplete is explicitly false (for profile completion page), bypass completion/verification checks
+  if (!requireProfileComplete) {
+    return children;
+  }
+
+  // Check profile completion
+  if (!user?.profileComplete) {
+    const profileCompletePath = user?.role === 'teacher'
+      ? '/teacher/complete-profile'
+      : '/student/complete-profile';
+    return <Navigate to={profileCompletePath} replace />;
+  }
+
+  // Check profile verification status
+  if (user?.profileVerificationStatus === 'pending') {
+    return <Navigate to="/profile-under-review" replace />;
+  }
+
+  if (user?.profileVerificationStatus === 'rejected' || user?.profileVerificationStatus === 'changes_requested') {
+    const profileCompletePath = user?.role === 'teacher'
+      ? '/teacher/complete-profile'
+      : '/student/complete-profile';
+    return <Navigate to={profileCompletePath} replace />;
+  }
+
+  if (!user?.profileVerified && user?.profileVerificationStatus !== 'verified') {
+    return <Navigate to="/profile-under-review" replace />;
   }
 
   return children;

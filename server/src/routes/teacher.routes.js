@@ -14,16 +14,6 @@ router.get('/stats', teacherController.getStats);
 
 router.get('/', teacherController.getAll);
 
-router.post(
-  '/',
-  uploadFields([
-    { name: 'profilePhoto', maxCount: 1 },
-    { name: 'coverPhoto', maxCount: 1 },
-  ]),
-  validate(teacherValidator.createTeacherRules),
-  teacherController.create
-);
-
 router.put(
   '/:id',
   uploadFields([

@@ -2,6 +2,11 @@ const rateLimit = require('express-rate-limit');
 const env = require('../config/env');
 
 const createRateLimiter = (options = {}) => {
+  // Bypass all rate limiting in development mode for unlimited testing
+  if (env.nodeEnv === 'development') {
+    return (req, res, next) => next();
+  }
+
   return rateLimit({
     windowMs: options.windowMs || env.rateLimit.windowMs,
     max: options.max || env.rateLimit.max,

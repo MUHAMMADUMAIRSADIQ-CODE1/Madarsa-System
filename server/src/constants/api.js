@@ -29,6 +29,7 @@ const API_ROUTES = {
   ADMIN_SETTINGS: `${API_PREFIX}/admin/settings`,
   FOOTER: `${API_PREFIX}/admin/footer`,
   PUBLIC: `${API_PREFIX}/public`,
+  UPLOAD: `${API_PREFIX}/upload`,
 };
 
 const PAGINATION = {

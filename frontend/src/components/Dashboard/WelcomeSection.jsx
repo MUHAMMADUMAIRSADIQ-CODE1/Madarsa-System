@@ -16,7 +16,7 @@ export default function WelcomeSection() {
 
       <div className="relative z-10">
         <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl font-bold mb-2">
-          Assalamu Alaikum, {user?.name?.split(' ')[0]}
+          Assalamu Alaikum, {(user?.fullName || user?.name || '').split(' ')[0]}
         </h1>
         <p className="text-lg text-green-100 mb-6 opacity-90">
           Welcome to Your Islamic Academy Dashboard

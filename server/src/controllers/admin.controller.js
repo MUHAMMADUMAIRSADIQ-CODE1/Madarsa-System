@@ -5,6 +5,7 @@ const {
   AuditService,
   AdminService,
 } = require('../services');
+const { USER_STATUS } = require('../constants');
 const User = require('../models/User.model');
 const CmsContent = require('../models/CmsContent.model');
 
@@ -144,16 +145,24 @@ const getPendingUsers = asyncHandler(async (req, res) => {
 
 const approveUser = asyncHandler(async (req, res) => {
   const { userId } = req.params;
+  
+  // Check user's current status to determine if this is a re-approval
+  const currentUser = await User.findById(userId).select('status');
+  const isReApproval = currentUser && currentUser.status === USER_STATUS.REJECTED;
+  
   const user = await AdminService.approveUser(req.user.id, userId);
+  
+  const actionType = isReApproval ? 're_approve_user' : 'approve_user';
+  const actionLabel = isReApproval ? 'Re-approved' : 'Approved';
 
   AuditService.log({
     user: req.user.id,
-    action: 'approve_user',
+    action: actionType,
     module: 'admin',
     resourceId: userId,
     resourceType: 'User',
-    description: `Approved user: ${user.email} (${user.role})`,
-    metadata: { approvedUser: userId, role: user.role, email: user.email },
+    description: `${actionLabel} user: ${user.email} (${user.role})`,
+    metadata: { approvedUser: userId, role: user.role, email: user.email, isReApproval },
   });
 
   res.status(200).json(
@@ -181,6 +190,81 @@ const rejectUser = asyncHandler(async (req, res) => {
   );
 });
 
+const getRejectedUsers = asyncHandler(async (req, res) => {
+  const { page, limit, role, search } = req.query;
+  const result = await AdminService.getRejectedUsers({ page, limit, role, search });
+
+  res.status(200).json(
+    ApiResponse.success('Rejected users fetched successfully', result)
+  );
+});
+
+const blockUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const user = await AdminService.blockUser(req.user.id, userId, reason);
+
+  res.status(200).json(
+    ApiResponse.success('User blocked successfully', user)
+  );
+});
+
+const unblockUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await AdminService.unblockUser(req.user.id, userId);
+
+  res.status(200).json(
+    ApiResponse.success('User unblocked successfully', user)
+  );
+});
+
+const deactivateUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const user = await AdminService.deactivateUser(req.user.id, userId, reason);
+
+  res.status(200).json(
+    ApiResponse.success('User deactivated successfully', user)
+  );
+});
+
+const activateUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await AdminService.activateUser(req.user.id, userId);
+
+  res.status(200).json(
+    ApiResponse.success('User activated successfully', user)
+  );
+});
+
+const getPendingProfileVerifications = asyncHandler(async (req, res) => {
+  const { page, limit, role, search } = req.query;
+  const result = await AdminService.getPendingProfileVerifications({ page, limit, role, search });
+
+  res.status(200).json(
+    ApiResponse.success('Pending profile verifications fetched successfully', result)
+  );
+});
+
+const approveProfileVerification = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const user = await AdminService.approveProfileVerification(req.user.id, userId);
+
+  res.status(200).json(
+    ApiResponse.success('Profile verified successfully', user)
+  );
+});
+
+const rejectProfileVerification = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { reason } = req.body;
+  const user = await AdminService.rejectProfileVerification(req.user.id, userId, reason);
+
+  res.status(200).json(
+    ApiResponse.success('Profile verification rejected', user)
+  );
+});
+
 module.exports = {
   getDashboard,
   getAuditLogs,
@@ -191,4 +275,12 @@ module.exports = {
   getPendingUsers,
   approveUser,
   rejectUser,
+  getRejectedUsers,
+  blockUser,
+  unblockUser,
+  deactivateUser,
+  activateUser,
+  getPendingProfileVerifications,
+  approveProfileVerification,
+  rejectProfileVerification,
 };

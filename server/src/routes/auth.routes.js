@@ -59,4 +59,10 @@ router.post(
   authController.changeEmail
 );
 
+router.patch(
+  '/complete-profile',
+  authenticate,
+  authController.completeProfile
+);
+
 module.exports = router;

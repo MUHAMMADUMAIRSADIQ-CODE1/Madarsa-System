@@ -3,6 +3,11 @@ const { createBaseSchema } = require('./Base.model');
 
 const teacherSchema = createBaseSchema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
     fullName: {
       type: String,
       required: [true, 'Full name is required'],
@@ -131,6 +136,59 @@ const teacherSchema = createBaseSchema(
       trim: true,
       maxlength: 500,
     },
+    address: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    postalCode: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+    },
+    bloodGroup: {
+      type: String,
+      trim: true,
+      maxlength: 10,
+    },
+    religion: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    cnicPassport: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+    },
+    cnicFront: {
+      type: String,
+      default: '',
+    },
+    cnicBack: {
+      type: String,
+      default: '',
+    },
+    emergencyContact: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    emergencyPhone: {
+      type: String,
+      trim: true,
+      maxlength: 30,
+    },
+    teachingMode: {
+      type: String,
+      enum: ['online', 'physical', 'both', ''],
+      default: '',
+    },
+    availability: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
     certificates: [{
       title: { type: String, trim: true },
       issuer: { type: String, trim: true },
@@ -179,6 +237,14 @@ const teacherSchema = createBaseSchema(
       maxlength: 500,
     },
     seoKeywords: [{
+      type: String,
+      trim: true,
+    }],
+    resume: {
+      type: String,
+      default: '',
+    },
+    additionalDocuments: [{
       type: String,
       trim: true,
     }],
@@ -242,6 +308,17 @@ teacherSchema.methods.toPublicJSON = function () {
     certificates: this.certificates,
     skills: this.skills,
     awards: this.awards,
+    address: this.address,
+    postalCode: this.postalCode,
+    bloodGroup: this.bloodGroup,
+    religion: this.religion,
+    cnicPassport: this.cnicPassport,
+    cnicFront: this.cnicFront,
+    cnicBack: this.cnicBack,
+    emergencyContact: this.emergencyContact,
+    emergencyPhone: this.emergencyPhone,
+    teachingMode: this.teachingMode,
+    availability: this.availability,
     featured: this.featured,
     availableForOnline: this.availableForOnline,
     displayOrder: this.displayOrder,

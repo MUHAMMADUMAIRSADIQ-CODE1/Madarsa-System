@@ -1,6 +1,8 @@
 const { TeacherService, AuditService } = require('../services');
 const { ApiResponse, asyncHandler, helpers } = require('../utils');
 const { CMS_AUDIT_ACTIONS, CMS_MODULES } = require('../constants/cms');
+const User = require('../models/User.model');
+const { roles, USER_STATUS } = require('../constants');
 
 const getAll = asyncHandler(async (req, res) => {
   const { page, limit, skip } = helpers.parsePagination(req.query);
@@ -14,13 +16,30 @@ const getAll = asyncHandler(async (req, res) => {
   if (req.query.featured === 'true') query.featured = true;
   if (req.query.availableForOnline === 'true') query.availableForOnline = true;
 
-  const result = await TeacherService.getAll(query, { page, limit, skip, sort });
+  // Support filtering by user approval status (pending, active, rejected, blocked)
+  if (req.query.userStatus) {
+    const validStatuses = Object.values(USER_STATUS);
+    const statuses = req.query.userStatus.split(',').filter(s => validStatuses.includes(s));
+    if (statuses.length > 0) {
+      const userFilter = { role: roles.TEACHER, status: { $in: statuses } };
+      const matchingUsers = await User.find(userFilter).select('_id').lean();
+      const userIds = matchingUsers.map(u => u._id);
+      if (userIds.length > 0) {
+        query.user = { $in: userIds };
+      } else {
+        // No matching users, return empty
+        query._id = null;
+      }
+    }
+  }
+
+  const result = await TeacherService.getAll(query, { page, limit, skip, sort, populate: 'user' });
 
   res.status(200).json(ApiResponse.success('Teachers fetched successfully', result));
 });
 
 const getById = asyncHandler(async (req, res) => {
-  const teacher = await TeacherService.getById(req.params.id);
+  const teacher = await TeacherService.getById(req.params.id, { populate: 'user' });
   res.status(200).json(ApiResponse.success('Teacher fetched successfully', teacher));
 });
 
@@ -272,7 +291,7 @@ const removeCourse = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
-  getAll, getById, getBySlug, create, update,
+  getAll, getById, getBySlug, update,
   deleteTeacher, restoreTeacher, publishTeacher, unpublishTeacher,
   archiveTeacher, duplicateTeacher, getStats, getPublished,
   assignCourse, removeCourse,

@@ -3,6 +3,11 @@ const { createBaseSchema } = require('./Base.model');
 
 const studentSchema = createBaseSchema(
   {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      index: true,
+    },
     studentId: {
       type: String,
       unique: true,
@@ -42,7 +47,6 @@ const studentSchema = createBaseSchema(
     },
     dateOfBirth: {
       type: Date,
-      required: [true, 'Date of birth is required'],
     },
     email: {
       type: String,
@@ -81,7 +85,61 @@ const studentSchema = createBaseSchema(
       trim: true,
       maxlength: 100,
     },
+    religion: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    bloodGroup: {
+      type: String,
+      trim: true,
+      maxlength: 10,
+    },
+    postalCode: {
+      type: String,
+      trim: true,
+      maxlength: 20,
+    },
+    emergencyContact: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    emergencyPhone: {
+      type: String,
+      trim: true,
+      maxlength: 30,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+    },
+    languages: [{
+      type: String,
+      trim: true,
+    }],
+    skills: [{
+      type: String,
+      trim: true,
+    }],
+    socialLinks: {
+      facebook: { type: String, trim: true, maxlength: 500 },
+      twitter: { type: String, trim: true, maxlength: 500 },
+      linkedin: { type: String, trim: true, maxlength: 500 },
+      website: { type: String, trim: true, maxlength: 500 },
+    },
     cnicPassport: {
+      type: String,
+      trim: true,
+      maxlength: 50,
+    },
+    motherName: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    guardianRelation: {
       type: String,
       trim: true,
       maxlength: 50,
@@ -142,6 +200,14 @@ const studentSchema = createBaseSchema(
       type: String,
       default: '',
     },
+    educationalCertificates: [{
+      type: String,
+      trim: true,
+    }],
+    additionalDocuments: [{
+      type: String,
+      trim: true,
+    }],
     reasonForJoining: {
       type: String,
       trim: true,
@@ -232,7 +298,9 @@ studentSchema.methods.toPublicJSON = function () {
     enrollmentNumber: this.enrollmentNumber,
     studentName: this.studentName,
     fatherName: this.fatherName,
+    motherName: this.motherName,
     guardianName: this.guardianName,
+    guardianRelation: this.guardianRelation,
     gender: this.gender,
     dateOfBirth: this.dateOfBirth,
     email: this.email,
@@ -240,7 +308,17 @@ studentSchema.methods.toPublicJSON = function () {
     whatsapp: this.whatsapp,
     country: this.country,
     city: this.city,
+    address: this.address,
+    postalCode: this.postalCode,
     nationality: this.nationality,
+    religion: this.religion,
+    bloodGroup: this.bloodGroup,
+    emergencyContact: this.emergencyContact,
+    emergencyPhone: this.emergencyPhone,
+    bio: this.bio,
+    languages: this.languages,
+    skills: this.skills,
+    socialLinks: this.socialLinks,
     selectedCourse: this.selectedCourse,
     learningMode: this.learningMode,
     status: this.status,

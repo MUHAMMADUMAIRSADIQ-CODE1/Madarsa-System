@@ -21,15 +21,36 @@ export default function LoginForm({ onSignupClick }) {
     try {
       const user = await login(email, password);
       
-      // Redirect based on role
+      // Redirect based on role, profile completion, and verification status
       setTimeout(() => {
-        if (user.role === 'student') {
-          navigate('/student/dashboard');
-        } else if (user.role === 'teacher') {
-          navigate('/teacher/dashboard');
-        } else if (user.role === 'admin') {
+        if (user.role === 'admin') {
           navigate('/admin/dashboard');
+          return;
         }
+
+        // Profile not complete -> redirect to complete profile
+        if (!user.profileComplete) {
+          const path = user.role === 'teacher' ? '/teacher/complete-profile' : '/student/complete-profile';
+          navigate(path);
+          return;
+        }
+
+        // Profile complete but pending verification -> show under review page
+        if (user.profileVerificationStatus === 'pending') {
+          navigate('/profile-under-review');
+          return;
+        }
+
+        // Profile rejected -> redirect back to complete profile (with existing data)
+        if (user.profileVerificationStatus === 'rejected' || user.profileVerificationStatus === 'changes_requested') {
+          const path = user.role === 'teacher' ? '/teacher/complete-profile' : '/student/complete-profile';
+          navigate(path);
+          return;
+        }
+
+        // Profile verified -> dashboard access
+        const dashboard = user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard';
+        navigate(dashboard);
       }, 500);
     } catch (err) {
       setLocalError(err.message);

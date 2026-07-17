@@ -13,8 +13,18 @@ router.use(isAdmin);
 router.get('/dashboard', adminController.getDashboard);
 
 router.get('/pending-users', adminController.getPendingUsers);
+router.get('/rejected-users', adminController.getRejectedUsers);
 router.patch('/approve-user/:userId', adminController.approveUser);
 router.patch('/reject-user/:userId', adminController.rejectUser);
+router.patch('/block-user/:userId', adminController.blockUser);
+router.patch('/unblock-user/:userId', adminController.unblockUser);
+router.patch('/deactivate-user/:userId', adminController.deactivateUser);
+router.patch('/activate-user/:userId', adminController.activateUser);
+
+// Profile verification routes
+router.get('/pending-profile-verifications', adminController.getPendingProfileVerifications);
+router.patch('/approve-profile-verification/:userId', adminController.approveProfileVerification);
+router.patch('/reject-profile-verification/:userId', adminController.rejectProfileVerification);
 
 router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/audit-logs/stats', adminController.getAuditLogStats);

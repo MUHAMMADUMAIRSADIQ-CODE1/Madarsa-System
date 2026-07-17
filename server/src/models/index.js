@@ -15,6 +15,9 @@ const Testimonial = require('./Testimonial.model');
 const Contact = require('./Contact.model');
 const CmsContent = require('./CmsContent.model');
 const AuditLog = require('./AuditLog.model');
+const Result = require('./Result.model');
+const TeacherAnnouncement = require('./TeacherAnnouncement.model');
+const { TeacherConversation, TeacherMessage } = require('./TeacherMessage.model');
 
 module.exports = {
   User,
@@ -34,4 +37,8 @@ module.exports = {
   Contact,
   CmsContent,
   AuditLog,
+  Result,
+  TeacherAnnouncement,
+  TeacherConversation,
+  TeacherMessage,
 };

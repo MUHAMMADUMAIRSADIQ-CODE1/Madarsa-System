@@ -13,12 +13,6 @@ router.get('/stats', studentController.getStats);
 
 router.get('/', studentController.getAll);
 
-router.post(
-  '/',
-  validate(studentValidator.createStudentRules),
-  studentController.create
-);
-
 router.get(
   '/:id',
   validate(studentValidator.idParamRules),

@@ -148,10 +148,10 @@ export default function Sidebar({ isOpen, onClose }) {
         <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-border-light bg-white">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || 'S'}
+              {(user?.fullName || user?.name || 'S').charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-text-dark truncate">{user?.name}</p>
+              <p className="text-sm font-semibold text-text-dark truncate">{user?.fullName || user?.name}</p>
               <p className="text-xs text-text-light truncate">{user?.role}</p>
             </div>
           </div>

@@ -130,16 +130,25 @@ class TeacherService extends BaseService {
   }
 
   async getTeacherStats() {
-    const [total, published, draft, archived, featured, online] = await Promise.all([
+    const User = require('../models/User.model');
+    const { roles, USER_STATUS } = require('../constants');
+
+    const [total, published, draft, archived, featured, online,
+      pendingUsers, activeUsers, rejectedUsers, blockedUsers] = await Promise.all([
       this.count({ isDeleted: false }),
       this.count({ status: 'published', isDeleted: false }),
       this.count({ status: 'draft', isDeleted: false }),
       this.count({ status: 'archived', isDeleted: false }),
       this.count({ featured: true, status: 'published', isDeleted: false }),
       this.count({ availableForOnline: true, status: 'published', isDeleted: false }),
+      User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.PENDING }),
+      User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.ACTIVE }),
+      User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.REJECTED }),
+      User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.BLOCKED }),
     ]);
 
-    return { total, published, draft, archived, featured, availableForOnline: online };
+    return { total, published, draft, archived, featured, availableForOnline: online,
+      pendingUsers, activeUsers, rejectedUsers, blockedUsers };
   }
 }
 
