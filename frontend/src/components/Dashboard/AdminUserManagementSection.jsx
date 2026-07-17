@@ -260,11 +260,10 @@ export default function AdminUserManagementSection() {
         </div>
         <div className="p-4 bg-bg-light rounded-xl">
           <p className="text-xs text-text-light font-medium uppercase tracking-wider">Status</p>
-          <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${
-            user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+          <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold ${user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
             user.status === 'rejected' ? 'bg-red-100 text-red-800' :
-            'bg-green-100 text-green-800'
-          }`}>
+              'bg-green-100 text-green-800'
+            }`}>
             {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1) : 'N/A'}
           </span>
         </div>
@@ -297,8 +296,8 @@ export default function AdminUserManagementSection() {
         <p className="text-sm font-semibold text-text-dark mt-1">
           {user.createdAt
             ? new Date(user.createdAt).toLocaleString('en-US', {
-                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
-              })
+              year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+            })
             : 'N/A'}
         </p>
       </div>
@@ -476,11 +475,10 @@ export default function AdminUserManagementSection() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                activeTab === tab.id
-                  ? 'bg-primary text-white'
-                  : 'bg-white text-text-body hover:bg-bg-light'
-              }`}
+              className={`flex-1 px-4 py-3 text-sm font-semibold transition-all flex items-center justify-center gap-2 ${activeTab === tab.id
+                ? 'bg-primary text-white'
+                : 'bg-white text-text-body hover:bg-bg-light'
+                }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
@@ -512,11 +510,10 @@ export default function AdminUserManagementSection() {
                 <button
                   key={tab.value}
                   onClick={() => setFilter(tab.value)}
-                  className={`px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 ${
-                    currentFilter === tab.value
-                      ? 'bg-primary text-white'
-                      : 'bg-white text-text-body hover:bg-bg-light'
-                  }`}
+                  className={`px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 ${currentFilter === tab.value
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-text-body hover:bg-bg-light'
+                    }`}
                 >
                   <span>{tab.icon}</span>
                   <span>{tab.label}</span>
@@ -678,8 +675,8 @@ export default function AdminUserManagementSection() {
                           <td className="p-3 text-sm text-text-body">
                             {user.rejectedAt
                               ? new Date(user.rejectedAt).toLocaleDateString('en-US', {
-                                  year: 'numeric', month: 'short', day: 'numeric',
-                                })
+                                year: 'numeric', month: 'short', day: 'numeric',
+                              })
                               : 'N/A'}
                           </td>
                           <td className="p-3">
@@ -763,16 +760,27 @@ export default function AdminUserManagementSection() {
                 They will gain access as a <strong>{ROLE_LABELS[selectedUser.role]}</strong> and receive an approval notification via email.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button onClick={handleApprove} disabled={actionLoading} className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-                  {actionLoading ? 'Approving...' : '✓ Confirm Approval'}
                 <button
                   onClick={handleApprove}
                   disabled={actionLoading}
                   className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
-                  {actionLoading ? 'Approving...' : <> <FiCheck size={18} /> Confirm Approval </>}
+                  {actionLoading ? (
+                    "Approving..."
+                  ) : (
+                    <>
+                      <FiCheck size={18} />
+                      Confirm Approval
+                    </>
+                  )}
                 </button>
-                <button onClick={closeAllModals} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
+
+                <button
+                  onClick={closeAllModals}
+                  className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -805,16 +813,27 @@ export default function AdminUserManagementSection() {
                 <p className="text-xs text-text-light mt-1.5">This reason will be included in the rejection email sent to the user.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <button onClick={handleReject} disabled={actionLoading || !rejectionReason.trim()} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
-                  {actionLoading ? 'Rejecting...' : '✗ Confirm Rejection'}
                 <button
                   onClick={handleReject}
                   disabled={actionLoading || !rejectionReason.trim()}
                   className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
                 >
-                  {actionLoading ? 'Rejecting...' : <> <FiX size={18} /> Confirm Rejection </>}
+                  {actionLoading ? (
+                    "Rejecting..."
+                  ) : (
+                    <>
+                      <FiX size={18} />
+                      Confirm Rejection
+                    </>
+                  )}
                 </button>
-                <button onClick={closeAllModals} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
+
+                <button
+                  onClick={closeAllModals}
+                  className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
