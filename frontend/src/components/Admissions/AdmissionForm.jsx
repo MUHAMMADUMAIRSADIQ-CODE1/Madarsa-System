@@ -185,15 +185,15 @@ export default function AdmissionForm() {
 
   function renderProgress() {
     return (
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mb-10">
+      <div className="flex items-center justify-center gap-1 sm:gap-4 mb-6 sm:mb-10 overflow-x-auto pb-2 -mx-2 sm:mx-0 px-2 sm:px-0">
         {STEPS.map((s, idx) => (
-          <div key={s.id} className="flex items-center">
-            <div className={`flex items-center gap-2 ${idx < step ? 'cursor-pointer' : ''}`} onClick={() => idx < step && setStep(s.id)}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+          <div key={s.id} className="flex items-center flex-shrink-0">
+            <div className={`flex items-center gap-1 sm:gap-2 ${idx < step ? 'cursor-pointer' : ''}`} onClick={() => idx < step && setStep(s.id)}>
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
                 s.id === step ? 'bg-primary text-white' : s.id < step ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'
               }`}>
                 {s.id < step ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                 ) : s.id}
               </div>
               <span className={`text-xs font-medium hidden sm:inline ${s.id === step ? 'text-primary' : s.id < step ? 'text-green-600' : 'text-gray-400'}`}>
@@ -201,7 +201,7 @@ export default function AdmissionForm() {
               </span>
             </div>
             {idx < STEPS.length - 1 && (
-              <div className={`w-6 sm:w-12 h-0.5 mx-1 sm:mx-2 ${s.id < step ? 'bg-green-300' : 'bg-gray-200'}`} />
+              <div className={`w-3 sm:w-6 md:w-12 h-0.5 mx-0.5 sm:mx-2 ${s.id < step ? 'bg-green-300' : 'bg-gray-200'}`} />
             )}
           </div>
         ))}
@@ -454,7 +454,7 @@ export default function AdmissionForm() {
 
           {renderStep()}
 
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border-light">
+          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-3 mt-8 pt-6 border-t border-border-light">
             <div>
               {step > 1 ? (
                 <button onClick={prev} className="px-5 py-2.5 border border-border-light text-text-light rounded-xl hover:bg-bg-light transition-colors text-sm font-medium">
@@ -465,6 +465,9 @@ export default function AdmissionForm() {
                   Cancel
                 </button>
               )}
+            </div>
+            <div className="text-xs sm:text-sm text-text-light order-first sm:order-none w-full sm:w-auto text-center mb-2 sm:mb-0">
+              <span className="inline-block px-3 py-1 bg-bg-light rounded-full text-xs font-medium">Step {step} of 6</span>
             </div>
             <div className="flex items-center gap-2">
               {step < 6 ? (

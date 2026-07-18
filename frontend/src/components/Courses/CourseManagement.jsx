@@ -53,6 +53,12 @@ export default function AdminCourseManagementSection() {
   const [statusFilter, setStatusFilter] = useState('');
   const [perCourseStats, setPerCourseStats] = useState({});
 
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+
   const loadCourses = useCallback(async () => {
     try {
       setLoading(true);
@@ -89,6 +95,54 @@ export default function AdminCourseManagementSection() {
     loadCourses();
     loadStats();
   }, [loadCourses, loadStats]);
+
+  async function loadCategories() {
+    try {
+      setLoadingCategories(true);
+      const res = await courseService.getCategories();
+      setCategories(res.data || []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoadingCategories(false);
+    }
+  }
+
+  async function handleAddCategory() {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    try {
+      if (editingCategory) {
+        await courseService.updateCategory(editingCategory._id, { name });
+      } else {
+        await courseService.createCategory({ name });
+      }
+      setNewCategoryName('');
+      setEditingCategory(null);
+      await loadCategories();
+      await loadStats();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleDeleteCategory(id) {
+    if (!confirm('Delete this category?')) return;
+    try {
+      await courseService.deleteCategory(id);
+      await loadCategories();
+      await loadStats();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  function openCategoryModal() {
+    setShowCategoryModal(true);
+    setNewCategoryName('');
+    setEditingCategory(null);
+    loadCategories();
+  }
 
   function resetForm() {
     setForm(defaultForm);
@@ -606,6 +660,12 @@ export default function AdminCourseManagementSection() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={openCategoryModal}
+              className="px-5 py-2.5 border border-primary text-primary font-semibold rounded-xl hover:bg-primary-light transition-colors text-sm"
+            >
+              Categories
+            </button>
+            <button
               onClick={() => { resetForm(); setView('form'); }}
               className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors text-sm"
             >
@@ -735,6 +795,61 @@ export default function AdminCourseManagementSection() {
           </div>
         )}
       </div>
+
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-10 pb-10 overflow-y-auto"
+          onClick={() => setShowCategoryModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-lg mx-4"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-heading text-xl font-bold text-text-dark">Manage Categories</h3>
+              <button onClick={() => setShowCategoryModal(false)}
+                className="text-text-light hover:text-text-dark text-xl">&times;</button>
+            </div>
+
+            <div className="flex gap-2 mb-4">
+              <input type="text" value={newCategoryName}
+                onChange={e => setNewCategoryName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
+                placeholder={editingCategory ? 'Edit category name...' : 'New category name...'}
+                className="flex-1 px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              <button onClick={handleAddCategory}
+                className="px-4 py-2 bg-primary text-white rounded-xl text-sm hover:bg-primary-dark transition-colors whitespace-nowrap">
+                {editingCategory ? 'Update' : 'Add'}
+              </button>
+              {editingCategory && (
+                <button onClick={() => { setEditingCategory(null); setNewCategoryName(''); }}
+                  className="px-4 py-2 border border-border-light text-text-light rounded-xl text-sm hover:bg-bg-light transition-colors">
+                  Cancel
+                </button>
+              )}
+            </div>
+
+            {loadingCategories ? (
+              <div className="animate-pulse space-y-2">
+                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-lg" />)}
+              </div>
+            ) : categories.length === 0 ? (
+              <p className="text-center py-8 text-text-light text-sm">No categories yet</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {categories.map(cat => (
+                  <div key={cat._id} className="flex items-center justify-between p-3 bg-bg-light rounded-lg">
+                    <span className="text-sm font-medium text-text-dark">{cat.name}</span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => { setEditingCategory(cat); setNewCategoryName(cat.name); }}
+                        className="text-primary text-xs hover:underline font-medium">Edit</button>
+                      <button onClick={() => handleDeleteCategory(cat._id)}
+                        className="text-red-500 text-xs hover:underline font-medium">Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

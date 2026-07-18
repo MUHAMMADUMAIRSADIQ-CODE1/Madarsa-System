@@ -1,9 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import studentService from '../../services/studentService';
+import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
+
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
-import { FiEye, FiEdit2, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser, FiUserCheck } from 'react-icons/fi';
+
+import {
+  FiEye,
+  FiEdit2,
+  FiLock,
+  FiUnlock,
+  FiToggleLeft,
+  FiToggleRight,
+  FiTrash2,
+  FiUser,
+  FiBook,
+  FiUserCheck
+} from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -76,7 +91,13 @@ export default function AdminStudentManagementSection() {
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
   const [actionTarget, setActionTarget] = useState(null);
-  const [assignedTeachers, setAssignedTeachers] = useState({});
+const [showEnrollModal, setShowEnrollModal] = useState(false);
+const [enrollStudent, setEnrollStudent] = useState(null);
+const [availableCourses, setAvailableCourses] = useState([]);
+const [selectedCourseId, setSelectedCourseId] = useState('');
+const [enrolling, setEnrolling] = useState(false);
+
+const [assignedTeachers, setAssignedTeachers] = useState({});
 
   const loadStudents = useCallback(async () => {
     try {
@@ -215,6 +236,37 @@ export default function AdminStudentManagementSection() {
       loadStudents(); loadStats();
     } catch (err) { setError(err.message || `Failed to ${actionType} user`); }
     finally { setSaving(false); }
+  }
+
+  async function openEnrollModal(student) {
+    setEnrollStudent(student);
+    setSelectedCourseId('');
+    setError(null);
+    try {
+      const res = await courseService.getAdminCourses({ status: 'published' });
+      setAvailableCourses(res.data?.data || res.data || []);
+      setShowEnrollModal(true);
+    } catch (err) {
+      setError(err.message || 'Failed to load courses');
+    }
+  }
+
+  async function handleEnrollCourse() {
+    if (!enrollStudent || !selectedCourseId) return;
+    setEnrolling(true);
+    setError(null);
+    try {
+      await studentService.enrollCourse(enrollStudent._id, selectedCourseId);
+      setSuccess(`Student enrolled in course successfully`);
+      setShowEnrollModal(false);
+      setEnrollStudent(null);
+      setSelectedCourseId('');
+      loadStudents();
+    } catch (err) {
+      setError(err.message || 'Failed to enroll student');
+    } finally {
+      setEnrolling(false);
+    }
   }
 
   const badgeVariant = (user) => {
@@ -358,6 +410,11 @@ export default function AdminStudentManagementSection() {
                       icon: FiEdit2,
                       onClick: () => startEdit(student),
                     },
+                    {
+                      label: 'Enroll in Course',
+                      icon: FiBook,
+                      onClick: () => openEnrollModal(student),
+                    },
                     { divider: true },
                     ...(isActive
                       ? [{
@@ -450,16 +507,16 @@ export default function AdminStudentManagementSection() {
         )}
       </div>
 
-      {/* Student Detail Modal */}
-      {viewingStudent && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-10 pb-10 overflow-y-auto"
+      {/* Student Detail Modal - rendered via Portal to escape admin layout stacking context */}
+      {viewingStudent && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 pt-6 sm:pt-10 pb-6 sm:pb-10 overflow-y-auto"
           onClick={() => setViewingStudent(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-3xl mx-4 relative max-h-[90vh] overflow-y-auto"
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto overflow-x-hidden"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-xl font-bold text-text-dark">Student Details</h3>
+            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-3 z-10 border-b border-border-light/50">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Student Details</h3>
               <button onClick={() => setViewingStudent(null)}
-                className="text-text-light hover:text-text-dark text-xl">&times;</button>
+                className="w-8 h-8 rounded-xl bg-bg-light hover:bg-border-light text-text-light hover:text-text-dark flex items-center justify-center transition-colors text-lg">&times;</button>
             </div>
 
             {/* Assigned Teacher Info */}
@@ -506,7 +563,8 @@ export default function AdminStudentManagementSection() {
 
             <AdminDetailView entity={viewingStudent} type="student" statusMaps={studentStatusMap} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Student Modal */}
@@ -750,6 +808,44 @@ export default function AdminStudentManagementSection() {
                 {saving ? 'Processing...' : 'Confirm'}
               </button>
               <button onClick={() => { setShowActionModal(false); setActionTarget(null); setError(null); }}
+                className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enroll Course Modal */}
+      {showEnrollModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => { setShowEnrollModal(false); setEnrollStudent(null); setError(null); }}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-xl font-bold text-text-dark">Enroll in Course</h3>
+              <button onClick={() => { setShowEnrollModal(false); setEnrollStudent(null); setError(null); }}
+                className="text-text-light hover:text-text-dark text-xl">&times;</button>
+            </div>
+            <p className="text-sm text-text-body mb-4">
+              Select a course to enroll <strong>{enrollStudent?.studentName || 'this student'}</strong> in:
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-text-dark mb-1">Course</label>
+              <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
+                <option value="">Select a course...</option>
+                {availableCourses.map((c) => (
+                  <option key={c._id} value={c._id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleEnrollCourse} disabled={enrolling || !selectedCourseId}
+                className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">
+                {enrolling ? 'Enrolling...' : 'Enroll'}
+              </button>
+              <button onClick={() => { setShowEnrollModal(false); setEnrollStudent(null); setError(null); }}
                 className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">
                 Cancel
               </button>

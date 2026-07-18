@@ -58,12 +58,12 @@ function Badge({ children, variant = 'default', size = 'sm' }) {
 function Field({ label, value, icon: Icon, fullWidth }) {
   const val = value !== null && value !== undefined && value !== '' ? value : NA;
   return (
-    <div className={fullWidth ? 'sm:col-span-2' : ''}>
+    <div className={`min-w-0 ${fullWidth ? 'sm:col-span-2' : ''}`}>
       <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1">
-        {Icon && <Icon size={12} className="text-text-light" />}
+        {Icon && <Icon size={12} className="text-text-light flex-shrink-0" />}
         {label}
       </p>
-      <p className="text-sm font-semibold text-text-dark leading-relaxed">{val}</p>
+      <p className="text-sm font-semibold text-text-dark leading-relaxed break-words">{val}</p>
     </div>
   );
 }
@@ -97,11 +97,8 @@ function TagList({ items, color = 'primary' }) {
 const GRID_COLS = { 1: 'sm:grid-cols-1', 2: 'sm:grid-cols-2', 3: 'sm:grid-cols-3' };
 
 function SectionCard({ title, icon: Icon, children, cols = 2, className = '' }) {
-  return (
-    <div
-      className={`bg-white rounded-2xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 ${className}`}
-    >
-      <div className="px-5 sm:px-6 py-4 border-b border-border-light bg-gradient-to-r from-bg-light/80 to-white">
+  return (        <div className={`bg-white rounded-2xl border border-border-light overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 ${className}`}>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border-light bg-gradient-to-r from-bg-light/80 to-white">
         <h3 className="flex items-center gap-2 font-heading font-bold text-text-dark text-sm">
           {Icon && (
             <span className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -112,7 +109,7 @@ function SectionCard({ title, icon: Icon, children, cols = 2, className = '' }) 
         </h3>
       </div>
       <div
-        className={`p-5 sm:p-6 grid grid-cols-1 ${GRID_COLS[cols] || 'sm:grid-cols-2'} gap-x-6 gap-y-4`}
+        className={`p-4 sm:p-6 grid grid-cols-1 ${GRID_COLS[cols] || 'sm:grid-cols-2'} gap-x-5 gap-y-3 sm:gap-y-4 min-w-0`}
       >
         {children}
       </div>
@@ -151,25 +148,24 @@ function AccountStatusCard({ label, value, badge, icon: Icon, color }) {
     blue: 'text-blue-600',
     gray: 'text-gray-600',
   };
-  return (
-    <div
-      className={`rounded-xl border border-border-light border-l-4 p-4 ${colors[color] || colors.gray} shadow-sm`}
-    >
-      <div className="flex items-center justify-between">
+  return (      <div
+        className={`rounded-xl border border-border-light border-l-4 p-4 ${colors[color] || colors.gray} shadow-sm`}
+      >
         <div className="flex items-center gap-3">
-          {Icon && (
-            <span className="w-9 h-9 rounded-lg bg-white shadow-sm border border-border-light flex items-center justify-center">
-              <Icon size={16} className={iconColors[color] || 'text-gray-600'} />
-            </span>
-          )}
-          <div>
-            <p className="text-xs font-semibold text-text-light uppercase tracking-wider">{label}</p>
-            <p className="text-sm font-bold text-text-dark mt-0.5">{value}</p>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {Icon && (
+              <span className="w-9 h-9 rounded-lg bg-white shadow-sm border border-border-light flex items-center justify-center flex-shrink-0">
+                <Icon size={16} className={iconColors[color] || 'text-gray-600'} />
+              </span>
+            )}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-text-light uppercase tracking-wider break-words">{label}</p>
+              <p className="text-sm font-bold text-text-dark mt-0.5 break-words">{value}</p>
+            </div>
           </div>
+          {badge && <Badge variant={badge.variant}>{badge.label}</Badge>}
         </div>
-        {badge && <Badge variant={badge.variant}>{badge.label}</Badge>}
       </div>
-    </div>
   );
 }
 
@@ -567,14 +563,14 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
 
   function SummaryCard({ icon: Icon, label, value }) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10 hover:bg-white/15 transition-colors">
-        <div className="flex items-start gap-3">
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-3 border border-white/10 hover:bg-white/15 transition-colors">
+        <div className="flex items-start gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
             <Icon size={14} className="text-white/70" />
           </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
-            <p className="text-sm font-bold text-white mt-0.5 truncate">{value}</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 break-words">{label}</p>
+            <p className="text-sm font-bold text-white mt-0.5 break-words" title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}>{value}</p>
           </div>
         </div>
       </div>
@@ -607,82 +603,80 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
           </svg>
         </div>
         {/* Gradient overlay at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/10 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/10 to-transparent" />          <div className="relative z-10 p-5 sm:p-8">
+            {/* ── Responsive layout: stacks on mobile, 3 cols on lg ── */}
+            <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
 
-        <div className="relative z-10 p-6 sm:p-8">
-          {/* ── 3-column grid: Left ─ Col 1-2 ─ Col 3 ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {/* ════ LEFT SECTION: Avatar + Name + Badges ════ */}
+              <div className="flex-1 min-w-0 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                {/* Avatar */}
+                <div className="flex-shrink-0 relative">
+                  {photo ? (
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
+                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center border-2 border-white/20 shadow-xl ring-4 ring-white/10">
+                      <FiUser size={44} className="text-white/60" />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-400 border-2 border-white rounded-full shadow-lg" />
+                </div>
 
-            {/* ════ COLUMN 1: Avatar + Name + Email + Country ════ */}
-            <div className="flex flex-col items-center sm:items-start sm:flex-row gap-4 lg:gap-5">
-              {/* Avatar */}
-              <div className="flex-shrink-0 relative">
-                {photo ? (
-                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                    <img src={photo} alt="" className="w-full h-full object-cover" />
+                {/* Name + Email + Badges */}
+                <div className="text-center sm:text-left min-w-0 flex-1">
+                  <h2 className="font-heading text-xl sm:text-2xl lg:text-3xl font-bold text-white break-words">
+                    {name || 'Unknown'}
+                  </h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
+                    {entity?.email && (
+                      <p className="flex items-center justify-center sm:justify-start gap-1.5 text-green-100/80 text-sm min-w-0">
+                        <FiMail size={13} className="flex-shrink-0" />
+                        <span className="truncate">{entity.email}</span>
+                      </p>
+                    )}
+                    {entity?.country && (
+                      <p className="flex items-center justify-center sm:justify-start gap-1.5 text-green-100/60 text-sm min-w-0">
+                        <FiMapPin size={12} className="flex-shrink-0" />
+                        <span className="truncate">{[entity?.city, entity?.country].filter(Boolean).join(', ')}</span>
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                    <FiUser size={44} className="text-white/60" />
+                  {/* Badges */}
+                  <div className="flex flex-col items-center sm:items-start gap-1.5 mt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Status</p>
+                    <div className="flex flex-wrap gap-1.5 justify-center sm:justify-start">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/15 text-white border border-white/20 backdrop-blur-sm">
+                        <FiShield size={10} />
+                        {isTeacher ? 'Teacher' : 'Student'}
+                      </span>
+                      <Badge variant={userStatusVariant}>{userStatusLabel}</Badge>
+                      <Badge variant={verifVariant}>{verifLabel}</Badge>
+                      <Badge variant={profileCompleteVariant}>
+                        {completionPct >= 100 ? 'Complete' : `${completionPct}%`}
+                      </Badge>
+                    </div>
                   </div>
-                )}
-                {/* Online indicator */}
-                <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-400 border-2 border-white rounded-full shadow-lg" />
+                </div>
               </div>
 
-              {/* Name + Email + Country */}
-              <div className="text-center sm:text-left min-w-0">
-                <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white break-words">
-                  {name || 'Unknown'}
-                </h2>
-                {entity?.email && (
-                  <p className="flex items-center justify-center sm:justify-start gap-1.5 text-green-100/80 text-sm mt-1.5">
-                    <FiMail size={13} />
-                    <span className="truncate">{entity.email}</span>
-                  </p>
-                )}
-                {entity?.country && (
-                  <p className="flex items-center justify-center sm:justify-start gap-1.5 text-green-100/60 text-sm mt-0.5">
-                    <FiMapPin size={12} />
-                    <span>{[entity?.city, entity?.country].filter(Boolean).join(', ')}</span>
-                  </p>
-                )}
+              {/* ════ RIGHT SECTION: Summary Cards ════ */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-2.5 lg:gap-3 min-w-0">
+                {headerSummaryCards
+                  .filter((c) => c.show)
+                  .map((card, i) => (
+                    <SummaryCard key={i} icon={card.icon} label={card.label} value={card.value} />
+                  ))}
               </div>
-            </div>
 
-            {/* ════ COLUMN 2: Badges ════ */}
-            <div className="flex flex-col items-center sm:items-start justify-center gap-2.5">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/40 mb-0.5">Status</p>
-              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-sm">
-                  <FiShield size={11} />
-                  {isTeacher ? 'Teacher' : 'Student'}
-                </span>
-                <Badge variant={userStatusVariant} size="lg">{userStatusLabel}</Badge>
-                <Badge variant={verifVariant} size="lg">{verifLabel}</Badge>
-                <Badge variant={profileCompleteVariant} size="lg">
-                  {completionPct >= 100 ? 'Complete' : `${completionPct}%`}
-                </Badge>
-              </div>
             </div>
-
-            {/* ════ COLUMN 3: Summary Cards ════ */}
-            <div className="grid grid-cols-2 gap-3 content-start">
-              {headerSummaryCards
-                .filter((c) => c.show)
-                .map((card, i) => (
-                  <SummaryCard key={i} icon={card.icon} label={card.label} value={card.value} />
-                ))}
-            </div>
-
           </div>
-        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════
           ACCOUNT SUMMARY
       ══════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <AccountStatusCard
           label="Account Status"
           value={userStatusLabel}
@@ -998,37 +992,37 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
           TIMESTAMPS FOOTER
       ══════════════════════════════════════════════════════ */}
       {(entity?.createdAt || entity?.updatedAt) && (
-        <div className="bg-gradient-to-r from-bg-light/80 to-white rounded-2xl px-5 sm:px-6 py-5 border border-border-light">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="text-center sm:text-left">
+        <div className="bg-gradient-to-r from-bg-light/80 to-white rounded-2xl px-4 sm:px-6 py-4 sm:py-5 border border-border-light">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div className="text-center sm:text-left min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-light">Created</p>
-              <p className="text-sm font-bold text-text-dark mt-0.5">
+              <p className="text-sm font-bold text-text-dark mt-0.5 break-words">
                 {entity?.createdAt ? fmtShortDate(entity.createdAt) : '-'}
               </p>
             </div>
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-light">Updated</p>
-              <p className="text-sm font-bold text-text-dark mt-0.5">
+              <p className="text-sm font-bold text-text-dark mt-0.5 break-words">
                 {entity?.updatedAt ? fmtShortDate(entity.updatedAt) : '-'}
               </p>
             </div>
             {isTeacher && (
-              <div className="text-center sm:text-left">
+              <div className="text-center sm:text-left min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-text-light">
                   Published
                 </p>
-                <p className="text-sm font-bold text-text-dark mt-0.5">
+                <p className="text-sm font-bold text-text-dark mt-0.5 break-words">
                   {entity?.publishedAt
                     ? fmtShortDate(entity.publishedAt)
                     : '-'}
                 </p>
               </div>
             )}
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-left min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-wider text-text-light">
                 Profile
               </p>
-              <p className="text-sm font-bold text-text-dark mt-0.5 capitalize">
+              <p className="text-sm font-bold text-text-dark mt-0.5 capitalize break-words">
                 {completionPct >= 100 ? 'Complete' : `${completionPct}%`}
               </p>
             </div>

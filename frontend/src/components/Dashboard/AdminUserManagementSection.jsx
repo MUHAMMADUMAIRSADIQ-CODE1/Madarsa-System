@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { adminDashboardData } from '../../data/adminDashboardData';
-import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle, FiEye } from 'react-icons/fi';
+import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle, FiBookmark, FiEye } from 'react-icons/fi';
 
 const ROLE_LABELS = {
   student: 'Student',
@@ -18,9 +18,14 @@ const ROLE_ICONS = {
   teacher: FiUserCheck,
 };
 
+const RoleBadgeIcon = ({ role, className = '' }) => {
+  const Icon = ROLE_ICONS[role] || FiBookmark;
+  return <Icon className={className} />;
+};
+
 const TABS = [
-  { id: 'pending', label: 'Pending', icon: '⏳' },
-  { id: 'rejected', label: 'Rejected', icon: '🚫' },
+  { id: 'pending', label: 'Pending', icon: FiClock },
+  { id: 'rejected', label: 'Rejected', icon: FiXCircle },
 ];
 
 const dashboardStatCards = [
@@ -239,7 +244,7 @@ export default function AdminUserManagementSection() {
         <div>
           <h3 className="text-xl font-bold text-text-dark">{user.fullName}</h3>
           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border mt-1 ${ROLE_COLORS[user.role] || 'bg-gray-100 text-gray-800'}`}>
-            {ROLE_ICONS[user.role] || '📌'} {ROLE_LABELS[user.role] || user.role}
+            <RoleBadgeIcon role={user.role} className="inline-block" /> {ROLE_LABELS[user.role] || user.role}
           </span>
         </div>
       </div>
@@ -312,7 +317,7 @@ export default function AdminUserManagementSection() {
             onClick={() => { setShowDetailModal(false); openReApproveModal(user); }}
             className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
           >
-            ✓ Re-Approve
+            <FiCheck size={16} className="-mt-0.5 inline-block" /> Re-Approve
           </button>
           <button
             onClick={closeAllModals}
@@ -328,15 +333,15 @@ export default function AdminUserManagementSection() {
         <button
           onClick={() => { setShowDetailModal(false); openApproveModal(user); }}
           className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"
-        >
-          ✓ Approve
-        </button>
+          >
+            <FiCheck size={16} className="-mt-0.5 inline-block" /> Approve
+          </button>
         <button
           onClick={() => { setShowDetailModal(false); openRejectModal(user); }}
           className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
-        >
-          ✗ Reject
-        </button>
+          >
+            <FiX size={16} className="-mt-0.5 inline-block" /> Reject
+          </button>
         <button
           onClick={closeAllModals}
           className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors"
@@ -412,7 +417,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-blue-100 text-sm font-medium">Pending Students</p>
                   <p className="text-3xl font-bold mt-2">{pendingStats.pendingStudents}</p>
                 </div>
-                <span className="text-5xl opacity-20">🎓</span>
+                <FiAward size={48} className="opacity-20" />
               </div>
             </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -421,7 +426,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-purple-100 text-sm font-medium">Pending Teachers</p>
                   <p className="text-3xl font-bold mt-2">{pendingStats.pendingTeachers}</p>
                 </div>
-                <span className="text-5xl opacity-20">👨‍🏫</span>
+                <FiUsers size={48} className="opacity-20" />
               </div>
             </div>
             <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -430,7 +435,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-amber-100 text-sm font-medium">Total Pending</p>
                   <p className="text-3xl font-bold mt-2">{pendingStats.totalPending}</p>
                 </div>
-                <span className="text-5xl opacity-20">⏳</span>
+                <FiClock size={48} className="opacity-20" />
               </div>
             </div>
           </>
@@ -442,7 +447,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-red-100 text-sm font-medium">Rejected Students</p>
                   <p className="text-3xl font-bold mt-2">{rejectedStats.rejectedStudents}</p>
                 </div>
-                <span className="text-5xl opacity-20">🎓</span>
+                <FiAward size={48} className="opacity-20" />
               </div>
             </div>
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -451,7 +456,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-orange-100 text-sm font-medium">Rejected Teachers</p>
                   <p className="text-3xl font-bold mt-2">{rejectedStats.rejectedTeachers}</p>
                 </div>
-                <span className="text-5xl opacity-20">👨‍🏫</span>
+                <FiUsers size={48} className="opacity-20" />
               </div>
             </div>
             <div className="bg-gradient-to-br from-gray-600 to-gray-700 rounded-2xl p-5 sm:p-6 text-white shadow-lg">
@@ -460,7 +465,7 @@ export default function AdminUserManagementSection() {
                   <p className="text-gray-100 text-sm font-medium">Total Rejected</p>
                   <p className="text-3xl font-bold mt-2">{rejectedStats.totalRejected}</p>
                 </div>
-                <span className="text-5xl opacity-20">🚫</span>
+                <FiXCircle size={48} className="opacity-20" />
               </div>
             </div>
           </>
@@ -480,7 +485,7 @@ export default function AdminUserManagementSection() {
                 : 'bg-white text-text-body hover:bg-bg-light'
                 }`}
             >
-              <span>{tab.icon}</span>
+              <tab.icon />
               <span>{tab.label}</span>
             </button>
           ))}
@@ -500,9 +505,9 @@ export default function AdminUserManagementSection() {
 
           <div className="flex rounded-xl border border-border-light overflow-hidden">
             {[
-              { value: '', label: 'All', icon: '📋' },
-              { value: 'student', label: 'Students', icon: '🎓' },
-              { value: 'teacher', label: 'Teachers', icon: '👨‍🏫' },
+              { value: '', label: 'All', icon: FiClipboard },
+              { value: 'student', label: 'Students', icon: FiAward },
+              { value: 'teacher', label: 'Teachers', icon: FiUsers },
             ].map((tab) => {
               const currentFilter = activeTab === 'pending' ? pendingRoleFilter : rejectedRoleFilter;
               const setFilter = activeTab === 'pending' ? setPendingRoleFilter : setRejectedRoleFilter;
@@ -515,7 +520,7 @@ export default function AdminUserManagementSection() {
                     : 'bg-white text-text-body hover:bg-bg-light'
                     }`}
                 >
-                  <span>{tab.icon}</span>
+                  <tab.icon />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -533,7 +538,7 @@ export default function AdminUserManagementSection() {
               </div>
             ) : pendingUsers.length === 0 ? (
               <div className="text-center py-16">
-                <span className="text-6xl block mb-4">✅</span>
+                <FiCheckCircle size={64} className="block mb-4 mx-auto" />
                 <h3 className="text-xl font-bold text-text-dark mb-2">All Clear!</h3>
                 <p className="text-text-light">No pending users to review at this time.</p>
               </div>
@@ -568,7 +573,7 @@ export default function AdminUserManagementSection() {
                           <td className="p-3 text-sm text-text-body">{user.email}</td>
                           <td className="p-3 text-center">
                             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${ROLE_COLORS[user.role] || 'bg-gray-100 text-gray-800'}`}>
-                              {ROLE_ICONS[user.role] || '📌'} {ROLE_LABELS[user.role] || user.role}
+                              <RoleBadgeIcon role={user.role} className="inline-block" /> {ROLE_LABELS[user.role] || user.role}
                             </span>
                           </td>
                           <td className="p-3 text-sm text-text-body">
@@ -629,7 +634,7 @@ export default function AdminUserManagementSection() {
               </div>
             ) : rejectedUsers.length === 0 ? (
               <div className="text-center py-16">
-                <span className="text-6xl block mb-4">✅</span>
+                <FiCheckCircle size={64} className="block mb-4 mx-auto" />
                 <h3 className="text-xl font-bold text-text-dark mb-2">No Rejected Users</h3>
                 <p className="text-text-light">There are no rejected users in the database.</p>
               </div>
@@ -664,7 +669,7 @@ export default function AdminUserManagementSection() {
                           <td className="p-3 text-sm text-text-body">{user.email}</td>
                           <td className="p-3 text-center">
                             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${ROLE_COLORS[user.role] || 'bg-gray-100 text-gray-800'}`}>
-                              {ROLE_ICONS[user.role] || '📌'} {ROLE_LABELS[user.role] || user.role}
+                              <RoleBadgeIcon role={user.role} className="inline-block" /> {ROLE_LABELS[user.role] || user.role}
                             </span>
                           </td>
                           <td className="p-3 text-sm text-text-body max-w-[200px]">

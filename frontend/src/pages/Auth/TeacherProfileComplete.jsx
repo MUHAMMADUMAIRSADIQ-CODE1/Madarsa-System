@@ -4,14 +4,27 @@ import { useAuth } from '../../context/AuthContext';
 import teacherPortalService from '../../services/teacherPortalService';
 import courseService from '../../services/courseService';
 import uploadService from '../../services/uploadService';
-import { FiCheckCircle, FiArrowRight, FiUpload, FiTrash2, FiFile, FiPlus, FiBook, FiCheck } from 'react-icons/fi';
+import {
+  FiCheckCircle,
+  FiArrowRight,
+  FiUpload,
+  FiTrash2,
+  FiFile,
+  FiPlus,
+  FiUser,
+  FiAward,
+  FiStar,
+  FiLink,
+  FiBook,
+  FiCheck,
+} from "react-icons/fi";
 
 const STEPS = [
-  { id: 'personal', label: 'Personal', icon: '👤' },
-  { id: 'qualification', label: 'Qualification', icon: '🎓' },
-  { id: 'skills', label: 'Skills', icon: '✨' },
-  { id: 'social', label: 'Social Links', icon: '🔗' },
-  { id: 'documents', label: 'Documents', icon: '📄' },
+  { id: 'personal', label: 'Personal', icon: FiUser },
+  { id: 'qualification', label: 'Qualification', icon: FiAward },
+  { id: 'skills', label: 'Skills', icon: FiStar },
+  { id: 'social', label: 'Social Links', icon: FiLink },
+  { id: 'documents', label: 'Documents', icon: FiFile },
 ];
 
 const INITIAL_FORM = {
@@ -357,27 +370,27 @@ export default function TeacherProfileComplete() {
                 {formData[fieldName].map((url, idx) => (
                   <div key={idx} className="flex items-center gap-2 p-2 bg-bg-light rounded-lg">
                     {url.match(/\.(jpg|jpeg|png|gif|webp)/i) ? (
-                      <img src={url} alt={`${label} ${idx + 1}`} className="w-12 h-12 object-cover rounded-lg" />
+                      <img src={url} alt={`${label} ${idx + 1}`} className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-lg flex-shrink-0" />
                     ) : (
-                      <FiFile className="w-6 h-6 text-primary" />
+                      <FiFile className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
                     )}
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate flex-1 hover:underline">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary truncate flex-1 hover:underline min-w-0">
                       {label} {idx + 1}
                     </a>
-                    <button onClick={() => removeMultiFile(fieldName, idx)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                      <FiTrash2 className="w-4 h-4" />
+                    <button onClick={() => removeMultiFile(fieldName, idx)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
+                      <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
-            <label className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isUploading ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary hover:bg-primary/5'}`}>
+            <label className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isUploading ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary hover:bg-primary/5'}`}>
               {isUploading ? (
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <FiUpload className="w-5 h-5 text-text-light" />
+                <FiUpload className="w-4 h-4 sm:w-5 sm:h-5 text-text-light" />
               )}
-              <span className="text-sm text-text-light">{isUploading ? 'Uploading...' : `Upload ${label}`}</span>
+              <span className="text-xs sm:text-sm text-text-light truncate">{isUploading ? 'Uploading...' : `Upload ${label}`}</span>
               <input type="file" accept={accept} multiple onChange={(e) => handleMultiFileUpload(fieldName, e.target.files)} className="hidden" disabled={isUploading} />
             </label>
           </div>
@@ -386,30 +399,30 @@ export default function TeacherProfileComplete() {
             {hasFile && (
               <div className="relative mb-3">
                 {formData[fieldName].match(/\.(jpg|jpeg|png|gif|webp)/i) ? (
-                  <div className="relative group inline-block">
-                    <img src={formData[fieldName]} alt={label} className="w-32 h-32 object-cover rounded-xl border-2 border-border-light" />
+                  <div className="relative group inline-block max-w-full">
+                    <img src={formData[fieldName]} alt={label} className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 object-cover rounded-xl border-2 border-border-light" />
                     <button onClick={() => removeSingleFile(fieldName)} className="absolute top-1 right-1 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                       <FiTrash2 className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2 p-2 bg-bg-light rounded-lg">
-                    <FiFile className="w-6 h-6 text-primary" />
-                    <a href={formData[fieldName]} target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate flex-1 hover:underline">View {label}</a>
-                    <button onClick={() => removeSingleFile(fieldName)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                      <FiTrash2 className="w-4 h-4" />
+                    <FiFile className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
+                    <a href={formData[fieldName]} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary truncate flex-1 hover:underline min-w-0">View {label}</a>
+                    <button onClick={() => removeSingleFile(fieldName)} className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0">
+                      <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 )}
               </div>
             )}
-            <label className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isUploading ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary hover:bg-primary/5'}`}>
+            <label className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isUploading ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary hover:bg-primary/5'}`}>
               {isUploading ? (
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <FiUpload className="w-5 h-5 text-text-light" />
+                <FiUpload className="w-4 h-4 sm:w-5 sm:h-5 text-text-light" />
               )}
-              <span className="text-sm text-text-light">{hasFile ? 'Replace' : 'Upload'} {label}</span>
+              <span className="text-xs sm:text-sm text-text-light truncate">{hasFile ? 'Replace' : 'Upload'} {label}</span>
               <input type="file" accept={accept} onChange={(e) => handleFileUpload(fieldName, e.target.files[0])} className="hidden" disabled={isUploading} />
             </label>
           </div>
@@ -420,16 +433,16 @@ export default function TeacherProfileComplete() {
   };
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 sm:gap-4 mb-10">
+    <div className="flex items-center justify-center gap-0.5 sm:gap-2 md:gap-4 mb-6 sm:mb-10 overflow-x-auto pb-2 -mx-2 sm:mx-0 px-2 sm:px-0">
       {STEPS.map((step, idx) => (
-        <div key={step.id} className="flex items-center gap-2 sm:gap-4">
+        <div key={step.id} className="flex items-center gap-0.5 sm:gap-2 md:gap-4 flex-shrink-0">
           <button onClick={() => idx < currentStep ? setCurrentStep(idx) : null}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${idx === currentStep ? 'bg-primary text-white shadow-lg' : idx < currentStep ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-text-light'}`}>
-            <span className="text-sm">{idx < currentStep ? '✓' : step.icon}</span>
-            <span className="hidden sm:inline text-sm font-semibold">{step.label}</span>
+            className={`flex items-center gap-1 sm:gap-2 px-1.5 sm:px-2.5 md:px-3 py-1 sm:py-2 rounded-xl transition-all ${idx === currentStep ? 'bg-primary text-white shadow-lg' : idx < currentStep ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-text-light'}`}>
+            <span className="text-xs sm:text-sm">{idx < currentStep ? <FiCheck /> : <step.icon />}</span>
+            <span className="hidden sm:inline text-xs md:text-sm font-semibold">{step.label}</span>
           </button>
           {idx < STEPS.length - 1 && (
-            <div className={`w-6 sm:w-12 h-0.5 ${idx < currentStep ? 'bg-primary' : 'bg-gray-200'}`} />
+            <div className={`w-1.5 sm:w-4 md:w-8 lg:w-12 h-0.5 ${idx < currentStep ? 'bg-primary' : 'bg-gray-200'}`} />
           )}
         </div>
       ))}
@@ -437,53 +450,53 @@ export default function TeacherProfileComplete() {
   );
 
   const renderPersonalInfo = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div className="sm:col-span-2">
-        <div className="flex items-center gap-4 mb-6 p-4 bg-primary-light rounded-xl">
-          <span className="text-3xl">👤</span>
-          <div>
-            <h3 className="font-semibold text-text-dark">Personal Information</h3>
-            <p className="text-sm text-text-light">Tell us about yourself</p>
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
+          <FiUser size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Personal Information</h3>
+            <p className="text-xs sm:text-sm text-text-light">Tell us about yourself</p>
           </div>
         </div>
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Full Name *</label>
         <input type="text" name="fullName" value={formData.fullName} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.fullName ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.fullName ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.fullName && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.fullName}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Gender *</label>
         <select name="gender" value={formData.gender} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.gender ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`}>
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.gender ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`}>
           <option value="">Select Gender</option>
           <option value="male">Male</option>
           <option value="female">Female</option>
           <option value="other">Other</option>
         </select>
-        {errors.gender && <p className="text-red-600 text-sm mt-1">{errors.gender}</p>}
+        {errors.gender && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.gender}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Date of Birth</label>
         <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Nationality *</label>
         <input type="text" name="nationality" value={formData.nationality} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.nationality ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.nationality && <p className="text-red-600 text-sm mt-1">{errors.nationality}</p>}
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.nationality ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.nationality && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.nationality}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Religion</label>
         <input type="text" name="religion" value={formData.religion} onChange={handleChange}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Blood Group</label>
         <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all">
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base">
           <option value="">Select</option>
           <option value="A+">A+</option>
           <option value="A-">A-</option>
@@ -498,42 +511,42 @@ export default function TeacherProfileComplete() {
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Phone *</label>
         <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.phone ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.phone ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.phone && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.phone}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp</label>
         <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Country *</label>
         <input type="text" name="country" value={formData.country} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.country ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.country && <p className="text-red-600 text-sm mt-1">{errors.country}</p>}
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.country ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.country && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.country}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">City *</label>
         <input type="text" name="city" value={formData.city} onChange={handleChange}
-          className={`w-full px-4 py-3 rounded-xl border-2 outline-none transition-all ${errors.city ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.city ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.city && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.city}</p>}
       </div>
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Address</label>
         <textarea name="address" value={formData.address} onChange={handleChange} rows={2}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
       </div>
     </div>
   );
 
   const renderQualification = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div className="sm:col-span-2">
-        <div className="flex items-center gap-4 mb-6 p-4 bg-primary-light rounded-xl">
-          <span className="text-3xl">🎓</span>
-          <div>
-            <h3 className="font-semibold text-text-dark">Qualification & Experience</h3>
-            <p className="text-sm text-text-light">Your academic background and teaching experience</p>
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
+          <FiAward size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Qualification & Experience</h3>
+            <p className="text-xs sm:text-sm text-text-light">Your academic background and teaching experience</p>
           </div>
         </div>
       </div>
@@ -598,66 +611,66 @@ export default function TeacherProfileComplete() {
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Qualification</label>
         <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} placeholder="e.g. Masters in Islamic Studies"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Degree</label>
         <input type="text" name="degree" value={formData.degree} onChange={handleChange} placeholder="e.g. PhD, Masters"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Experience (years)</label>
         <input type="number" name="experience" value={formData.experience} onChange={handleChange} min="0" max="70"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Specialization</label>
         <input type="text" name="specialization" value={formData.specialization} onChange={handleChange} placeholder="e.g. Quran & Tafseer"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Subjects (comma separated)</label>
         <input type="text" value={formData.subjects.join(', ')} onChange={(e) => handleArrayChange('subjects', e.target.value)} placeholder="Quran, Hadith, Fiqh"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Languages (comma separated)</label>
         <input type="text" value={formData.teachingLanguages.join(', ')} onChange={(e) => handleArrayChange('teachingLanguages', e.target.value)} placeholder="Urdu, English, Arabic"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Short Bio</label>
         <textarea name="shortBio" value={formData.shortBio} onChange={handleChange} rows={3} placeholder="Brief introduction about yourself"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
       </div>
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Biography</label>
         <textarea name="biography" value={formData.biography} onChange={handleChange} rows={4} placeholder="Detailed biography"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
       </div>
     </div>
   );
 
   const renderSkills = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div className="sm:col-span-2">
-        <div className="flex items-center gap-4 mb-6 p-4 bg-primary-light rounded-xl">
-          <span className="text-3xl">✨</span>
-          <div>
-            <h3 className="font-semibold text-text-dark">Skills & Availability</h3>
-            <p className="text-sm text-text-light">Your teaching skills and availability</p>
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
+          <FiStar size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Skills & Availability</h3>
+            <p className="text-xs sm:text-sm text-text-light">Your teaching skills and availability</p>
           </div>
         </div>
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Skills (comma separated)</label>
         <input type="text" value={formData.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} placeholder="Tajweed, Tafseer, Arabic grammar"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Mode</label>
         <select name="teachingMode" value={formData.teachingMode} onChange={handleChange}
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all">
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base">
           <option value="">Select Mode</option>
           <option value="online">Online</option>
           <option value="physical">Physical</option>
@@ -667,97 +680,97 @@ export default function TeacherProfileComplete() {
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Availability</label>
         <input type="text" name="availability" value={formData.availability} onChange={handleChange} placeholder="e.g. Weekdays 9AM-5PM"
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div className="flex items-center gap-3 pt-4">
         <input type="checkbox" name="availableForOnline" checked={formData.availableForOnline} onChange={handleChange}
-          className="w-5 h-5 rounded border-2 border-border-light accent-primary" />
+          className="w-5 h-5 rounded border-2 border-border-light accent-primary flex-shrink-0" />
         <label className="text-sm font-semibold text-text-dark">Available for online teaching</label>
       </div>
     </div>
   );
 
   const renderSocialLinks = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div className="sm:col-span-2">
-        <div className="flex items-center gap-4 mb-6 p-4 bg-primary-light rounded-xl">
-          <span className="text-3xl">🔗</span>
-          <div>
-            <h3 className="font-semibold text-text-dark">Social Links (Optional)</h3>
-            <p className="text-sm text-text-light">Connect your professional profiles</p>
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
+          <FiLink size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Social Links (Optional)</h3>
+            <p className="text-xs sm:text-sm text-text-light">Connect your professional profiles</p>
           </div>
         </div>
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">LinkedIn</label>
         <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Facebook</label>
         <input type="url" name="facebook" value={formData.facebook} onChange={handleChange} placeholder="https://facebook.com/..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Instagram</label>
         <input type="url" name="instagram" value={formData.instagram} onChange={handleChange} placeholder="https://instagram.com/..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">YouTube</label>
         <input type="url" name="youtube" value={formData.youtube} onChange={handleChange} placeholder="https://youtube.com/@..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Website</label>
         <input type="url" name="website" value={formData.website} onChange={handleChange} placeholder="https://..."
-          className="w-full px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all" />
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
       </div>
     </div>
   );
 
   const renderDocuments = () => (
-    <div className="space-y-6">
-      <div className="p-4 bg-primary-light rounded-xl">
-        <div className="flex items-center gap-4">
-          <span className="text-3xl">📄</span>
-          <div>
-            <h3 className="font-semibold text-text-dark">Documents</h3>
-            <p className="text-sm text-text-light">Upload your certificates and documents</p>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="p-3 sm:p-4 bg-primary-light rounded-xl">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <FiFile size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Documents</h3>
+            <p className="text-xs sm:text-sm text-text-light">Upload your certificates and documents</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {renderFileUpload('profilePhoto', 'Profile Photo', 'image/*')}
         {renderFileUpload('coverPhoto', 'Cover Photo', 'image/*')}
         {renderFileUpload('resume', 'Resume / CV', '.pdf,.doc,.docx')}
       </div>
 
       {/* Certificates */}
-      <div className="p-4 bg-bg-light rounded-xl">
+      <div className="p-3 sm:p-4 bg-bg-light rounded-xl">
         <label className="block text-sm font-semibold text-text-dark mb-3">Certificates</label>
         {formData.certificates.length > 0 && (
           <div className="space-y-2 mb-3">
             {formData.certificates.map((cert, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-border-light">
-                <div>
-                  <p className="text-sm font-semibold text-text-dark">{cert.title}</p>
+              <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border border-border-light">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-text-dark truncate">{cert.title}</p>
                   <p className="text-xs text-text-light">{cert.issuer}{cert.year ? ` (${cert.year})` : ''}</p>
                 </div>
-                <button onClick={() => removeCertificate(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                  <FiTrash2 className="w-4 h-4" />
+                <button onClick={() => removeCertificate(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 ml-2">
+                  <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ))}
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" value={certInput.title} onChange={e => setCertInput(p => ({ ...p, title: e.target.value }))} placeholder="Certificate title" className="px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <input type="text" value={certInput.issuer} onChange={e => setCertInput(p => ({ ...p, issuer: e.target.value }))} placeholder="Issuer" className="px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <div className="flex gap-2">
-            <input type="number" value={certInput.year} onChange={e => setCertInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="flex-1 px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-            <button onClick={addCertificate} className="px-4 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <input type="text" value={certInput.title} onChange={e => setCertInput(p => ({ ...p, title: e.target.value }))} placeholder="Certificate title" className="w-full sm:flex-1 px-3 sm:px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
+          <input type="text" value={certInput.issuer} onChange={e => setCertInput(p => ({ ...p, issuer: e.target.value }))} placeholder="Issuer" className="w-full sm:flex-1 px-3 sm:px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <input type="number" value={certInput.year} onChange={e => setCertInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="flex-1 sm:w-24 px-3 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm min-w-0" />
+            <button onClick={addCertificate} className="px-4 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0">
               <FiPlus className="w-4 h-4" /> Add
             </button>
           </div>
@@ -765,29 +778,29 @@ export default function TeacherProfileComplete() {
       </div>
 
       {/* Awards */}
-      <div className="p-4 bg-bg-light rounded-xl">
+      <div className="p-3 sm:p-4 bg-bg-light rounded-xl">
         <label className="block text-sm font-semibold text-text-dark mb-3">Awards</label>
         {formData.awards.length > 0 && (
           <div className="space-y-2 mb-3">
             {formData.awards.map((award, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-border-light">
-                <div>
-                  <p className="text-sm font-semibold text-text-dark">{award.title}</p>
+              <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border border-border-light">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-text-dark truncate">{award.title}</p>
                   <p className="text-xs text-text-light">{award.year}{award.description ? ` - ${award.description}` : ''}</p>
                 </div>
-                <button onClick={() => removeAward(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                  <FiTrash2 className="w-4 h-4" />
+                <button onClick={() => removeAward(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 ml-2">
+                  <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             ))}
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" value={awardInput.title} onChange={e => setAwardInput(p => ({ ...p, title: e.target.value }))} placeholder="Award title" className="px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <input type="number" value={awardInput.year} onChange={e => setAwardInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <div className="flex gap-2">
-            <input type="text" value={awardInput.description} onChange={e => setAwardInput(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="flex-1 px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-            <button onClick={addAward} className="px-4 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <input type="text" value={awardInput.title} onChange={e => setAwardInput(p => ({ ...p, title: e.target.value }))} placeholder="Award title" className="w-full sm:flex-1 px-3 sm:px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
+          <input type="number" value={awardInput.year} onChange={e => setAwardInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="w-full sm:w-24 px-3 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <input type="text" value={awardInput.description} onChange={e => setAwardInput(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="flex-1 px-3 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm min-w-0" />
+            <button onClick={addAward} className="px-4 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0">
               <FiPlus className="w-4 h-4" /> Add
             </button>
           </div>
@@ -806,10 +819,10 @@ export default function TeacherProfileComplete() {
     <div className="min-h-screen bg-gradient-to-br from-accent-soft via-white to-primary-light pt-20 pb-12">
       <div className="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="font-heading text-3xl sm:text-4xl font-bold text-text-dark mb-3">
+          <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-bold text-text-dark mb-2 sm:mb-3 px-2">
             {profileRejected ? 'Update Your Profile' : 'Complete Your Profile'}
           </h1>
-          <p className="text-text-body text-lg">
+          <p className="text-text-body text-sm sm:text-base lg:text-lg px-2">
             {profileRejected ? 'Please update your profile based on the feedback below' : 'Please complete your profile to access the teacher dashboard'}
           </p>
         </div>
@@ -845,24 +858,26 @@ export default function TeacherProfileComplete() {
             {currentStep === 4 && renderDocuments()}
           </div>
 
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border-light">
+          <div className="flex flex-wrap items-center justify-center sm:justify-between gap-3 mt-8 pt-6 border-t border-border-light">
             <button onClick={handlePrev} disabled={currentStep === 0}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${currentStep === 0 ? 'text-text-light cursor-not-allowed' : 'border-2 border-border-light text-text-body hover:bg-bg-light'}`}>
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-all text-sm sm:text-base ${currentStep === 0 ? 'text-text-light cursor-not-allowed opacity-50' : 'border-2 border-border-light text-text-body hover:bg-bg-light'}`}>
               ← Previous
             </button>
-            <div className="text-sm text-text-light">Step {currentStep + 1} of {STEPS.length}</div>
+            <div className="text-xs sm:text-sm text-text-light order-first sm:order-none w-full sm:w-auto text-center mb-2 sm:mb-0">
+              <span className="inline-block px-3 py-1 bg-bg-light rounded-full text-xs font-medium">Step {currentStep + 1} of {STEPS.length}</span>
+            </div>
             {currentStep < STEPS.length - 1 ? (
               <button onClick={handleNext}
-                className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 flex items-center gap-2 text-sm sm:text-base">
                 Next <FiArrowRight className="w-4 h-4" />
               </button>
             ) : (
               <button onClick={handleSubmit} disabled={isSubmitting}
-                className={`px-8 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${isSubmitting ? 'bg-text-light text-white cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20'}`}>
+                className={`px-5 sm:px-8 py-2.5 sm:py-3 rounded-xl font-semibold transition-all flex items-center gap-2 text-sm sm:text-base ${isSubmitting ? 'bg-text-light text-white cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20'}`}>
                 {isSubmitting ? (
                   <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Submitting...</>
                 ) : (
-                  <><FiCheckCircle className="w-5 h-5" /> Submit for Verification</>
+                  <><FiCheckCircle className="w-4 h-4 sm:w-5 sm:h-5" /> Submit for Verification</>
                 )}
               </button>
             )}

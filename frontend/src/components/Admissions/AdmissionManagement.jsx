@@ -75,6 +75,18 @@ export default function AdminAdmissionManagementSection() {
     } catch (err) { setError(err.message); }
   }
 
+  async function handleConvertToStudent(id) {
+    if (!confirm('Convert this admission to a student account? This action cannot be undone.')) return;
+    try {
+      await admissionService.convertToStudent(id);
+      setSuccess('Admission converted to student account');
+      loadAdmissions();
+      loadStats();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   const StatCard = ({ label, value, color }) => (
     <div className="bg-white rounded-xl border border-border-light p-4">
       <p className="text-sm text-text-light">{label}</p>
@@ -182,7 +194,12 @@ export default function AdminAdmissionManagementSection() {
                           </>
                         )}
                         {adm.status === 'approved' && (
-                          <span className="text-xs text-text-light">Completed</span>
+                          <>
+                            <span className="text-xs text-text-light">Completed</span>
+                            {!adm.convertedToStudent && (
+                              <button onClick={() => handleConvertToStudent(adm._id)} className="text-green-600 text-xs hover:underline font-medium ml-1">Convert to Student</button>
+                            )}
+                          </>
                         )}
                         {adm.status === 'rejected' && (
                           <button onClick={() => handleAction('restore', adm._id)} className="text-blue-500 text-xs hover:underline font-medium">Restore</button>

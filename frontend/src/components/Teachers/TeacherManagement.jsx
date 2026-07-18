@@ -1,11 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import teacherService from '../../services/teacherService';
+import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
+
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
 import AdminAssignmentSection from '../Dashboard/AdminAssignmentSection';
 import AdminTeacherCourseAssignment from '../Dashboard/AdminTeacherCourseAssignment';
-import { FiEye, FiEdit2, FiUpload, FiDownload, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser, FiUsers, FiBookOpen } from 'react-icons/fi';
+
+import {
+  FiEye,
+  FiEdit2,
+  FiUpload,
+  FiDownload,
+  FiLock,
+  FiUnlock,
+  FiToggleLeft,
+  FiToggleRight,
+  FiTrash2,
+  FiUser,
+  FiUsers,
+  FiStar,
+  FiBook,
+  FiBookOpen,
+} from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -68,10 +87,16 @@ export default function AdminTeacherManagementSection() {
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
   const [actionTarget, setActionTarget] = useState(null);
-  const [assigningTeacher, setAssigningTeacher] = useState(null);
-  const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
-  const [assignedCounts, setAssignedCounts] = useState({});
-  const [assignRefreshKey, setAssignRefreshKey] = useState(0);
+const [showAssignModal, setShowAssignModal] = useState(false);
+const [assignTarget, setAssignTarget] = useState(null);
+const [availableCourses, setAvailableCourses] = useState([]);
+const [selectedCourseId, setSelectedCourseId] = useState('');
+const [assigning, setAssigning] = useState(false);
+
+const [assigningTeacher, setAssigningTeacher] = useState(null);
+const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
+const [assignedCounts, setAssignedCounts] = useState({});
+const [assignRefreshKey, setAssignRefreshKey] = useState(0);
 
   const loadTeachers = useCallback(async () => {
     try {
@@ -224,6 +249,37 @@ export default function AdminTeacherManagementSection() {
     finally { setSaving(false); }
   }
 
+  async function openAssignModal(teacher) {
+    setAssignTarget(teacher);
+    setSelectedCourseId('');
+    setError(null);
+    try {
+      const res = await courseService.getAdminCourses({ status: 'published' });
+      setAvailableCourses(res.data?.data || res.data || []);
+      setShowAssignModal(true);
+    } catch (err) {
+      setError(err.message || 'Failed to load courses');
+    }
+  }
+
+  async function handleAssignCourse() {
+    if (!assignTarget || !selectedCourseId) return;
+    setAssigning(true);
+    setError(null);
+    try {
+      await teacherService.assignCourse(assignTarget._id, selectedCourseId);
+      setSuccess(`Course assigned to teacher successfully`);
+      setShowAssignModal(false);
+      setAssignTarget(null);
+      setSelectedCourseId('');
+      loadTeachers();
+    } catch (err) {
+      setError(err.message || 'Failed to assign course');
+    } finally {
+      setAssigning(false);
+    }
+  }
+
   const badgeVariant = (user) => {
     const status = user?.status || 'pending';
     const map = { pending: 'pending', active: 'active', rejected: 'rejected', blocked: 'blocked' };
@@ -368,15 +424,22 @@ export default function AdminTeacherManagementSection() {
                       onClick: () => startEdit(teacher),
                     },
                     {
-                      label: 'Assign Courses',
-                      icon: FiBookOpen,
-                      onClick: () => setAssigningCoursesTo(teacher),
-                    },
-                    { divider: true },
-                    {
-                      label: 'Assign Students',
-                      icon: FiUsers,
-                      onClick: () => setAssigningTeacher(teacher),
+{
+  label: 'Assign Course',
+  icon: FiBook,
+  onClick: () => openAssignModal(teacher),
+},
+{
+  label: 'Assign Courses',
+  icon: FiBookOpen,
+  onClick: () => setAssigningCoursesTo(teacher),
+},
+{ divider: true },
+{
+  label: 'Assign Students',
+  icon: FiUsers,
+  onClick: () => setAssigningTeacher(teacher),
+},
                     },
                     { divider: true },
                     ...(isPublished
@@ -445,7 +508,7 @@ export default function AdminTeacherManagementSection() {
                           <div className="min-w-0">
                             <p className="font-semibold text-text-dark text-sm truncate">
                               {teacher.fullName}
-                              {teacher.featured && <span className="ml-1 text-yellow-500 text-xs">★</span>}
+                              {teacher.featured && <FiStar className="ml-1 text-yellow-500 inline-block" size={12} />}
                             </p>
                             <p className="text-xs text-text-light truncate">{teacher.country || teacher.email || ''}</p>
                           </div>
@@ -493,20 +556,21 @@ export default function AdminTeacherManagementSection() {
         )}
       </div>
 
-      {/* Teacher Detail Modal */}
-      {viewingTeacher && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-10 pb-10 overflow-y-auto"
+      {/* Teacher Detail Modal - rendered via Portal to escape admin layout stacking context */}
+      {viewingTeacher && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 pt-6 sm:pt-10 pb-6 sm:pb-10 overflow-y-auto"
           onClick={() => setViewingTeacher(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-3xl mx-4 relative max-h-[90vh] overflow-y-auto"
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto overflow-x-hidden"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-heading text-xl font-bold text-text-dark">Teacher Details</h3>
+            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-3 z-10 border-b border-border-light/50">
+              <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Teacher Details</h3>
               <button onClick={() => setViewingTeacher(null)}
-                className="text-text-light hover:text-text-dark text-xl">&times;</button>
+                className="w-8 h-8 rounded-xl bg-bg-light hover:bg-border-light text-text-light hover:text-text-dark flex items-center justify-center transition-colors text-lg">&times;</button>
             </div>
             <AdminDetailView entity={viewingTeacher} type="teacher" statusMaps={teacherStatusMap} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Teacher Modal */}
@@ -800,6 +864,44 @@ export default function AdminTeacherManagementSection() {
                 {saving ? 'Processing...' : 'Confirm'}
               </button>
               <button onClick={() => { setShowActionModal(false); setActionTarget(null); setError(null); }}
+                className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Course Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => { setShowAssignModal(false); setAssignTarget(null); setError(null); }}>
+          <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-heading text-xl font-bold text-text-dark">Assign Course</h3>
+              <button onClick={() => { setShowAssignModal(false); setAssignTarget(null); setError(null); }}
+                className="text-text-light hover:text-text-dark text-xl">&times;</button>
+            </div>
+            <p className="text-sm text-text-body mb-4">
+              Assign a course to <strong>{assignTarget?.fullName || 'this teacher'}</strong>:
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-text-dark mb-1">Course</label>
+              <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
+                <option value="">Select a course...</option>
+                {availableCourses.map((c) => (
+                  <option key={c._id} value={c._id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleAssignCourse} disabled={assigning || !selectedCourseId}
+                className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">
+                {assigning ? 'Assigning...' : 'Assign'}
+              </button>
+              <button onClick={() => { setShowAssignModal(false); setAssignTarget(null); setError(null); }}
                 className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">
                 Cancel
               </button>
