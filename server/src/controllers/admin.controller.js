@@ -4,12 +4,27 @@ const {
   SettingService,
   AuditService,
   AdminService,
+  StudentAssignmentService,
 } = require('../services');
 const { USER_STATUS } = require('../constants');
 const User = require('../models/User.model');
 const CmsContent = require('../models/CmsContent.model');
 
 const getDashboard = asyncHandler(async (_req, res) => {
+  const Teacher = require('../models/Teacher.model');
+  const Student = require('../models/Student.model');
+  const Course = require('../models/Course.model');
+
+  // Cache distinct course IDs to avoid duplicate queries
+  const teacherAssignedCourseIds = await Teacher.distinct('assignedCourses', {
+    isDeleted: false,
+    'assignedCourses.0': { $exists: true },
+  });
+  const studentSelectedCourseIds = await Student.distinct('courses.course', {
+    isDeleted: false,
+    'courses.0': { $exists: true },
+  });
+
   const [
     totalUsers,
     totalAdmins,
@@ -19,6 +34,16 @@ const getDashboard = asyncHandler(async (_req, res) => {
     pendingStudents,
     cmsStats,
     recentAuditLogs,
+    courseStats,
+    coursesPublished,
+    teachersWithCourses,
+    teachersWithoutCourses,
+    studentsAssigned,
+    studentsWaiting,
+    coursesWithTeacher,
+    coursesWithoutTeacher,
+    coursesWithStudent,
+    coursesWithoutStudent,
   ] = await Promise.all([
     User.countDocuments({ isActive: true }),
     User.countDocuments({ role: 'admin', isActive: true }),
@@ -39,6 +64,39 @@ const getDashboard = asyncHandler(async (_req, res) => {
       },
     ]),
     AuditService.getRecentLogs(10),
+    // Course counts
+    Course.countDocuments({ isDeleted: false }),
+    Course.countDocuments({ isDeleted: false, status: 'published' }),
+    // Teacher course assignments
+    Teacher.countDocuments({ isDeleted: false, 'assignedCourses.0': { $exists: true } }),
+    Teacher.countDocuments({
+      isDeleted: false,
+      $or: [
+        { assignedCourses: { $size: 0 } },
+        { assignedCourses: { $exists: false } },
+      ],
+    }),
+    // Student assignments
+    Student.countDocuments({ isDeleted: false, assignedTeacher: { $ne: null } }),
+    Student.countDocuments({ isDeleted: false, assignedTeacher: null, 'courses.0': { $exists: true } }),
+    // Courses with/without teachers (using cached IDs)
+    Course.countDocuments({
+      isDeleted: false,
+      _id: { $in: teacherAssignedCourseIds },
+    }),
+    Course.countDocuments({
+      isDeleted: false,
+      _id: { $nin: teacherAssignedCourseIds },
+    }),
+    // Courses with/without students
+    Course.countDocuments({
+      isDeleted: false,
+      _id: { $in: studentSelectedCourseIds },
+    }),
+    Course.countDocuments({
+      isDeleted: false,
+      _id: { $nin: studentSelectedCourseIds },
+    }),
   ]);
 
   res.status(200).json(
@@ -55,6 +113,19 @@ const getDashboard = asyncHandler(async (_req, res) => {
       cms: {
         total: cmsStats[0]?.total || 0,
         published: cmsStats[0]?.published || 0,
+      },
+      courses: {
+        total: courseStats,
+        active: coursesPublished || 0,
+        published: coursesPublished || 0,
+        teachersWithCourses,
+        teachersWithoutCourses,
+        studentsAssigned,
+        studentsWaiting,
+        coursesWithTeacher,
+        coursesWithoutTeacher,
+        coursesWithStudent,
+        coursesWithoutStudent,
       },
       recentActivity: recentAuditLogs.data || [],
     })
@@ -265,6 +336,128 @@ const rejectProfileVerification = asyncHandler(async (req, res) => {
   );
 });
 
+// =================== ASSIGNMENT MANAGEMENT ===================
+
+const assignStudent = asyncHandler(async (req, res) => {
+  const { teacherId, studentId } = req.body;
+  const result = await StudentAssignmentService.assignStudent(
+    req.user.id,
+    teacherId,
+    studentId
+  );
+  res.status(200).json(
+    ApiResponse.success('Student assigned to teacher successfully', result)
+  );
+});
+
+const removeStudent = asyncHandler(async (req, res) => {
+  const { teacherId, studentId } = req.body;
+  const result = await StudentAssignmentService.removeStudent(
+    req.user.id,
+    teacherId,
+    studentId
+  );
+  res.status(200).json(
+    ApiResponse.success('Student removed from teacher successfully', result)
+  );
+});
+
+const reassignStudent = asyncHandler(async (req, res) => {
+  const { teacherId, studentId } = req.body;
+  const result = await StudentAssignmentService.reassignStudent(
+    req.user.id,
+    teacherId,
+    studentId
+  );
+  res.status(200).json(
+    ApiResponse.success('Student reassigned successfully', result)
+  );
+});
+
+const bulkAssignStudents = asyncHandler(async (req, res) => {
+  const { teacherId, studentIds } = req.body;
+  const result = await StudentAssignmentService.bulkAssignStudents(
+    req.user.id,
+    teacherId,
+    studentIds
+  );
+  res.status(200).json(
+    ApiResponse.success('Bulk assignment completed', result)
+  );
+});
+
+const getAssignedStudents = asyncHandler(async (req, res) => {
+  const { teacherId } = req.params;
+  const result = await StudentAssignmentService.getAssignedStudents(
+    teacherId,
+    req.query
+  );
+  res.status(200).json(
+    ApiResponse.success('Assigned students fetched successfully', result)
+  );
+});
+
+const getAssignedTeacher = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
+  const result = await StudentAssignmentService.getAssignedTeacher(studentId);
+  res.status(200).json(
+    ApiResponse.success('Assigned teacher fetched successfully', result)
+  );
+});
+
+const getAssignmentSummary = asyncHandler(async (_req, res) => {
+  const result = await StudentAssignmentService.getAssignmentSummary();
+  res.status(200).json(
+    ApiResponse.success('Assignment summary fetched successfully', result)
+  );
+});
+
+const getTeacherAssignmentCounts = asyncHandler(async (req, res) => {
+  console.log('\n======== DIAGNOSTIC: admin.getTeacherAssignmentCounts ========');
+  console.log('Request body:', JSON.stringify(req.body));
+  const { teacherIds } = req.body;
+  console.log('Received teacherIds:', JSON.stringify(teacherIds));
+
+  if (!teacherIds || !Array.isArray(teacherIds) || teacherIds.length === 0) {
+    console.log('No teacherIds - returning empty');
+    return res.status(200).json(
+      ApiResponse.success('Teacher assignment counts fetched successfully', {})
+    );
+  }
+
+  const counts = await StudentAssignmentService.getTeacherAssignmentCounts(teacherIds);
+  console.log('Response counts:', JSON.stringify(counts));
+  console.log('==========================================================\n');
+  
+  const response = ApiResponse.success('Teacher assignment counts fetched successfully', counts);
+  console.log('Full JSON response:', JSON.stringify(response));
+  res.status(200).json(response);
+});
+
+// =================== COURSE-AWARE ASSIGNMENT ===================
+
+const getEligibleStudentsForTeacher = asyncHandler(async (req, res) => {
+  const { teacherId } = req.params;
+  const result = await StudentAssignmentService.getEligibleStudentsForTeacher(
+    teacherId,
+    req.query
+  );
+  res.status(200).json(
+    ApiResponse.success('Eligible students fetched successfully', result)
+  );
+});
+
+const getEligibleTeachersForStudent = asyncHandler(async (req, res) => {
+  const { studentId } = req.params;
+  const result = await StudentAssignmentService.getEligibleTeachersForStudent(
+    studentId,
+    req.query
+  );
+  res.status(200).json(
+    ApiResponse.success('Eligible teachers fetched successfully', result)
+  );
+});
+
 module.exports = {
   getDashboard,
   getAuditLogs,
@@ -283,4 +476,15 @@ module.exports = {
   getPendingProfileVerifications,
   approveProfileVerification,
   rejectProfileVerification,
+  // Assignment management
+  assignStudent,
+  removeStudent,
+  reassignStudent,
+  bulkAssignStudents,
+  getAssignedStudents,
+  getAssignedTeacher,
+  getAssignmentSummary,
+  getTeacherAssignmentCounts,
+  getEligibleStudentsForTeacher,
+  getEligibleTeachersForStudent,
 };

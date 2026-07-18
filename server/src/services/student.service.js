@@ -41,6 +41,11 @@ class StudentService extends BaseService {
 
   async softDeleteStudent(id, userId) {
     const student = await this.getById(id);
+
+    // Auto-remove assignment reference when student is deleted
+    const StudentAssignmentService = require('./studentAssignment.service');
+    await StudentAssignmentService.removeAssignmentOnStudentDelete(id);
+
     student.isDeleted = true;
     student.deletedAt = new Date();
     student.updatedBy = userId;

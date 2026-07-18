@@ -216,6 +216,14 @@ const teacherSchema = createBaseSchema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Course',
     }],
+    canTeachCourses: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course',
+    }],
+    assignedStudents: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Student',
+    }],
     status: {
       type: String,
       enum: ['draft', 'published', 'archived'],

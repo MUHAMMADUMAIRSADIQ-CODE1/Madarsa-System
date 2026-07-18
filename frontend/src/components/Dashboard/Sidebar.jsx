@@ -15,6 +15,7 @@ const sidebarItems = [
   { id: 'fees', label: 'Fee Status', icon: FiCreditCard, section: 'main', path: '/student/fees' },
   { id: 'messages', label: 'Messages', icon: FiMail, section: 'main', path: '/student/messages', badge: 3 },
   { id: 'notifications', label: 'Notifications', icon: FiBell, section: 'main', path: '/student/notifications', badge: 2 },
+  { id: 'teacher', label: 'My Teacher', icon: FiUser, section: 'main', path: '/student/teacher' },
   { id: 'profile', label: 'Profile', icon: FiUser, section: 'account', path: '/student/profile' },
   { id: 'settings', label: 'Settings', icon: FiSettings, section: 'account', path: '/student/settings' },
 ];

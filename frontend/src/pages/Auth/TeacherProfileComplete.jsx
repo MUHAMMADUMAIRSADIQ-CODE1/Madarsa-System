@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import teacherPortalService from '../../services/teacherPortalService';
+import courseService from '../../services/courseService';
 import uploadService from '../../services/uploadService';
-import { FiCheckCircle, FiArrowRight, FiUpload, FiTrash2, FiFile, FiPlus } from 'react-icons/fi';
+import { FiCheckCircle, FiArrowRight, FiUpload, FiTrash2, FiFile, FiPlus, FiBook, FiCheck } from 'react-icons/fi';
 
 const STEPS = [
   { id: 'personal', label: 'Personal', icon: '👤' },
@@ -66,6 +67,9 @@ export default function TeacherProfileComplete() {
   const [uploading, setUploading] = useState({});
   const [certInput, setCertInput] = useState({ title: '', issuer: '', year: '' });
   const [awardInput, setAwardInput] = useState({ title: '', year: '', description: '' });
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   useEffect(() => {
     if (user?.profileComplete && user?.profileVerified) {
@@ -73,11 +77,29 @@ export default function TeacherProfileComplete() {
       return;
     }
 
+    // Load available courses for multi-select
+    const loadCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const res = await courseService.getPublishedCourses({ limit: 200 });
+        if (res?.data?.data) {
+          setAvailableCourses(res.data.data);
+        }
+      } catch (_) {}
+      setCoursesLoading(false);
+    };
+    loadCourses();
+
     const loadProfile = async () => {
       try {
         const res = await teacherPortalService.getProfile();
         if (res?.data) {
           const existing = res.data;
+          // Pre-select courses from existing profile
+          if (existing.canTeachCourses && Array.isArray(existing.canTeachCourses)) {
+            const courseIds = existing.canTeachCourses.map(c => c._id || c);
+            setSelectedCourses(courseIds);
+          }
           setFormData(prev => ({
             ...prev,
             fullName: existing.fullName || user?.fullName || '',
@@ -154,6 +176,14 @@ export default function TeacherProfileComplete() {
 
   const handleArrayChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  };
+
+  const toggleCourse = (courseId) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
   };
 
   const handleFileUpload = async (fieldName, file) => {
@@ -282,8 +312,14 @@ export default function TeacherProfileComplete() {
         }
       } catch (err) {}
 
+      // Add canTeachCourses to submission data
+      const submitData = {
+        ...formData,
+        canTeachCourses: selectedCourses,
+      };
+
       if (teacherId) {
-        await teacherPortalService.updateProfile(teacherId, formData);
+        await teacherPortalService.updateProfile(teacherId, submitData);
       }
 
       await completeProfile();
@@ -501,6 +537,64 @@ export default function TeacherProfileComplete() {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Course Selection */}
+      <div className="sm:col-span-2">
+        <label className="block text-sm font-semibold text-text-dark mb-3">
+          Courses You Can Teach *
+          <span className="text-xs text-text-light ml-2 font-normal">(Select the courses you are qualified to teach)</span>
+        </label>
+        {coursesLoading ? (
+          <div className="flex items-center gap-3 p-4 bg-bg-light rounded-xl">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-text-light">Loading courses...</span>
+          </div>
+        ) : availableCourses.length === 0 ? (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-sm text-amber-700">No courses available yet. Please check back later.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {availableCourses.map(course => {
+              const isSelected = selectedCourses.includes(course._id);
+              return (
+                <button
+                  key={course._id}
+                  type="button"
+                  onClick={() => toggleCourse(course._id)}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border-light hover:border-primary/50 hover:bg-primary/[0.02]'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all flex-shrink-0 ${
+                    isSelected ? 'bg-primary text-white' : 'border-2 border-border-light'
+                  }`}>
+                    {isSelected && <FiCheck className="w-3.5 h-3.5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-dark truncate">{course.title}</p>
+                    {course.shortDescription && (
+                      <p className="text-xs text-text-light truncate mt-0.5">{course.shortDescription}</p>
+                    )}
+                  </div>
+                  {course.thumbnail && (
+                    <img src={course.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {selectedCourses.length > 0 && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-text-light">
+            <FiBook className="w-3.5 h-3.5" />
+            <span>{selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected</span>
+          </div>
+        )}
+      </div>
+
       <div className="sm:col-span-2">
         <label className="block text-sm font-semibold text-text-dark mb-2">Qualification</label>
         <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} placeholder="e.g. Masters in Islamic Studies"

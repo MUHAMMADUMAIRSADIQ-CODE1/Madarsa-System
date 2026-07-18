@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { adminDashboardData } from '../../data/adminDashboardData';
-import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle } from 'react-icons/fi';
+import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle, FiEye } from 'react-icons/fi';
 
 const ROLE_LABELS = {
   student: 'Student',

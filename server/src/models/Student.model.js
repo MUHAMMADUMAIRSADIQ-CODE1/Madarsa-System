@@ -222,6 +222,11 @@ const studentSchema = createBaseSchema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Admission',
     },
+    assignedTeacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Teacher',
+      index: true,
+    },
     status: {
       type: String,
       enum: ['active', 'inactive', 'graduated', 'suspended', 'transferred'],

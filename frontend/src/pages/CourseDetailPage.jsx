@@ -1,266 +1,398 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import coursesData from '../data/coursesData';
+import courseService from '../services/courseService';
+import {
+  FiBook, FiClock, FiUser, FiUsers, FiStar,
+  FiCheckCircle, FiCalendar, FiAward, FiBarChart2,
+  FiRefreshCw,
+} from 'react-icons/fi';
+
+function LoadingSkeleton() {
+  return (
+    <div className="min-h-screen pt-24 pb-16 bg-bg-light">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-4 bg-gray-200 rounded w-48 mb-8 animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="h-96 bg-gray-200 rounded-3xl animate-pulse" />
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-3/4 animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse" />
+            </div>
+          </div>
+          <div className="h-96 bg-gray-200 rounded-2xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }) {
+  return (
+    <div className="min-h-screen pt-24 pb-16 bg-bg-light flex items-center justify-center">
+      <div className="text-center max-w-md">
+        <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+          <FiRefreshCw size={28} className="text-red-500" />
+        </div>
+        <h1 className="font-heading text-2xl font-bold text-text-dark mb-2">Failed to Load Course</h1>
+        <p className="text-text-body mb-6">{message || 'Please try again later.'}</p>
+        {onRetry && (
+          <button onClick={onRetry} className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-colors">
+            <FiRefreshCw size={16} />
+            Retry
+          </button>
+        )}
+        <Link to="/courses" className="block mt-4 text-primary hover:underline font-medium">
+          Back to Courses
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function CourseDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  
-  // Find course by slug or id
-  const course = coursesData.courses.find(c => {
-    const courseSlug = c.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    return courseSlug === slug || c.id.toString() === slug;
-  });
+  const [courseDetail, setCourseDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!course) {
-    return (
-      <div className="min-h-screen pt-32 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-heading text-3xl font-bold text-text-dark mb-4">
-            Course Not Found
-          </h1>
-          <p className="text-text-body mb-8">
-            The course you're looking for doesn't exist.
-          </p>
-          <Link
-            to="/courses"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-semibold rounded-2xl hover:bg-primary-dark transition-all"
-          >
-            Back to Courses
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const fetchCourse = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Try fetching by slug from public endpoint first
+      const publicRes = await courseService.getPublishedCourses({ limit: 100 });
+      const allCourses = publicRes?.data?.data || publicRes?.data || [];
+      const found = allCourses.find(c => {
+        const cSlug = c.slug || c.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        return cSlug === slug || c._id === slug || c.id?.toString() === slug;
+      });
+      if (found) {
+        // Fetch full detail including stats
+        try {
+          const detailRes = await courseService.getCourseDetailWithStats(found._id);
+          if (detailRes?.data) {
+            setCourseDetail(detailRes.data);
+          } else {
+            setCourseDetail({ course: found, teachers: { count: 0, list: [] }, students: { interestedCount: 0, assignedCount: 0, interested: [], assigned: [] } });
+          }
+        } catch {
+          setCourseDetail({ course: found, teachers: { count: 0, list: [] }, students: { interestedCount: 0, assignedCount: 0, interested: [], assigned: [] } });
+        }
+      } else {
+        setError('Course not found');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load course');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCourse();
+  }, [slug]);
+
+  if (loading) return <LoadingSkeleton />;
+  if (error) return <ErrorState message={error} onRetry={fetchCourse} />;
+  if (!courseDetail) return <ErrorState message="Course not found" />;
+
+  const course = courseDetail.course;
+  const teachers = courseDetail.teachers || { count: 0, list: [] };
+  const students = courseDetail.students || { interestedCount: 0, assignedCount: 0 };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    });
+  };
+
+  const levelColor = (level) => {
+    switch (level) {
+      case 'beginner': return 'bg-green-100 text-green-800 border-green-200';
+      case 'intermediate': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'advanced': return 'bg-purple-100 text-purple-800 border-purple-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-bg-light">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm mb-8">
+        <div className="flex items-center gap-2 text-sm mb-6 sm:mb-8">
           <Link to="/" className="text-primary hover:underline">Home</Link>
           <span className="text-text-light">/</span>
           <Link to="/courses" className="text-primary hover:underline">Courses</Link>
           <span className="text-text-light">/</span>
-          <span className="text-text-body">{course.title}</span>
+          <span className="text-text-body truncate max-w-[200px]">{course.title}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Hero Section */}
-            <div className={`h-96 rounded-3xl bg-gradient-to-br ${course.color} relative overflow-hidden shadow-lg`}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="px-4 py-2 bg-white/95 rounded-lg text-sm font-semibold text-text-dark">
-                    {course.level}
-                  </span>
-                  <span className="px-4 py-2 bg-primary/95 rounded-lg text-sm font-semibold text-white">
-                    {course.mode}
-                  </span>
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+            {/* Banner */}
+            <div className="relative h-56 sm:h-72 md:h-96 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg bg-gradient-to-br from-primary/20 to-primary-dark/20">
+              {course.banner ? (
+                <img
+                  src={course.banner}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : course.thumbnail ? (
+                <img
+                  src={course.thumbnail}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : null}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  {course.level && (
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-bold border ${levelColor(course.level)}`}>
+                      {course.level}
+                    </span>
+                  )}
+                  {course.status === 'published' && (
+                    <span className="px-3 py-1.5 bg-green-500/90 rounded-lg text-xs font-bold text-white">
+                      Published
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Course Title & Meta */}
+            {/* Title & Meta */}
             <div>
-              <h1 className="font-heading text-4xl font-bold text-text-dark mb-4">
+              <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-text-dark mb-3 sm:mb-4">
                 {course.title}
               </h1>
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-gold" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="font-semibold text-text-dark">{course.rating}/5.0</span>
-                </div>
-                <div className="flex items-center gap-2 text-text-body">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{course.duration}</span>
-                </div>
-                <div className="flex items-center gap-2 text-text-body">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span>{course.students} Students</span>
-                </div>
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-sm">
+                {course.duration && (
+                  <span className="flex items-center gap-1.5 text-text-body">
+                    <FiClock size={16} className="text-text-light" />
+                    {course.duration}
+                  </span>
+                )}
+                {course.totalLessons > 0 && (
+                  <span className="flex items-center gap-1.5 text-text-body">
+                    <FiBook size={16} className="text-text-light" />
+                    {course.totalLessons} Lessons
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5 text-text-body">
+                  <FiUser size={16} className="text-text-light" />
+                  {teachers.count} Teacher{teachers.count !== 1 ? 's' : ''}
+                </span>
+                <span className="flex items-center gap-1.5 text-text-body">
+                  <FiUsers size={16} className="text-text-light" />
+                  {students.interestedCount} Interested
+                </span>
+                {course.language && (
+                  <span className="flex items-center gap-1.5 text-text-body">
+                    <FiStar size={16} className="text-text-light" />
+                    {course.language}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Description */}
-            <div>
-              <h2 className="font-heading text-2xl font-bold text-text-dark mb-4">
-                About This Course
-              </h2>
-              <p className="text-text-body text-lg leading-relaxed mb-6">
-                {course.description}
-              </p>
-            </div>
+            {(course.shortDescription || course.fullDescription) && (
+              <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-border-light">
+                <h2 className="font-heading text-xl sm:text-2xl font-bold text-text-dark mb-4">
+                  About This Course
+                </h2>
+                {course.shortDescription && (
+                  <p className="text-text-body text-base sm:text-lg leading-relaxed mb-4">
+                    {course.shortDescription}
+                  </p>
+                )}
+                {course.fullDescription && (
+                  <div className="text-text-body leading-relaxed whitespace-pre-line">
+                    {course.fullDescription}
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Course Details Grid */}
-            <div>
-              <h2 className="font-heading text-2xl font-bold text-text-dark mb-4">
+            {/* Course Info Grid */}
+            <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-border-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold text-text-dark mb-6">
                 Course Details
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Instructor</p>
-                  <p className="font-semibold text-text-dark">{course.teacher}</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                {course.categoryName && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Category</p>
+                    <p className="font-semibold text-text-dark">{course.categoryName}</p>
+                  </div>
+                )}
+                {course.duration && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Duration</p>
+                    <p className="font-semibold text-text-dark">{course.duration}</p>
+                  </div>
+                )}
+                {course.level && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Level</p>
+                    <p className="font-semibold text-text-dark capitalize">{course.level}</p>
+                  </div>
+                )}
+                {course.language && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Language</p>
+                    <p className="font-semibold text-text-dark">{course.language}</p>
+                  </div>
+                )}
+                {course.totalLessons > 0 && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Total Lessons</p>
+                    <p className="font-semibold text-text-dark">{course.totalLessons}</p>
+                  </div>
+                )}
+                <div className="bg-bg-light rounded-xl p-4">
+                  <p className="text-xs text-text-light font-medium mb-1">Certificate</p>
+                  <p className={`font-semibold ${course.certificateAvailable ? 'text-green-600' : 'text-text-light'}`}>
+                    {course.certificateAvailable ? 'Yes' : 'No'}
+                  </p>
                 </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Duration</p>
-                  <p className="font-semibold text-text-dark">{course.duration}</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Level</p>
-                  <p className="font-semibold text-text-dark">{course.level}</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Mode</p>
-                  <p className="font-semibold text-text-dark">{course.mode}</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Schedule</p>
-                  <p className="font-semibold text-text-dark">{course.schedule}</p>
-                </div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-border-light">
-                  <p className="text-xs text-text-light font-medium mb-2">Certificate</p>
-                  <p className="font-semibold text-green-600">{course.certificate ? 'Yes' : 'No'}</p>
-                </div>
+                {course.maxStudents && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Max Students</p>
+                    <p className="font-semibold text-text-dark">{course.maxStudents}</p>
+                  </div>
+                )}
+                {course.createdAt && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Created</p>
+                    <p className="font-semibold text-text-dark text-sm">{formatDate(course.createdAt)}</p>
+                  </div>
+                )}
+                {course.updatedAt && (
+                  <div className="bg-bg-light rounded-xl p-4">
+                    <p className="text-xs text-text-light font-medium mb-1">Last Updated</p>
+                    <p className="font-semibold text-text-dark text-sm">{formatDate(course.updatedAt)}</p>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Languages */}
-            <div>
-              <h2 className="font-heading text-2xl font-bold text-text-dark mb-4">
-                Languages
-              </h2>
-              <div className="flex flex-wrap gap-3">
-                {course.language.map(lang => (
-                  <span key={lang} className="px-4 py-2 bg-primary-light text-primary font-semibold rounded-full">
-                    {lang}
-                  </span>
-                ))}
+            {/* Assigned Teachers */}
+            {teachers.list && teachers.list.length > 0 && (
+              <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-border-light">
+                <h2 className="font-heading text-xl sm:text-2xl font-bold text-text-dark mb-4 flex items-center gap-2">
+                  <FiUser size={22} className="text-primary" />
+                  Assigned Teachers ({teachers.count})
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  {teachers.list.map((t) => (
+                    <div key={t._id} className="flex items-start gap-3 p-4 bg-bg-light rounded-xl hover:shadow-sm transition-shadow">
+                      {t.profilePhoto ? (
+                        <img src={t.profilePhoto} alt={t.fullName} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <FiUser size={18} className="text-primary" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-semibold text-text-dark text-sm truncate">{t.fullName}</p>
+                        {t.qualification && (
+                          <p className="text-xs text-text-light truncate">{t.qualification}</p>
+                        )}
+                        {t.specialization && (
+                          <p className="text-xs text-text-light truncate">{t.specialization}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* What You'll Learn */}
-            <div>
-              <h2 className="font-heading text-2xl font-bold text-text-dark mb-4">
-                What You'll Learn
+            {/* Features */}
+            <div className="bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-border-light">
+              <h2 className="font-heading text-xl sm:text-2xl font-bold text-text-dark mb-4">
+                Course Features
               </h2>
-              <ul className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
-                  'Comprehensive understanding of course material',
-                  'Practical skills applicable in real-world scenarios',
-                  'Certification upon successful completion',
-                  'Access to course materials and resources',
-                  'One-on-one guidance from qualified instructors',
-                  'Community support and peer learning',
-                ].map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-3">
-                    <svg className="w-6 h-6 text-green-500 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-text-body">{item}</span>
-                  </li>
+                  { label: 'Certificate Available', active: course.certificateAvailable },
+                  { label: 'Featured Course', active: course.featured },
+                  { label: 'Popular Course', active: course.popular },
+                  { label: 'Trending', active: course.trending },
+                ].map((f, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-bg-light">
+                    <FiCheckCircle size={18} className={f.active ? 'text-green-500' : 'text-gray-300'} />
+                    <span className={`text-sm font-medium ${f.active ? 'text-text-dark' : 'text-text-light'}`}>
+                      {f.label}
+                    </span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            {/* Enrollment Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-28 space-y-6">
-              <div>
-                <p className="text-3xl font-heading font-bold text-text-dark mb-2">
-                  {course.price}
-                </p>
-                <p className="text-sm text-text-light">
-                  All courses are donation-based to ensure accessibility for all
-                </p>
+            <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 sticky top-28 space-y-5 border border-border-light">
+              {/* Course Image */}
+              {course.thumbnail && (
+                <div className="rounded-xl overflow-hidden border border-border-light">
+                  <img
+                    src={course.thumbnail}
+                    alt={course.title}
+                    className="w-full h-40 object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              )}
+
+              {/* Quick Stats */}
+              <div className="space-y-4">
+                <h3 className="font-heading text-base font-bold text-text-dark">Quick Stats</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Teachers', value: teachers.count, icon: FiUser, color: 'text-blue-600' },
+                    { label: 'Interested Students', value: students.interestedCount, icon: FiUsers, color: 'text-purple-600' },
+                    { label: 'Assigned Students', value: students.assignedCount, icon: FiAward, color: 'text-green-600' },
+                    { label: 'Duration', value: course.duration || '-', icon: FiClock, color: 'text-orange-600' },
+                    { label: 'Level', value: course.level || '-', icon: FiBarChart2, color: 'text-primary' },
+                  ].map((stat, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
+                      <div className="flex items-center gap-2">
+                        <stat.icon size={14} className={stat.color} />
+                        <span className="text-xs sm:text-sm text-text-light">{stat.label}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${stat.color}`}>{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <button className="w-full py-4 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/30 hover:shadow-xl">
-                Enroll Now
-              </button>
-
-              <button className="w-full py-3 border-2 border-primary text-primary font-semibold rounded-xl hover:bg-primary-light transition-all">
-                Add to Wishlist
-              </button>
-
-              {/* Course Stats */}
-              <div className="space-y-4 pt-4 border-t border-border-light">
-                <div className="flex items-center justify-between">
-                  <span className="text-text-light text-sm">Students Enrolled</span>
-                  <span className="font-bold text-text-dark">{course.students}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-text-light text-sm">Rating</span>
-                  <div className="flex items-center gap-1">
-                    <span className="font-bold text-text-dark">{course.rating}</span>
-                    <svg className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
+              {/* Dates */}
+              <div className="space-y-3 pt-4 border-t border-border-light text-xs text-text-light">
+                {course.createdAt && (
+                  <div className="flex items-center gap-2">
+                    <FiCalendar size={12} />
+                    Created: {formatDate(course.createdAt)}
                   </div>
-                </div>
-              </div>
-
-              {/* Share */}
-              <div className="space-y-3 pt-4 border-t border-border-light">
-                <p className="text-sm font-semibold text-text-dark">Share This Course</p>
-                <div className="flex gap-2">
-                  <button className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-                    Facebook
-                  </button>
-                  <button className="flex-1 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition text-sm font-medium">
-                    Twitter
-                  </button>
-                  <button className="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-sm font-medium">
-                    WhatsApp
-                  </button>
-                </div>
+                )}
+                {course.updatedAt && (
+                  <div className="flex items-center gap-2">
+                    <FiCalendar size={12} />
+                    Updated: {formatDate(course.updatedAt)}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Related Courses */}
-        <div className="mt-16">
-          <h2 className="font-heading text-3xl font-bold text-text-dark mb-8">
-            Related Courses
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coursesData.courses
-              .filter(c => c.category === course.category && c.id !== course.id)
-              .slice(0, 3)
-              .map(relatedCourse => (
-                <Link
-                  key={relatedCourse.id}
-                  to={`/course/${relatedCourse.id}`}
-                  className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <div className={`h-40 bg-gradient-to-br ${relatedCourse.color}`} />
-                  <div className="p-4">
-                    <h3 className="font-heading font-bold text-text-dark group-hover:text-primary transition-colors">
-                      {relatedCourse.title}
-                    </h3>
-                    <p className="text-sm text-text-light mt-2">By {relatedCourse.teacher}</p>
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-border-light">
-                      <span className="text-xs font-semibold text-text-light">{relatedCourse.duration}</span>
-                      <span className="flex items-center gap-1">
-                        <svg className="w-3 h-3 text-gold" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span className="text-xs font-bold text-text-dark">{relatedCourse.rating}</span>
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
           </div>
         </div>
       </div>
