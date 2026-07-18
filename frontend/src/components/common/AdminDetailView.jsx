@@ -159,8 +159,8 @@ function AccountStatusCard({ label, value, badge, icon: Icon, color }) {
               </span>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-text-light uppercase tracking-wider break-words">{label}</p>
-              <p className="text-sm font-bold text-text-dark mt-0.5 break-words">{value}</p>
+              <p className="text-xs font-semibold text-text-light uppercase tracking-wider break-words whitespace-normal">{label}</p>
+              <p className="text-sm font-bold text-text-dark mt-0.5 break-words whitespace-normal">{value}</p>
             </div>
           </div>
           {badge && <Badge variant={badge.variant}>{badge.label}</Badge>}
@@ -569,8 +569,8 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
             <Icon size={14} className="text-white/70" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 break-words">{label}</p>
-            <p className="text-sm font-bold text-white mt-0.5 break-words" title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}>{value}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 break-words whitespace-normal">{label}</p>
+            <p className="text-sm font-bold text-white mt-0.5 break-words whitespace-normal" title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}>{value}</p>
           </div>
         </div>
       </div>
@@ -674,43 +674,51 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          ACCOUNT SUMMARY
+          ACCOUNT SUMMARY - RESPONSIVE FLEX WRAP
       ══════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <AccountStatusCard
-          label="Account Status"
-          value={userStatusLabel}
-          icon={FiShield}
-          color={userStatus === 'active' ? 'green' : userStatus === 'blocked' ? 'red' : userStatus === 'pending' ? 'yellow' : 'gray'}
-          badge={{ label: userStatusLabel, variant: userStatusVariant }}
-        />
-        <AccountStatusCard
-          label="Verification Status"
-          value={verifLabel}
-          icon={FiCheckCircle}
-          color={verifStatus === 'verified' ? 'green' : verifStatus === 'pending' ? 'yellow' : verifStatus === 'rejected' ? 'red' : 'gray'}
-          badge={{ label: verifLabel, variant: verifVariant }}
-        />
-        <AccountStatusCard
-          label="Approval Status"
-          value={isTeacher ? entity?.status || 'draft' : 'Active'}
-          icon={FiFlag}
-          color={entity?.status === 'published' || !isTeacher ? 'green' : 'yellow'}
-          badge={{
-            label: isTeacher ? entity?.status || 'draft' : 'Active',
-            variant: entity?.status === 'published' || !isTeacher ? 'active' : 'draft',
-          }}
-        />
-        <AccountStatusCard
-          label="Profile Completion"
-          value={`${completionPct}%`}
-          icon={FiStar}
-          color={completionPct >= 100 ? 'green' : 'yellow'}
-          badge={{
-            label: completionPct >= 100 ? 'Complete' : 'Incomplete',
-            variant: profileCompleteVariant,
-          }}
-        />
+      <div className="flex flex-wrap gap-3 sm:gap-4">
+        <div className="flex-1 min-w-[200px] sm:min-w-[210px]">
+          <AccountStatusCard
+            label="Account Status"
+            value={userStatusLabel}
+            icon={FiShield}
+            color={userStatus === 'active' ? 'green' : userStatus === 'blocked' ? 'red' : userStatus === 'pending' ? 'yellow' : 'gray'}
+            badge={{ label: userStatusLabel, variant: userStatusVariant }}
+          />
+        </div>
+        <div className="flex-1 min-w-[200px] sm:min-w-[210px]">
+          <AccountStatusCard
+            label="Verification Status"
+            value={verifLabel}
+            icon={FiCheckCircle}
+            color={verifStatus === 'verified' ? 'green' : verifStatus === 'pending' ? 'yellow' : verifStatus === 'rejected' ? 'red' : 'gray'}
+            badge={{ label: verifLabel, variant: verifVariant }}
+          />
+        </div>
+        <div className="flex-1 min-w-[200px] sm:min-w-[210px]">
+          <AccountStatusCard
+            label="Approval Status"
+            value={isTeacher ? entity?.status || 'draft' : 'Active'}
+            icon={FiFlag}
+            color={entity?.status === 'published' || !isTeacher ? 'green' : 'yellow'}
+            badge={{
+              label: isTeacher ? entity?.status || 'draft' : 'Active',
+              variant: entity?.status === 'published' || !isTeacher ? 'active' : 'draft',
+            }}
+          />
+        </div>
+        <div className="flex-1 min-w-[200px] sm:min-w-[210px]">
+          <AccountStatusCard
+            label="Profile Completion"
+            value={`${completionPct}%`}
+            icon={FiStar}
+            color={completionPct >= 100 ? 'green' : 'yellow'}
+            badge={{
+              label: completionPct >= 100 ? 'Complete' : 'Incomplete',
+              variant: profileCompleteVariant,
+            }}
+          />
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════

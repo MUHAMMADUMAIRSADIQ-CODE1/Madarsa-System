@@ -556,9 +556,9 @@ export default function AdminTeacherManagementSection() {
       {viewingTeacher && createPortal(
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 pt-6 sm:pt-10 pb-6 sm:pb-10 overflow-y-auto"
           onClick={() => setViewingTeacher(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto overflow-x-hidden"
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-3 z-10 border-b border-border-light/50">
+            <div className="flex items-center justify-between  sm:mb-6 sticky -top-8 bg-white p-3 z-100 border-b border-border-light/50">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Teacher Details</h3>
               <button onClick={() => setViewingTeacher(null)}
                 className="w-8 h-8 rounded-xl bg-bg-light hover:bg-border-light text-text-light hover:text-text-dark flex items-center justify-center transition-colors text-lg">&times;</button>

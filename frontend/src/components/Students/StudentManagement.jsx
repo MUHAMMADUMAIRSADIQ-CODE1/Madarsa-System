@@ -511,7 +511,7 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
       {viewingStudent && createPortal(
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 pt-6 sm:pt-10 pb-6 sm:pb-10 overflow-y-auto"
           onClick={() => setViewingStudent(null)}>
-          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto overflow-x-hidden"
+          <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-3 z-10 border-b border-border-light/50">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Student Details</h3>
