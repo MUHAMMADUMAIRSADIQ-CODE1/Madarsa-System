@@ -87,16 +87,16 @@ export default function AdminTeacherManagementSection() {
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
   const [actionTarget, setActionTarget] = useState(null);
-const [showAssignModal, setShowAssignModal] = useState(false);
-const [assignTarget, setAssignTarget] = useState(null);
-const [availableCourses, setAvailableCourses] = useState([]);
-const [selectedCourseId, setSelectedCourseId] = useState('');
-const [assigning, setAssigning] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
-const [assigningTeacher, setAssigningTeacher] = useState(null);
-const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
-const [assignedCounts, setAssignedCounts] = useState({});
-const [assignRefreshKey, setAssignRefreshKey] = useState(0);
+  const [assigningTeacher, setAssigningTeacher] = useState(null);
+  const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
+  const [assignedCounts, setAssignedCounts] = useState({});
+  const [assignRefreshKey, setAssignRefreshKey] = useState(0);
 
   const loadTeachers = useCallback(async () => {
     try {
@@ -111,7 +111,7 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
   }, [searchQuery, userStatusFilter]);
 
   const loadStats = useCallback(async () => {
-    try { const res = await teacherService.getTeacherStats(); setStats(res.data); } catch (_) {}
+    try { const res = await teacherService.getTeacherStats(); setStats(res.data); } catch (_) { }
   }, []);
 
   useEffect(() => { loadTeachers(); loadStats(); }, [loadTeachers, loadStats]);
@@ -125,7 +125,7 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
       if (res && res.data) {
         setAssignedCounts(res.data);
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [teachers]);
 
   useEffect(() => {
@@ -424,66 +424,64 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
                       onClick: () => startEdit(teacher),
                     },
                     {
-{
-  label: 'Assign Course',
-  icon: FiBook,
-  onClick: () => openAssignModal(teacher),
-},
-{
-  label: 'Assign Courses',
-  icon: FiBookOpen,
-  onClick: () => setAssigningCoursesTo(teacher),
-},
-{ divider: true },
-{
-  label: 'Assign Students',
-  icon: FiUsers,
-  onClick: () => setAssigningTeacher(teacher),
-},
+                      label: 'Assign Course',
+                      icon: FiBook,
+                      onClick: () => openAssignModal(teacher),
+                    },
+                    {
+                      label: 'Assign Courses',
+                      icon: FiBookOpen,
+                      onClick: () => setAssigningCoursesTo(teacher),
+                    },
+                    { divider: true },
+                    {
+                      label: 'Assign Students',
+                      icon: FiUsers,
+                      onClick: () => setAssigningTeacher(teacher),
                     },
                     { divider: true },
                     ...(isPublished
                       ? [{
-                          label: 'Unpublish',
-                          icon: FiDownload,
-                          warning: true,
-                          onClick: () => handleUnpublish(teacher._id),
-                        }]
+                        label: 'Unpublish',
+                        icon: FiDownload,
+                        warning: true,
+                        onClick: () => handleUnpublish(teacher._id),
+                      }]
                       : [{
-                          label: 'Publish',
-                          icon: FiUpload,
-                          success: true,
-                          onClick: () => handlePublish(teacher._id),
-                        }]
+                        label: 'Publish',
+                        icon: FiUpload,
+                        success: true,
+                        onClick: () => handlePublish(teacher._id),
+                      }]
                     ),
                     { divider: true },
                     ...(isActive
                       ? [{
-                          label: 'Deactivate',
-                          icon: FiToggleRight,
-                          warning: true,
-                          onClick: () => confirmAction(teacher, 'deactivate_user'),
-                        }]
+                        label: 'Deactivate',
+                        icon: FiToggleRight,
+                        warning: true,
+                        onClick: () => confirmAction(teacher, 'deactivate_user'),
+                      }]
                       : [{
-                          label: 'Activate',
-                          icon: FiToggleLeft,
-                          success: true,
-                          onClick: () => confirmAction(teacher, 'activate_user'),
-                        }]
+                        label: 'Activate',
+                        icon: FiToggleLeft,
+                        success: true,
+                        onClick: () => confirmAction(teacher, 'activate_user'),
+                      }]
                     ),
                     ...(isBlocked
                       ? [{
-                          label: 'Unblock',
-                          icon: FiUnlock,
-                          success: true,
-                          onClick: () => confirmAction(teacher, 'unblock'),
-                        }]
+                        label: 'Unblock',
+                        icon: FiUnlock,
+                        success: true,
+                        onClick: () => confirmAction(teacher, 'unblock'),
+                      }]
                       : [{
-                          label: 'Block',
-                          icon: FiLock,
-                          warning: true,
-                          onClick: () => confirmAction(teacher, 'block'),
-                        }]
+                        label: 'Block',
+                        icon: FiLock,
+                        warning: true,
+                        onClick: () => confirmAction(teacher, 'block'),
+                      }]
                     ),
                     { divider: true },
                     {
@@ -523,21 +521,19 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
                         <Badge variant={verifVariant(user.profileVerificationStatus)}>{VERIFICATION_STATUS_MAP[user.profileVerificationStatus]?.label || 'Not Submitted'}</Badge>
                       </td>
                       <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          (teacher.assignedCourses?.length || 0) > 0
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${(teacher.assignedCourses?.length || 0) > 0
                             ? 'bg-primary/10 text-primary border border-primary/20'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}>
+                          }`}>
                           <FiBookOpen size={12} />
                           {teacher.assignedCourses?.length || 0}
                         </span>
                       </td>
                       <td className="px-4 sm:px-6 py-3.5 text-center hidden xl:table-cell">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          (assignedCounts[teacher._id] || 0) > 0
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${(assignedCounts[teacher._id] || 0) > 0
                             ? 'bg-blue-100 text-blue-800 border border-blue-200'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
-                        }`}>
+                          }`}>
                           <FiUsers size={12} />
                           {assignedCounts[teacher._id] || 0}
                         </span>
@@ -818,7 +814,7 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
             if (ids.length > 0) {
               assignmentService.getTeacherAssignmentCounts(ids)
                 .then(res => { if (res && res.data) setAssignedCounts(res.data); })
-                .catch(() => {});
+                .catch(() => { });
             }
           }}
         />
@@ -833,18 +829,18 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-heading text-xl font-bold text-text-dark capitalize">
                 {actionType === 'block' ? 'Block Teacher' :
-                 actionType === 'unblock' ? 'Unblock Teacher' :
-                 actionType === 'activate_user' ? 'Activate Teacher' :
-                 actionType === 'deactivate_user' ? 'Deactivate Teacher' : ''}
+                  actionType === 'unblock' ? 'Unblock Teacher' :
+                    actionType === 'activate_user' ? 'Activate Teacher' :
+                      actionType === 'deactivate_user' ? 'Deactivate Teacher' : ''}
               </h3>
               <button onClick={() => { setShowActionModal(false); setActionTarget(null); setError(null); }}
                 className="text-text-light hover:text-text-dark text-xl">&times;</button>
             </div>
             <p className="text-sm text-text-body mb-4">
               {actionType === 'block' ? `Are you sure you want to block ${actionTarget?.fullName || 'this teacher'}? They will not be able to log in.` :
-               actionType === 'unblock' ? `Are you sure you want to unblock ${actionTarget?.fullName || 'this teacher'}?` :
-               actionType === 'activate_user' ? `Are you sure you want to activate ${actionTarget?.fullName || 'this teacher'}?` :
-               actionType === 'deactivate_user' ? `Are you sure you want to deactivate ${actionTarget?.fullName || 'this teacher'}? They will not be able to access their account.` : ''}
+                actionType === 'unblock' ? `Are you sure you want to unblock ${actionTarget?.fullName || 'this teacher'}?` :
+                  actionType === 'activate_user' ? `Are you sure you want to activate ${actionTarget?.fullName || 'this teacher'}?` :
+                    actionType === 'deactivate_user' ? `Are you sure you want to deactivate ${actionTarget?.fullName || 'this teacher'}? They will not be able to access their account.` : ''}
             </p>
             {(actionType === 'block' || actionType === 'deactivate_user') && (
               <div className="mb-4">
@@ -856,11 +852,10 @@ const [assignRefreshKey, setAssignRefreshKey] = useState(0);
             )}
             <div className="flex gap-3">
               <button onClick={executeAction} disabled={saving}
-                className={`flex-1 px-6 py-3 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 ${
-                  actionType === 'block' || actionType === 'deactivate_user'
+                className={`flex-1 px-6 py-3 text-white rounded-xl font-semibold transition-colors disabled:opacity-50 ${actionType === 'block' || actionType === 'deactivate_user'
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-green-600 hover:bg-green-700'
-                }`}>
+                  }`}>
                 {saving ? 'Processing...' : 'Confirm'}
               </button>
               <button onClick={() => { setShowActionModal(false); setActionTarget(null); setError(null); }}
