@@ -108,4 +108,10 @@ router.post(
   courseController.duplicateCourse
 );
 
+router.get(
+  '/:id/detail-with-stats',
+  validate(courseValidator.idParamRules),
+  courseController.getDetailWithStats
+);
+
 module.exports = router;

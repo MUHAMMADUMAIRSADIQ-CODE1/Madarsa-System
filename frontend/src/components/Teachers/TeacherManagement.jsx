@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import teacherService from '../../services/teacherService';
+import assignmentService from '../../services/assignmentService';
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
-import { FiEye, FiEdit2, FiUpload, FiDownload, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser } from 'react-icons/fi';
+import AdminAssignmentSection from '../Dashboard/AdminAssignmentSection';
+import AdminTeacherCourseAssignment from '../Dashboard/AdminTeacherCourseAssignment';
+import { FiEye, FiEdit2, FiUpload, FiDownload, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser, FiUsers, FiBookOpen } from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -65,6 +68,10 @@ export default function AdminTeacherManagementSection() {
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
   const [actionTarget, setActionTarget] = useState(null);
+  const [assigningTeacher, setAssigningTeacher] = useState(null);
+  const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
+  const [assignedCounts, setAssignedCounts] = useState({});
+  const [assignRefreshKey, setAssignRefreshKey] = useState(0);
 
   const loadTeachers = useCallback(async () => {
     try {
@@ -83,6 +90,24 @@ export default function AdminTeacherManagementSection() {
   }, []);
 
   useEffect(() => { loadTeachers(); loadStats(); }, [loadTeachers, loadStats]);
+
+  // Load assigned student counts for all teachers in a single batch request
+  const loadAssignedCounts = useCallback(async () => {
+    try {
+      const teacherIds = teachers.map((t) => t._id);
+      if (teacherIds.length === 0) return;
+      const res = await assignmentService.getTeacherAssignmentCounts(teacherIds);
+      if (res && res.data) {
+        setAssignedCounts(res.data);
+      }
+    } catch (_) {}
+  }, [teachers]);
+
+  useEffect(() => {
+    if (teachers.length > 0) {
+      loadAssignedCounts();
+    }
+  }, [teachers, loadAssignedCounts, assignRefreshKey]);
 
   function resetForm() {
     setForm(defaultForm);
@@ -319,6 +344,8 @@ export default function AdminTeacherManagementSection() {
                   <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden sm:table-cell">Specialization</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Approval</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Verified</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Courses</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden xl:table-cell">Students</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -339,6 +366,17 @@ export default function AdminTeacherManagementSection() {
                       label: 'Edit Teacher',
                       icon: FiEdit2,
                       onClick: () => startEdit(teacher),
+                    },
+                    {
+                      label: 'Assign Courses',
+                      icon: FiBookOpen,
+                      onClick: () => setAssigningCoursesTo(teacher),
+                    },
+                    { divider: true },
+                    {
+                      label: 'Assign Students',
+                      icon: FiUsers,
+                      onClick: () => setAssigningTeacher(teacher),
                     },
                     { divider: true },
                     ...(isPublished
@@ -420,6 +458,26 @@ export default function AdminTeacherManagementSection() {
                       </td>
                       <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
                         <Badge variant={verifVariant(user.profileVerificationStatus)}>{VERIFICATION_STATUS_MAP[user.profileVerificationStatus]?.label || 'Not Submitted'}</Badge>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          (teacher.assignedCourses?.length || 0) > 0
+                            ? 'bg-primary/10 text-primary border border-primary/20'
+                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        }`}>
+                          <FiBookOpen size={12} />
+                          {teacher.assignedCourses?.length || 0}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3.5 text-center hidden xl:table-cell">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          (assignedCounts[teacher._id] || 0) > 0
+                            ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                        }`}>
+                          <FiUsers size={12} />
+                          {assignedCounts[teacher._id] || 0}
+                        </span>
                       </td>
                       <td className="px-4 sm:px-6 py-3.5">
                         <div className="flex items-center justify-center">
@@ -667,6 +725,39 @@ export default function AdminTeacherManagementSection() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Assign Courses Modal */}
+      {assigningCoursesTo && (
+        <AdminTeacherCourseAssignment
+          teacher={assigningCoursesTo}
+          onClose={() => {
+            setAssigningCoursesTo(null);
+            loadTeachers();
+          }}
+          onSuccess={() => {
+            setAssignRefreshKey(k => k + 1);
+          }}
+        />
+      )}
+
+      {/* Assign Students Modal */}
+      {assigningTeacher && (
+        <AdminAssignmentSection
+          teacher={assigningTeacher}
+          onClose={() => {
+            setAssigningTeacher(null);
+            loadTeachers();
+            setAssignRefreshKey(k => k + 1);
+            // Directly reload counts immediately instead of relying on useEffect chain
+            const ids = teachers.map((t) => t._id);
+            if (ids.length > 0) {
+              assignmentService.getTeacherAssignmentCounts(ids)
+                .then(res => { if (res && res.data) setAssignedCounts(res.data); })
+                .catch(() => {});
+            }
+          }}
+        />
       )}
 
       {/* Action Confirmation Modal */}

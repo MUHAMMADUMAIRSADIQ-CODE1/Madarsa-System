@@ -15,6 +15,7 @@ const ContactService = require('./contact.service');
 const SettingsService = require('./settings.service');
 const FooterService = require('./footer.service');
 const AdminService = require('./admin.service');
+const StudentAssignmentService = require('./studentAssignment.service');
 const EmailService = require('./email.service');
 
 module.exports = {
@@ -36,4 +37,5 @@ module.exports = {
   FooterService,
   AdminService,
   EmailService,
+  StudentAssignmentService,
 };

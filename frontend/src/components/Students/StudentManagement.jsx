@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import studentService from '../../services/studentService';
+import assignmentService from '../../services/assignmentService';
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
-import { FiEye, FiEdit2, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiLock, FiUnlock, FiToggleLeft, FiToggleRight, FiTrash2, FiUser, FiUserCheck } from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
   pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
@@ -75,6 +76,7 @@ export default function AdminStudentManagementSection() {
   const [actionType, setActionType] = useState('');
   const [actionReason, setActionReason] = useState('');
   const [actionTarget, setActionTarget] = useState(null);
+  const [assignedTeachers, setAssignedTeachers] = useState({});
 
   const loadStudents = useCallback(async () => {
     try {
@@ -93,6 +95,26 @@ export default function AdminStudentManagementSection() {
   }, []);
 
   useEffect(() => { loadStudents(); loadStats(); }, [loadStudents, loadStats]);
+
+  // Lazy-load assigned teacher when student detail view is opened
+  const loadStudentTeacher = useCallback(async (student) => {
+    try {
+      const res = await assignmentService.getAssignedTeacher(student._id);
+      const data = res.data || {};
+      setAssignedTeachers((prev) => ({
+        ...prev,
+        [student._id]: data.assignedTeacher || null,
+      }));
+    } catch (_) {
+      setAssignedTeachers((prev) => ({ ...prev, [student._id]: null }));
+    }
+  }, []);
+
+  function handleViewStudent(student) {
+    setViewingStudent(student);
+    // Load assigned teacher on every open to avoid stale cache
+    loadStudentTeacher(student);
+  }
 
   function resetForm() {
     setForm(defaultForm);
@@ -315,6 +337,7 @@ export default function AdminStudentManagementSection() {
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Approval</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Verified</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden sm:table-cell">Profile</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden xl:table-cell">Assigned Teacher</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -328,7 +351,7 @@ export default function AdminStudentManagementSection() {
                     {
                       label: 'View Details',
                       icon: FiEye,
-                      onClick: () => setViewingStudent(student),
+                      onClick: () => handleViewStudent(student),
                     },
                     {
                       label: 'Edit Student',
@@ -401,6 +424,18 @@ export default function AdminStudentManagementSection() {
                           {user.completionPercentage ? `${user.completionPercentage}%` : (user.profileComplete ? '100%' : '0%')}
                         </span>
                       </td>
+                      <td className="px-4 sm:px-6 py-3.5 text-center hidden xl:table-cell">
+                        {assignedTeachers[student._id] ? (
+                          <div className="flex items-center justify-center gap-1.5">
+                            <FiUserCheck size={12} className="text-primary" />
+                            <span className="text-xs font-semibold text-text-dark truncate max-w-[120px]">
+                              {assignedTeachers[student._id]?.fullName || 'Assigned'}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-text-light italic">Unassigned</span>
+                        )}
+                      </td>
                       <td className="px-4 sm:px-6 py-3.5">
                         <div className="flex items-center justify-center">
                           <ActionDropdown actions={dropdownActions} align="right" />
@@ -426,6 +461,49 @@ export default function AdminStudentManagementSection() {
               <button onClick={() => setViewingStudent(null)}
                 className="text-text-light hover:text-text-dark text-xl">&times;</button>
             </div>
+
+            {/* Assigned Teacher Info */}
+            {assignedTeachers[viewingStudent._id] && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-primary/5 to-primary/[0.02] border border-primary/10 rounded-2xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-heading font-bold text-text-dark text-sm flex items-center gap-2">
+                    <FiUserCheck size={16} className="text-primary" />
+                    Assigned Teacher
+                  </h4>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-base flex-shrink-0">
+                    {assignedTeachers[viewingStudent._id]?.fullName?.charAt(0)?.toUpperCase() || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-text-dark">{assignedTeachers[viewingStudent._id]?.fullName || 'Teacher'}</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1.5">
+                      {assignedTeachers[viewingStudent._id]?.email && (
+                        <p className="text-xs text-text-light flex items-center gap-1">
+                          <span className="font-medium">Email:</span> {assignedTeachers[viewingStudent._id].email}
+                        </p>
+                      )}
+                      {assignedTeachers[viewingStudent._id]?.phone && (
+                        <p className="text-xs text-text-light flex items-center gap-1">
+                          <span className="font-medium">Phone:</span> {assignedTeachers[viewingStudent._id].phone}
+                        </p>
+                      )}
+                      {assignedTeachers[viewingStudent._id]?.qualification && (
+                        <p className="text-xs text-text-light flex items-center gap-1">
+                          <span className="font-medium">Qualification:</span> {assignedTeachers[viewingStudent._id].qualification}
+                        </p>
+                      )}
+                      {assignedTeachers[viewingStudent._id]?.specialization && (
+                        <p className="text-xs text-text-light flex items-center gap-1">
+                          <span className="font-medium">Specialization:</span> {assignedTeachers[viewingStudent._id].specialization}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <AdminDetailView entity={viewingStudent} type="student" statusMaps={studentStatusMap} />
           </div>
         </div>

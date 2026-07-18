@@ -134,7 +134,8 @@ class CourseService extends BaseService {
   }
 
   async getCourseStats() {
-    const [total, published, draft, archived, featured, categoryDist] = await Promise.all([
+    const [total, published, draft, archived, featured, categoryDist,
+      coursesWithTeacherStats] = await Promise.all([
       this.count({ isDeleted: false }),
       this.count({ status: 'published', isDeleted: false }),
       this.count({ status: 'draft', isDeleted: false }),
@@ -145,9 +146,114 @@ class CourseService extends BaseService {
         { $group: { _id: '$categoryName', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
+      // Teacher & Student counts per course
+      Course.aggregate([
+        { $match: { isDeleted: false } },
+        {
+          $lookup: {
+            from: 'teachers',
+            let: { courseId: '$_id' },
+            pipeline: [
+              { $match: { isDeleted: false } },
+              { $match: { $expr: { $in: ['$$courseId', '$assignedCourses'] } } },
+              { $count: 'count' },
+            ],
+            as: 'teacherCount',
+          },
+        },
+        {
+          $addFields: {
+            teachers: {
+              $ifNull: [{ $arrayElemAt: ['$teacherCount.count', 0] }, 0],
+            },
+          },
+        },
+        { $project: { teacherCount: 0 } },
+        {
+          $lookup: {
+            from: 'students',
+            let: { courseId: '$_id' },
+            pipeline: [
+              { $match: { isDeleted: false } },
+              { $match: { $expr: { $in: ['$$courseId', '$courses.course'] } } },
+              { $count: 'count' },
+            ],
+            as: 'studentCount',
+          },
+        },
+        {
+          $addFields: {
+            students: {
+              $ifNull: [{ $arrayElemAt: ['$studentCount.count', 0] }, 0],
+            },
+          },
+        },
+        { $project: { studentCount: 0 } },
+        { $sort: { title: 1 } },
+      ]),
     ]);
 
-    return { total, published, draft, archived, featured, categoryDistribution: categoryDist };
+    return {
+      total,
+      published,
+      draft,
+      archived,
+      featured,
+      categoryDistribution: categoryDist,
+      perCourse: coursesWithTeacherStats,
+    };
+  }
+
+  async getCourseDetailWithStats(courseId) {
+    const Teacher = require('../models/Teacher.model');
+    const Student = require('../models/Student.model');
+
+    const course = await this.getById(courseId);
+    if (!course) return null;
+
+    // Get assigned teachers (official, not just preferred)
+    const assignedTeachers = await Teacher.find({
+      isDeleted: false,
+      assignedCourses: course._id,
+    })
+      .select('fullName email qualification specialization profilePhoto')
+      .populate('user', 'profileVerificationStatus')
+      .lean();
+
+    // Get students who selected this course
+    const interestedStudents = await Student.find({
+      isDeleted: false,
+      'courses.course': course._id,
+    })
+      .select('studentName email studentId phone status')
+      .populate('user', 'profileVerificationStatus')
+      .lean();
+
+    // Get students officially assigned to teachers for this course
+    const assignedStudentIds = assignedTeachers
+      .filter(t => t.assignedStudents && t.assignedStudents.length > 0)
+      .flatMap(t => t.assignedStudents || []);
+
+    const assignedStudents = await Student.find({
+      _id: { $in: assignedStudentIds },
+      isDeleted: false,
+    })
+      .select('studentName email studentId phone status')
+      .lean();
+
+    return {
+      course: course.toPublicJSON ? course.toPublicJSON() : course,
+      teachers: {
+        count: assignedTeachers.length,
+        list: assignedTeachers,
+      },
+      students: {
+        interestedCount: interestedStudents.length,
+        assignedCount: assignedStudents.length,
+        interested: interestedStudents,
+        assigned: assignedStudents,
+      },
+    };
   }
 }
 

@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import studentPortalService from '../../services/studentPortalService';
+import courseService from '../../services/courseService';
 import uploadService from '../../services/uploadService';
-import { FiCheckCircle, FiArrowRight, FiUpload, FiUser, FiMail, FiPhone, FiGlobe, FiMapPin, FiTrash2, FiFile } from 'react-icons/fi';
+import { FiCheckCircle, FiArrowRight, FiUpload, FiUser, FiMail, FiPhone, FiGlobe, FiMapPin, FiTrash2, FiFile, FiBook, FiCheck } from 'react-icons/fi';
 
 const STEPS = [
   { id: 'personal', label: 'Personal Info', icon: '👤' },
@@ -56,6 +57,9 @@ export default function StudentProfileComplete() {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState({});
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   useEffect(() => {
     if (user?.profileComplete && user?.profileVerified) {
@@ -64,11 +68,31 @@ export default function StudentProfileComplete() {
       return;
     }
 
+    // Load available courses for multi-select
+    const loadCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const res = await courseService.getPublishedCourses({ limit: 200 });
+        if (res?.data?.data) {
+          setAvailableCourses(res.data.data);
+        }
+      } catch (_) {}
+      setCoursesLoading(false);
+    };
+    loadCourses();
+
     const loadProfile = async () => {
       try {
         const res = await studentPortalService.getProfile();
         if (res?.data) {
           const existing = res.data;
+          // Pre-select courses from existing profile
+          if (existing.courses && Array.isArray(existing.courses)) {
+            const courseIds = existing.courses
+              .filter(c => c.course && c.course._id)
+              .map(c => c.course._id);
+            setSelectedCourses(courseIds);
+          }
           setFormData(prev => ({
             ...prev,
             studentName: existing.studentName || user?.fullName || '',
@@ -139,6 +163,14 @@ export default function StudentProfileComplete() {
 
   const handleArrayChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  };
+
+  const toggleCourse = (courseId) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
   };
 
   const handleFileUpload = async (fieldName, file) => {
@@ -244,8 +276,14 @@ export default function StudentProfileComplete() {
         }
       } catch (err) {}
 
+      // Add selectedCourses to submission data
+      const submitData = {
+        ...formData,
+        selectedCourses,
+      };
+
       if (studentId) {
-        await studentPortalService.updateProfile(studentId, formData);
+        await studentPortalService.updateProfile(studentId, submitData);
       }
 
       await completeProfile();
@@ -556,10 +594,67 @@ export default function StudentProfileComplete() {
         <div className="flex items-center gap-4 mb-6 p-4 bg-primary-light rounded-xl">
           <span className="text-3xl">📚</span>
           <div>
-            <h3 className="font-semibold text-text-dark">Education Background</h3>
-            <p className="text-sm text-text-light">Tell us about your education</p>
+            <h3 className="font-semibold text-text-dark">Education & Courses</h3>
+            <p className="text-sm text-text-light">Tell us about your education and select courses</p>
           </div>
         </div>
+      </div>
+
+      {/* Dynamic Course Selection */}
+      <div className="sm:col-span-2">
+        <label className="block text-sm font-semibold text-text-dark mb-3">
+          Select Courses *
+          <span className="text-xs text-text-light ml-2 font-normal">(Choose the courses you want to study)</span>
+        </label>
+        {coursesLoading ? (
+          <div className="flex items-center gap-3 p-4 bg-bg-light rounded-xl">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm text-text-light">Loading courses...</span>
+          </div>
+        ) : availableCourses.length === 0 ? (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+            <p className="text-sm text-amber-700">No courses available yet. Please check back later.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {availableCourses.map(course => {
+              const isSelected = selectedCourses.includes(course._id);
+              return (
+                <button
+                  key={course._id}
+                  type="button"
+                  onClick={() => toggleCourse(course._id)}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
+                    isSelected
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border-light hover:border-primary/50 hover:bg-primary/[0.02]'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all flex-shrink-0 ${
+                    isSelected ? 'bg-primary text-white' : 'border-2 border-border-light'
+                  }`}>
+                    {isSelected && <FiCheck className="w-3.5 h-3.5" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-text-dark truncate">{course.title}</p>
+                    {course.shortDescription && (
+                      <p className="text-xs text-text-light truncate mt-0.5">{course.shortDescription}</p>
+                    )}
+                  </div>
+                  {course.thumbnail && (
+                    <img src={course.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {selectedCourses.length > 0 && (
+          <div className="mt-3 flex items-center gap-2 text-xs text-text-light">
+            <FiBook className="w-3.5 h-3.5" />
+            <span>{selectedCourses.length} course{selectedCourses.length !== 1 ? 's' : ''} selected</span>
+          </div>
+        )}
       </div>
 
       <div className="sm:col-span-2">

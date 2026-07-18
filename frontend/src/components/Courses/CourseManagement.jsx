@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import courseService from '../../services/courseService';
+import { FiBook, FiUser, FiUsers } from 'react-icons/fi';
 
 const defaultForm = {
   title: '',
@@ -50,6 +51,7 @@ export default function AdminCourseManagementSection() {
   const [keywordInput, setKeywordInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [perCourseStats, setPerCourseStats] = useState({});
 
   const loadCourses = useCallback(async () => {
     try {
@@ -70,7 +72,16 @@ export default function AdminCourseManagementSection() {
   const loadStats = useCallback(async () => {
     try {
       const res = await courseService.getCourseStats();
-      setStats(res.data);
+      const s = res.data;
+      setStats(s);
+      // Build a map of courseId -> { teachers, students }
+      if (s?.perCourse) {
+        const map = {};
+        s.perCourse.forEach((c) => {
+          map[c._id] = { teachers: c.teachers || 0, students: c.students || 0 };
+        });
+        setPerCourseStats(map);
+      }
     } catch (_) {}
   }, []);
 
@@ -641,58 +652,84 @@ export default function AdminCourseManagementSection() {
           </div>
         ) : (
           <div className="overflow-x-auto -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8">
-            <table className="w-full min-w-[600px]">
+            <table className="w-full min-w-[900px]">
               <thead className="border-b-2 border-border-light">
                 <tr>
-                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Title</th>
+                  <th className="text-left p-3 font-semibold text-text-dark text-sm">Course</th>
                   <th className="text-left p-3 font-semibold text-text-dark text-sm hidden md:table-cell">Category</th>
                   <th className="text-center p-3 font-semibold text-text-dark text-sm hidden sm:table-cell">Level</th>
-                  <th className="text-center p-3 font-semibold text-text-dark text-sm hidden lg:table-cell">Lessons</th>
+                  <th className="text-center p-3 font-semibold text-text-dark text-sm hidden lg:table-cell">Teachers</th>
+                  <th className="text-center p-3 font-semibold text-text-dark text-sm hidden lg:table-cell">Students</th>
+                  <th className="text-center p-3 font-semibold text-text-dark text-sm">Duration</th>
                   <th className="text-center p-3 font-semibold text-text-dark text-sm">Status</th>
                   <th className="text-center p-3 font-semibold text-text-dark text-sm">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-light">
-                {courses.map((course) => (
-                  <tr key={course._id} className="hover:bg-bg-light transition-colors">
-                    <td className="p-3">
-                      <div className="flex items-center gap-3">
-                        {course.thumbnail && (
-                          <img src={course.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover hidden sm:block" />
-                        )}
-                        <div>
-                          <p className="font-semibold text-text-dark text-sm">{course.title}</p>
-                          <p className="text-xs text-text-light mt-0.5">
-                            {course.language} {course.duration ? ` - ${course.duration}` : ''}
-                          </p>
+                {courses.map((course) => {
+                  const stats = perCourseStats[course._id] || {};
+                  return (
+                    <tr key={course._id} className="hover:bg-bg-light transition-colors">
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          {course.thumbnail ? (
+                            <img
+                              src={course.thumbnail}
+                              alt=""
+                              className="w-10 h-10 rounded-lg object-cover hidden sm:block border border-border-light"
+                              onError={(e) => { e.target.style.display = 'none'; }}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center hidden sm:flex">
+                              <FiBook size={16} className="text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="font-semibold text-text-dark text-sm">{course.title}</p>
+                            <p className="text-xs text-text-light mt-0.5">
+                              {course.language} {course.duration ? ` - ${course.duration}` : ''}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-sm text-text-body hidden md:table-cell">{course.categoryName || '-'}</td>
-                    <td className="p-3 text-center hidden sm:table-cell">
-                      <span className="text-xs capitalize text-text-body">{course.level}</span>
-                    </td>
-                    <td className="p-3 text-center text-sm text-text-body hidden lg:table-cell">{course.totalLessons || 0}</td>
-                    <td className="p-3 text-center">{statusBadge(course.status)}</td>
-                    <td className="p-3">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => startEdit(course)} className="text-primary text-xs hover:underline font-medium">Edit</button>
-                        {course.status === 'published' ? (
-                          <button onClick={() => handleUnpublish(course._id)} className="text-orange-500 text-xs hover:underline font-medium">Unpublish</button>
-                        ) : course.status === 'archived' ? (
-                          <button onClick={() => handleRestore(course._id)} className="text-blue-500 text-xs hover:underline font-medium">Restore</button>
-                        ) : (
-                          <button onClick={() => handlePublish(course._id)} className="text-green-600 text-xs hover:underline font-medium">Publish</button>
-                        )}
-                        <button onClick={() => handleDuplicate(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Copy</button>
-                        {course.status !== 'archived' && (
-                          <button onClick={() => handleArchive(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Archive</button>
-                        )}
-                        <button onClick={() => handleDelete(course._id)} className="text-red-500 text-xs hover:underline font-medium">Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-3 text-sm text-text-body hidden md:table-cell">{course.categoryName || '-'}</td>
+                      <td className="p-3 text-center hidden sm:table-cell">
+                        <span className="text-xs capitalize text-text-body">{course.level}</span>
+                      </td>
+                      <td className="p-3 text-center hidden lg:table-cell">
+                        <span className="inline-flex items-center gap-1 text-sm font-bold text-blue-600">
+                          <FiUser size={12} />
+                          {stats.teachers ?? '-'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center hidden lg:table-cell">
+                        <span className="inline-flex items-center gap-1 text-sm font-bold text-purple-600">
+                          <FiUsers size={12} />
+                          {stats.students ?? '-'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-center text-sm text-text-body">{course.duration || '-'}</td>
+                      <td className="p-3 text-center">{statusBadge(course.status)}</td>
+                      <td className="p-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => startEdit(course)} className="text-primary text-xs hover:underline font-medium">Edit</button>
+                          {course.status === 'published' ? (
+                            <button onClick={() => handleUnpublish(course._id)} className="text-orange-500 text-xs hover:underline font-medium">Unpublish</button>
+                          ) : course.status === 'archived' ? (
+                            <button onClick={() => handleRestore(course._id)} className="text-blue-500 text-xs hover:underline font-medium">Restore</button>
+                          ) : (
+                            <button onClick={() => handlePublish(course._id)} className="text-green-600 text-xs hover:underline font-medium">Publish</button>
+                          )}
+                          <button onClick={() => handleDuplicate(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Copy</button>
+                          {course.status !== 'archived' && (
+                            <button onClick={() => handleArchive(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Archive</button>
+                          )}
+                          <button onClick={() => handleDelete(course._id)} className="text-red-500 text-xs hover:underline font-medium">Delete</button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

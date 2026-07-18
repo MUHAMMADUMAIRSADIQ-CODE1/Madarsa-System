@@ -349,10 +349,11 @@ class TeacherAcademicService {
   // =================== DASHBOARD ANALYTICS ===================
 
   async getDashboardAnalytics(teacherId) {
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses user').lean();
+    const teacher = await Teacher.findById(teacherId).select('assignedCourses user assignedStudents').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const courseIds = teacher.assignedCourses || [];
+    const assignedStudentIds = teacher.assignedStudents || [];
     const userId = teacher.user;
 
     const [
@@ -366,9 +367,7 @@ class TeacherAcademicService {
       unreadNotifications,
     ] = await Promise.all([
       courseIds.length,
-      courseIds.length > 0
-        ? Student.countDocuments({ 'courses.course': { $in: courseIds }, isDeleted: false, status: 'active' })
-        : 0,
+      assignedStudentIds.length,
       Attendance.getStats ? Attendance.getStats({ teacher: teacherId }) : Promise.resolve({ total: 0, present: 0, absent: 0, late: 0, excused: 0, percentage: 0 }),
       Assignment.countDocuments({ teacher: teacherId }),
       LiveClass.countDocuments({ teacher: teacherId, scheduledAt: { $gte: new Date() }, status: { $ne: 'cancelled' } }),

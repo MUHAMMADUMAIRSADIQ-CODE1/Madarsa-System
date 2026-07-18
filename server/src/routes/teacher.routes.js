@@ -73,4 +73,23 @@ router.post(
   teacherController.removeCourse
 );
 
+router.post(
+  '/:id/bulk-assign-courses',
+  validate(teacherValidator.idParamRules),
+  validate(teacherValidator.bulkAssignCoursesRules),
+  teacherController.bulkAssignCourses
+);
+
+router.get(
+  '/:id/assigned-courses',
+  validate(teacherValidator.idParamRules),
+  teacherController.getAssignedCourses
+);
+
+router.get(
+  '/:id/assignable-courses',
+  validate(teacherValidator.idParamRules),
+  teacherController.getAssignableCourses
+);
+
 module.exports = router;

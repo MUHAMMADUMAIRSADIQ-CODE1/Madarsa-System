@@ -1,4 +1,5 @@
 const teacherPortalService = require('../services/teacherPortal.service');
+const StudentAssignmentService = require('../services/studentAssignment.service');
 const { ApiResponse, asyncHandler } = require('../utils');
 
 const getProfile = asyncHandler(async (req, res) => {
@@ -89,9 +90,20 @@ const deleteCourseMaterial = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Material deleted successfully', data));
 });
 
+// =================== ASSIGNED STUDENTS ===================
+
+const getAssignedStudents = asyncHandler(async (req, res) => {
+  const data = await StudentAssignmentService.getAssignedStudents(
+    req.params.teacherId,
+    req.query
+  );
+  res.status(200).json(ApiResponse.success('Assigned students fetched successfully', data));
+});
+
 module.exports = {
   getProfile, getProfileById, updateProfile, getDashboard, getCourses, getStudents,
   getAssignments, getAssignment, createAssignment, updateAssignment, deleteAssignment,
   getCourseDetails, getSchedule,
   getCourseMaterials, addCourseMaterial, deleteCourseMaterial,
+  getAssignedStudents,
 };

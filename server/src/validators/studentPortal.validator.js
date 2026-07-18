@@ -51,6 +51,14 @@ const updateProfileRules = [
     .trim()
     .isLength({ max: 2000 })
     .withMessage('Notes must not exceed 2000 characters'),
+  body('selectedCourses')
+    .optional()
+    .isArray()
+    .withMessage('Selected courses must be an array'),
+  body('selectedCourses.*')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid course ID in selectedCourses'),
 ];
 
 const idParamRules = [

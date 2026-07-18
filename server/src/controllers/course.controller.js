@@ -201,6 +201,14 @@ const getStats = asyncHandler(async (_req, res) => {
   res.status(200).json(ApiResponse.success('Course stats fetched successfully', stats));
 });
 
+const getDetailWithStats = asyncHandler(async (req, res) => {
+  const result = await CourseService.getCourseDetailWithStats(req.params.id);
+  if (!result) {
+    return res.status(404).json(ApiResponse.error('Course not found'));
+  }
+  res.status(200).json(ApiResponse.success('Course details fetched successfully', result));
+});
+
 const getPublished = asyncHandler(async (req, res) => {
   const { page, limit, skip } = helpers.parsePagination(req.query);
   const sort = helpers.buildSortObject(req.query.sortBy, req.query.sortOrder);
@@ -247,6 +255,6 @@ const deleteCategory = asyncHandler(async (req, res) => {
 module.exports = {
   getAll, getById, getBySlug, create, update,
   deleteCourse, restoreCourse, publishCourse, unpublishCourse,
-  archiveCourse, duplicateCourse, getStats, getPublished,
+  archiveCourse, duplicateCourse, getStats, getDetailWithStats, getPublished,
   getAllCategories, createCategory, updateCategory, deleteCategory,
 };

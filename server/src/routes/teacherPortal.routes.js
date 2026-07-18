@@ -13,6 +13,9 @@ router.use(isTeacher);
 router.get('/profile', teacherPortalController.getProfile);
 router.get('/dashboard/:id', requireProfileComplete, teacherPortalController.getDashboard);
 router.get('/courses/:id', teacherPortalController.getCourses);
+
+// IMPORTANT: Specific routes must come before parameterized ones to avoid Express matching ':id' as 'assigned'
+router.get('/students/assigned/:teacherId', teacherPortalController.getAssignedStudents);
 router.get('/students/:id', teacherPortalController.getStudents);
 
 router.get(

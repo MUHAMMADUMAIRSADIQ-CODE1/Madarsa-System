@@ -94,6 +94,10 @@ const CMS_AUDIT_ACTIONS = Object.freeze({
   UNBLOCK_USER: 'unblock_user',
   DEACTIVATE_USER: 'deactivate_user',
   ACTIVATE_USER: 'activate_user',
+  ASSIGN_STUDENT: 'assign_student',
+  REMOVE_STUDENT: 'remove_student',
+  REASSIGN_STUDENT: 'reassign_student',
+  BULK_ASSIGN_STUDENTS: 'bulk_assign_students',
 });
 
 const CMS_MODULES = Object.freeze({
@@ -110,6 +114,7 @@ const CMS_MODULES = Object.freeze({
   AUDIT: 'audit',
   AUTH: 'auth',
   ADMIN: 'admin',
+  ASSIGNMENTS: 'assignments',
 });
 
 function hasAdminPermission(adminRole, scope) {

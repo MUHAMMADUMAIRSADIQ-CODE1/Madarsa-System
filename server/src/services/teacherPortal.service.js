@@ -18,12 +18,14 @@ const ALLOWED_PROFILE_FIELDS = [
   'cnicFront', 'cnicBack', 'profilePhoto', 'coverPhoto',
   'address', 'postalCode', 'bloodGroup', 'religion',
   'resume', 'additionalDocuments',
+  'canTeachCourses',
 ];
 
 class TeacherPortalService {
   async getProfileByEmail(email) {
     const teacher = await Teacher.findOne({ email, isDeleted: false })
       .populate('assignedCourses', 'title slug thumbnail shortDescription level')
+      .populate('canTeachCourses', 'title slug thumbnail shortDescription')
       .lean();
 
     if (!teacher) {
@@ -36,6 +38,7 @@ class TeacherPortalService {
   async getProfileById(id) {
     const teacher = await Teacher.findOne({ _id: id, isDeleted: false })
       .populate('assignedCourses', 'title slug thumbnail shortDescription level')
+      .populate('canTeachCourses', 'title slug thumbnail shortDescription')
       .lean();
 
     if (!teacher) {
@@ -54,6 +57,24 @@ class TeacherPortalService {
 
     if (data.profilePhoto !== undefined) updateData.profilePhoto = data.profilePhoto;
 
+    // Validate canTeachCourses course IDs exist
+    if (data.canTeachCourses && Array.isArray(data.canTeachCourses)) {
+      const Course = require('../models/Course.model');
+      const validCourses = await Course.find({
+        _id: { $in: data.canTeachCourses },
+        isDeleted: false,
+      }).select('_id').lean();
+
+      const validIds = new Set(validCourses.map(c => c._id.toString()));
+      const invalidIds = data.canTeachCourses.filter(
+        id => !validIds.has(id.toString())
+      );
+
+      if (invalidIds.length > 0) {
+        throw new ApiError(httpStatus.BAD_REQUEST, `Invalid or deleted courses: ${invalidIds.join(', ')}`);
+      }
+    }
+
     const teacher = await Teacher.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
@@ -67,19 +88,39 @@ class TeacherPortalService {
   }
 
   async getDashboardData(teacherId) {
-    const teacher = await Teacher.findById(teacherId)
+    console.log('\n======== DIAGNOSTIC: teacherPortal.getDashboardData ========');
+    console.log('Teacher ID received:', teacherId);
+
+    // Support both Teacher._id and User._id references
+    let teacher = await Teacher.findById(teacherId)
       .populate('assignedCourses', 'title slug thumbnail shortDescription level')
       .lean();
 
+    console.log('Direct lookup by _id found:', !!teacher);
+
+    // Fallback: look up by user field if direct _id didn't match (User._id vs Teacher._id)
     if (!teacher) {
+      teacher = await Teacher.findOne({ user: teacherId, isDeleted: false })
+        .populate('assignedCourses', 'title slug thumbnail shortDescription level')
+        .lean();
+      console.log('Fallback lookup by user field found:', !!teacher);
+    }
+
+    if (!teacher) {
+      console.log('TEACHER NOT FOUND - throwing error');
       throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
     }
 
-    const totalStudents = await Student.countDocuments({
-      isDeleted: false,
-    });
+    console.log('Teacher fullName:', teacher.fullName);
+    console.log('Teacher email:', teacher.email);
+    console.log('Teacher assignedCourses count:', (teacher.assignedCourses || []).length);
+    console.log('Teacher assignedCourses:', JSON.stringify(teacher.assignedCourses));
+    console.log('Teacher assignedStudents count:', (teacher.assignedStudents || []).length);
+    console.log('Teacher assignedStudents (first 5):', JSON.stringify((teacher.assignedStudents || []).slice(0, 5)));
 
-    return {
+    const totalStudents = (teacher.assignedStudents || []).length;
+
+    const responseData = {
       profile: {
         _id: teacher._id,
         fullName: teacher.fullName,
@@ -100,6 +141,16 @@ class TeacherPortalService {
       totalStudents,
       totalCourses: (teacher.assignedCourses || []).length,
     };
+
+    console.log('Response data (truncated):', JSON.stringify({
+      profileKeys: Object.keys(responseData.profile),
+      coursesCount: responseData.courses.length,
+      totalStudents: responseData.totalStudents,
+      totalCourses: responseData.totalCourses
+    }));
+    console.log('=======================================================\n');
+
+    return responseData;
   }
 
   async getAssignedCourses(teacherId, query = {}) {
