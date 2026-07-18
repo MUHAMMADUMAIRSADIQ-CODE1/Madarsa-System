@@ -17,6 +17,8 @@ import AdminAdmissionManagementSection from '../components/Admissions/AdmissionM
 import AdminStudentManagementSection from '../components/Students/StudentManagement';
 import AdminAttendanceSection from '../components/Dashboard/AdminAttendanceSection';
 import AdminProfileVerificationSection from '../components/Dashboard/AdminProfileVerificationSection';
+import AdminGalleryManagementSection from '../components/Gallery/GalleryManagement';
+import AdminNewsManagementSection from '../components/News/NewsManagement';
 import { useAuth } from '../context/AuthContext';
 
 const adminSidebarItems = [
@@ -407,17 +409,10 @@ export default function AdminDashboardPage() {
         );
 
       case 'gallery':
+        return <AdminGalleryManagementSection />;
+
       case 'news':
-        return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">
-              {activeSection.charAt(0).toUpperCase() + activeSection.slice(1).replace('-', ' ')}
-            </h1>
-            <div className="text-center py-12">
-              <p className="text-text-light">Coming soon...</p>
-            </div>
-          </div>
-        );
+        return <AdminNewsManagementSection />;
       
       default:
         return null;

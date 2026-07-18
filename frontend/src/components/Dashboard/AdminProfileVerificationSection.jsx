@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { FiEye, FiCheck, FiX, FiRefreshCw } from 'react-icons/fi';
+import { FiEye, FiCheck, FiX, FiRefreshCw, FiAward, FiUsers, FiClipboard, FiAlertTriangle, FiCheckCircle, FiBookmark } from 'react-icons/fi';
 
 const ROLE_LABELS = { student: 'Student', teacher: 'Teacher' };
 const ROLE_COLORS = {
   student: 'bg-blue-100 text-blue-800 border-blue-200',
   teacher: 'bg-purple-100 text-purple-800 border-purple-200',
 };
-const ROLE_ICONS = { student: '🎓', teacher: '👨‍🏫' };
+const ROLE_ICONS = { student: FiAward, teacher: FiUsers };
+
+const RoleBadgeIcon = ({ role, className = '' }) => {
+  const Icon = ROLE_ICONS[role] || FiBookmark;
+  return <Icon className={className} />;
+};
 
 export default function AdminProfileVerificationSection() {
   const [users, setUsers] = useState([]);
@@ -120,13 +125,13 @@ export default function AdminProfileVerificationSection() {
       <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 lg:p-8">
         {successMsg && (
           <div className="mb-4 px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
-            <span>✓</span><span>{successMsg}</span>
+            <FiCheck className="inline-block flex-shrink-0" /><span>{successMsg}</span>
             <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-500 hover:text-emerald-700"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
         )}
         {error && (
           <div className="mb-4 px-5 py-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium animate-fade-in flex items-center gap-3">
-            <span>⚠</span><span>{error}</span>
+            <FiAlertTriangle className="inline-block flex-shrink-0" /><span>{error}</span>
             <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
         )}
@@ -135,13 +140,13 @@ export default function AdminProfileVerificationSection() {
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users..." className="flex-1 px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
           <div className="flex rounded-xl border border-border-light overflow-hidden">
             {[
-              { value: '', label: 'All', icon: '📋' },
-              { value: 'student', label: 'Students', icon: '🎓' },
-              { value: 'teacher', label: 'Teachers', icon: '👨‍🏫' },
+              { value: '', label: 'All', icon: FiClipboard },
+              { value: 'student', label: 'Students', icon: FiAward },
+              { value: 'teacher', label: 'Teachers', icon: FiUsers },
             ].map(tab => (
               <button key={tab.value} onClick={() => setRoleFilter(tab.value)}
                 className={`px-4 py-3 text-sm font-semibold transition-all flex items-center gap-2 ${roleFilter === tab.value ? 'bg-primary text-white' : 'bg-white text-text-body hover:bg-bg-light'}`}>
-                <span>{tab.icon}</span><span>{tab.label}</span>
+                <tab.icon /><span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -150,7 +155,7 @@ export default function AdminProfileVerificationSection() {
         {loading ? (
           <div className="text-center py-16"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" /><p className="text-text-light mt-4">Loading...</p></div>
         ) : users.length === 0 ? (
-          <div className="text-center py-16"><span className="text-6xl block mb-4">✅</span><h3 className="text-xl font-bold text-text-dark mb-2">All Profiles Verified</h3><p className="text-text-light">No pending profile verifications.</p></div>
+          <div className="text-center py-16"><FiCheckCircle size={64} className="block mb-4 mx-auto" /><h3 className="text-xl font-bold text-text-dark mb-2">All Profiles Verified</h3><p className="text-text-light">No pending profile verifications.</p></div>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -178,7 +183,7 @@ export default function AdminProfileVerificationSection() {
                       <td className="p-3 text-sm text-text-body">{u.email}</td>
                       <td className="p-3 text-center">
                         <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border ${ROLE_COLORS[u.role] || 'bg-gray-100 text-gray-800'}`}>
-                          {ROLE_ICONS[u.role] || '📌'} {ROLE_LABELS[u.role] || u.role}
+                          <RoleBadgeIcon role={u.role} className="inline-block" /> {ROLE_LABELS[u.role] || u.role}
                         </span>
                       </td>
                       <td className="p-3 text-sm text-text-body">
@@ -231,7 +236,7 @@ export default function AdminProfileVerificationSection() {
                 <div>
                   <h3 className="text-xl font-bold text-text-dark">{selectedUser.fullName}</h3>
                   <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border mt-1 ${ROLE_COLORS[selectedUser.role] || 'bg-gray-100 text-gray-800'}`}>
-                    {ROLE_ICONS[selectedUser.role] || '📌'} {ROLE_LABELS[selectedUser.role] || selectedUser.role}
+                    <RoleBadgeIcon role={selectedUser.role} className="inline-block" /> {ROLE_LABELS[selectedUser.role] || selectedUser.role}
                   </span>
                 </div>
               </div>
@@ -259,8 +264,8 @@ export default function AdminProfileVerificationSection() {
               </div>
             </div>
             <div className="p-6 sm:p-8 border-t border-border-light flex flex-col sm:flex-row gap-3">
-              <button onClick={() => { setShowDetailModal(false); setShowVerifyModal(true); }} className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">✓ Approve Profile</button>
-              <button onClick={() => { setShowDetailModal(false); setShowRejectModal(true); }} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">✗ Reject</button>
+              <button onClick={() => { setShowDetailModal(false); setShowVerifyModal(true); }} className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors"><FiCheck className="inline-block -mt-0.5" /> Approve Profile</button>
+              <button onClick={() => { setShowDetailModal(false); setShowRejectModal(true); }} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"><FiX className="inline-block -mt-0.5" /> Reject</button>
               <button onClick={closeAll} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
             </div>
           </div>
@@ -280,7 +285,7 @@ export default function AdminProfileVerificationSection() {
               <p className="text-sm text-text-light mb-6">This will enable dashboard access and send a verification email.</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleVerify} disabled={actionLoading} className="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors">
-                  {actionLoading ? 'Verifying...' : '✓ Confirm Verification'}
+                  {actionLoading ? 'Verifying...' : <><FiCheck className="inline-block -mt-0.5" /> Confirm Verification</>}
                 </button>
                 <button onClick={closeAll} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
               </div>
@@ -306,7 +311,7 @@ export default function AdminProfileVerificationSection() {
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={handleReject} disabled={actionLoading || !rejectionReason.trim()} className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors">
-                  {actionLoading ? 'Rejecting...' : '✗ Confirm Rejection'}
+                  {actionLoading ? 'Rejecting...' : <><FiX className="inline-block -mt-0.5" /> Confirm Rejection</>}
                 </button>
                 <button onClick={closeAll} className="flex-1 px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors">Cancel</button>
               </div>

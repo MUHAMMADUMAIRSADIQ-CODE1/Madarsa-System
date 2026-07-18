@@ -5,6 +5,7 @@ import StudentLayout from './layouts/StudentLayout';
 import TeacherLayout from './layouts/TeacherLayout';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
+import { ToastProvider } from './context/ToastContext';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
@@ -54,6 +55,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Suspense fallback={<PageLoader />}>
+      <ToastProvider>
       <ScrollToTop />
       <Routes>
         {/* Teacher Dashboard Routes - must come BEFORE PublicLayout to prevent /teacher/:slug conflict */}
@@ -152,6 +154,7 @@ export default function App() {
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ToastProvider>
     </Suspense>
   );
 }
