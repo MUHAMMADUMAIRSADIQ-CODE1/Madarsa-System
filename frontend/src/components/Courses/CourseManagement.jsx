@@ -1,6 +1,11 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import courseService from '../../services/courseService';
-import { FiBook, FiUser, FiUsers } from 'react-icons/fi';
+import ActionDropdown from '../common/ActionDropdown';
+import {
+  FiBook, FiUser, FiUsers,
+  FiEdit2, FiUpload, FiDownload,
+  FiCopy, FiArchive, FiTrash2, FiRefreshCw
+} from 'react-icons/fi';
 
 const defaultForm = {
   title: '',
@@ -728,6 +733,57 @@ export default function AdminCourseManagementSection() {
               <tbody className="divide-y divide-border-light">
                 {courses.map((course) => {
                   const stats = perCourseStats[course._id] || {};
+                  const dropdownActions = [
+                    {
+                      label: 'Edit',
+                      icon: FiEdit2,
+                      onClick: () => startEdit(course),
+                    },
+                    { divider: true },
+                    ...(course.status === 'published'
+                      ? [{
+                          label: 'Unpublish',
+                          icon: FiDownload,
+                          warning: true,
+                          onClick: () => handleUnpublish(course._id),
+                        }]
+                      : course.status === 'archived'
+                      ? [{
+                          label: 'Restore',
+                          icon: FiRefreshCw,
+                          success: true,
+                          onClick: () => handleRestore(course._id),
+                        }]
+                      : [{
+                          label: 'Publish',
+                          icon: FiUpload,
+                          success: true,
+                          onClick: () => handlePublish(course._id),
+                        }]
+                    ),
+                    { divider: true },
+                    {
+                      label: 'Copy',
+                      icon: FiCopy,
+                      onClick: () => handleDuplicate(course._id),
+                    },
+                    ...(course.status !== 'archived'
+                      ? [{
+                          label: 'Archive',
+                          icon: FiArchive,
+                          warning: true,
+                          onClick: () => handleArchive(course._id),
+                        }]
+                      : []
+                    ),
+                    { divider: true },
+                    {
+                      label: 'Delete',
+                      icon: FiTrash2,
+                      danger: true,
+                      onClick: () => handleDelete(course._id),
+                    },
+                  ];
                   return (
                     <tr key={course._id} className="hover:bg-bg-light transition-colors">
                       <td className="p-3">
@@ -771,20 +827,8 @@ export default function AdminCourseManagementSection() {
                       <td className="p-3 text-center text-sm text-text-body">{course.duration || '-'}</td>
                       <td className="p-3 text-center">{statusBadge(course.status)}</td>
                       <td className="p-3">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => startEdit(course)} className="text-primary text-xs hover:underline font-medium">Edit</button>
-                          {course.status === 'published' ? (
-                            <button onClick={() => handleUnpublish(course._id)} className="text-orange-500 text-xs hover:underline font-medium">Unpublish</button>
-                          ) : course.status === 'archived' ? (
-                            <button onClick={() => handleRestore(course._id)} className="text-blue-500 text-xs hover:underline font-medium">Restore</button>
-                          ) : (
-                            <button onClick={() => handlePublish(course._id)} className="text-green-600 text-xs hover:underline font-medium">Publish</button>
-                          )}
-                          <button onClick={() => handleDuplicate(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Copy</button>
-                          {course.status !== 'archived' && (
-                            <button onClick={() => handleArchive(course._id)} className="text-gray-500 text-xs hover:underline font-medium">Archive</button>
-                          )}
-                          <button onClick={() => handleDelete(course._id)} className="text-red-500 text-xs hover:underline font-medium">Delete</button>
+                        <div className="flex items-center justify-center">
+                          <ActionDropdown actions={dropdownActions} align="right" />
                         </div>
                       </td>
                     </tr>

@@ -381,15 +381,15 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[750px]">
+            <table className="w-full">
               <thead>
                 <tr className="border-t border-b-2 border-border-light">
                   <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Student</th>
-                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden md:table-cell">Contact</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Approval</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Verified</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden sm:table-cell">Profile</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden xl:table-cell">Assigned Teacher</th>
+                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Contact</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Approval</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Verified</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Profile</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Assigned Teacher</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -466,22 +466,22 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body hidden md:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body">
                         <div className="truncate max-w-[180px]">{student.email || '-'}</div>
                         <div className="text-xs text-text-light">{student.phone || ''}</div>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <Badge variant={badgeVariant(user)}>{USER_STATUS_MAP[user?.status]?.label || 'Pending'}</Badge>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <Badge variant={verifVariant(user.profileVerificationStatus)}>{VERIFICATION_STATUS_MAP[user.profileVerificationStatus]?.label || 'Not Submitted'}</Badge>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden sm:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
                           {user.completionPercentage ? `${user.completionPercentage}%` : (user.profileComplete ? '100%' : '0%')}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden xl:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         {assignedTeachers[student._id] ? (
                           <div className="flex items-center justify-center gap-1.5">
                             <FiUserCheck size={12} className="text-primary" />

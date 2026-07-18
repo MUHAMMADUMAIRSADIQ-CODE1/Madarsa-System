@@ -392,16 +392,16 @@ export default function AdminTeacherManagementSection() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[750px]">
+            <table className="w-full">
               <thead>
                 <tr className="border-t border-b-2 border-border-light">
                   <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Teacher</th>
-                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden md:table-cell">Qualification</th>
-                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden sm:table-cell">Specialization</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Approval</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Verified</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden lg:table-cell">Courses</th>
-                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider hidden xl:table-cell">Students</th>
+                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Qualification</th>
+                  <th className="text-left px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Specialization</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Approval</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Verified</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Courses</th>
+                  <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Students</th>
                   <th className="text-center px-4 sm:px-6 py-3.5 font-semibold text-text-dark text-xs uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -512,15 +512,15 @@ export default function AdminTeacherManagementSection() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body hidden md:table-cell">{teacher.qualification || '-'}</td>
-                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body hidden sm:table-cell">{teacher.specialization || '-'}</td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body">{teacher.qualification || '-'}</td>
+                      <td className="px-4 sm:px-6 py-3.5 text-sm text-text-body">{teacher.specialization || '-'}</td>
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <Badge variant={badgeVariant(user)}>{USER_STATUS_MAP[user?.status]?.label || 'Pending'}</Badge>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <Badge variant={verifVariant(user.profileVerificationStatus)}>{VERIFICATION_STATUS_MAP[user.profileVerificationStatus]?.label || 'Not Submitted'}</Badge>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden lg:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${(teacher.assignedCourses?.length || 0) > 0
                             ? 'bg-primary/10 text-primary border border-primary/20'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
@@ -529,7 +529,7 @@ export default function AdminTeacherManagementSection() {
                           {teacher.assignedCourses?.length || 0}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3.5 text-center hidden xl:table-cell">
+                      <td className="px-4 sm:px-6 py-3.5 text-center">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${(assignedCounts[teacher._id] || 0) > 0
                             ? 'bg-blue-100 text-blue-800 border border-blue-200'
                             : 'bg-gray-100 text-gray-800 border border-gray-200'
