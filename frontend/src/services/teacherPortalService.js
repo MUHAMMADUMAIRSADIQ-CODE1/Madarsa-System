@@ -18,6 +18,11 @@ export const teacherPortalService = {
     const q = new URLSearchParams(params || {}).toString();
     return api.get(`/teacher/students/${id}${q ? `?${q}` : ''}`);
   },
+
+  getAssignedStudents: (teacherId, params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return api.get(`/teacher/students/assigned/${teacherId}${q ? `?${q}` : ''}`);
+  },
 };
 
 export default teacherPortalService;

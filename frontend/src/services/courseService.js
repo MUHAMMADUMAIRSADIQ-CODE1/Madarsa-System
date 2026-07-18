@@ -52,6 +52,8 @@ export const courseService = {
     const q = new URLSearchParams(params || {}).toString();
     return api.get(`/public/courses${q ? `?${q}` : ''}`);
   },
+
+  getCourseDetailWithStats: (id) => api.get(`/admin/courses/${id}/detail-with-stats`),
 };
 
 export default courseService;

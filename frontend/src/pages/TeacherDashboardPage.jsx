@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import TeacherWelcomeSection from '../components/Dashboard/TeacherWelcomeSection';
 import TeacherTodaysClassesSection from '../components/Dashboard/TeacherTodaysClassesSection';
 import TeacherCoursesSection from '../components/Dashboard/TeacherCoursesSection';
-import TeacherStudentsSection from '../components/Dashboard/TeacherStudentsSection';
+import TeacherAssignedStudentsSection from '../components/Dashboard/TeacherAssignedStudentsSection';
 import TeacherAssignmentsSection from '../components/Dashboard/TeacherAssignmentsSection';
 import TeacherScheduleSection from '../components/Dashboard/TeacherScheduleSection';
 import TeacherCourseMaterialsSection from '../components/Dashboard/TeacherCourseMaterialsSection';
@@ -96,17 +96,35 @@ export default function TeacherDashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await teacherPortalService.getProfile();
+      const teacherId = user?._id || user?.id;
+      if (!teacherId) {
+        const res = await teacherPortalService.getProfile();
+        if (res?.data) {
+          setProfile(res.data);
+          setDashboardData(res.data);
+        }
+        return;
+      }
+      const res = await teacherPortalService.getDashboard(teacherId);
       if (res?.data) {
-        setProfile(res.data);
-        setDashboardData(res.data);
+        const d = res.data;
+        setProfile(d.profile || d);
+        setDashboardData(d);
       }
     } catch (err) {
-      setError(err.message);
+      try {
+        const fallback = await teacherPortalService.getProfile();
+        if (fallback?.data) {
+          setProfile(fallback.data);
+          setDashboardData(fallback.data);
+          return;
+        }
+      } catch (_) {}
+      setError(err.message || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchCourses = useCallback(async (id) => {
     try {
@@ -529,9 +547,18 @@ export default function TeacherDashboardPage() {
 
   const renderDashboard = () => {
     const a = analytics || {};
+    const courseCount = a.totalCourses || dashboardData?.courses?.length || dashboardData?.assignedCourses?.length || '-';
+    const studentCount = a.totalStudents || dashboardData?.totalStudents || dashboardData?.assignedStudents?.length || '-';
+    const welcomeStats = {
+      totalCourses: courseCount,
+      totalStudents: studentCount,
+      todaysClasses: a.todaysClasses || '-',
+      pendingReviews: a.pendingReviews || '-',
+    };
+
     const statItems = [
-      { label: 'My Courses', value: a.totalCourses || dashboardData?.totalCourses || '-', icon: FiBook, color: 'text-blue-600 bg-blue-100' },
-      { label: 'Students', value: a.totalStudents || '-', icon: FiUsers, color: 'text-green-600 bg-green-100' },
+      { label: 'My Courses', value: courseCount, icon: FiBook, color: 'text-blue-600 bg-blue-100' },
+      { label: 'Students', value: studentCount, icon: FiUsers, color: 'text-green-600 bg-green-100' },
       { label: 'Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle, color: 'text-purple-600 bg-purple-100' },
       { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText, color: 'text-orange-600 bg-orange-100' },
       { label: 'Announcements', value: a.totalAnnouncements || '-', icon: FiBell, color: 'text-red-600 bg-red-100' },
@@ -540,7 +567,7 @@ export default function TeacherDashboardPage() {
 
     return (
     <div className="space-y-8">
-      <TeacherWelcomeSection />
+      <TeacherWelcomeSection stats={welcomeStats} />
 
       {/* Analytics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -557,16 +584,18 @@ export default function TeacherDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-8">
           <TeacherTodaysClassesSection />
+          <TeacherCoursesSection />
         </div>
-        <div>
+        <div className="space-y-6">
+          {/* Quick Stats */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="font-heading text-lg font-bold text-text-dark mb-6">Quick Stats</h3>
             <div className="space-y-4">
               {[
-                { label: 'Active Students', value: a.totalStudents || dashboardData?.totalStudents || '-', icon: FiUsers },
-                { label: 'My Courses', value: a.totalCourses || dashboardData?.totalCourses || '-', icon: FiBook },
+                { label: 'Active Students', value: studentCount, icon: FiUsers },
+                { label: 'My Courses', value: courseCount, icon: FiBook },
                 { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText },
                 { label: 'Avg Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle },
               ].map((stat, idx) => {
@@ -587,7 +616,7 @@ export default function TeacherDashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Quick Actions</h3>
             <div className="space-y-3">
               <button
@@ -598,10 +627,17 @@ export default function TeacherDashboardPage() {
                 <span className="text-sm font-medium text-text-body">View My Courses</span>
               </button>
               <button
+                onClick={() => navigateTo('/teacher/students')}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
+              >
+                <FiUsers className="w-5 h-5 text-green-500" />
+                <span className="text-sm font-medium text-text-body">My Assigned Students</span>
+              </button>
+              <button
                 onClick={() => navigateTo('/teacher/attendance')}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
               >
-                <FiCheckCircle className="w-5 h-5 text-green-500" />
+                <FiCheckCircle className="w-5 h-5 text-purple-500" />
                 <span className="text-sm font-medium text-text-body">Take Attendance</span>
               </button>
               <button
@@ -612,17 +648,17 @@ export default function TeacherDashboardPage() {
                 <span className="text-sm font-medium text-text-body">View Schedule</span>
               </button>
               <button
-                onClick={() => navigateTo('/teacher/messages')}
+                onClick={() => navigateTo('/teacher/assignments')}
                 className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
               >
-                <FiMail className="w-5 h-5 text-orange-500" />
-                <span className="text-sm font-medium text-text-body">Open Messages</span>
+                <FiFileText className="w-5 h-5 text-orange-500" />
+                <span className="text-sm font-medium text-text-body">Manage Assignments</span>
               </button>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Recent Activity</h3>
             <div className="space-y-3">
               {teacherDashboardData.dashboard.recentActivity.map((activity) => (
@@ -643,7 +679,7 @@ export default function TeacherDashboardPage() {
           </div>
 
           {/* Recent Notifications */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-heading text-lg font-bold text-text-dark">Recent Notifications</h3>
               <button
@@ -667,7 +703,6 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
       </div>
-      <TeacherCoursesSection />
     </div>
   );
   };
@@ -986,7 +1021,7 @@ export default function TeacherDashboardPage() {
       return <TeacherCoursesSection onViewCourse={handleViewCourse} />;
 
     case 'students':
-      return <TeacherStudentsSection />;
+      return <TeacherAssignedStudentsSection />;
 
     case 'assignments':
       return <TeacherAssignmentsSection />;

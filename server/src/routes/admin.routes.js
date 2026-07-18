@@ -50,4 +50,66 @@ router.use('/admissions', require('./admission.routes'));
 router.use('/students', require('./student.routes'));
 router.use('/attendance', require('./attendance.routes'));
 
+// =================== Assignment Management ===================
+
+const { assignmentValidator } = require('../validators');
+
+router.post(
+  '/assignments/assign',
+  validate(assignmentValidator.assignStudentRules),
+  adminController.assignStudent
+);
+
+router.post(
+  '/assignments/remove',
+  validate(assignmentValidator.removeStudentRules),
+  adminController.removeStudent
+);
+
+router.post(
+  '/assignments/reassign',
+  validate(assignmentValidator.reassignStudentRules),
+  adminController.reassignStudent
+);
+
+router.post(
+  '/assignments/bulk-assign',
+  validate(assignmentValidator.bulkAssignRules),
+  adminController.bulkAssignStudents
+);
+
+router.get(
+  '/assignments/teacher/:teacherId',
+  validate(assignmentValidator.teacherIdParamRules),
+  adminController.getAssignedStudents
+);
+
+router.get(
+  '/assignments/student/:studentId',
+  validate(assignmentValidator.studentIdParamRules),
+  adminController.getAssignedTeacher
+);
+
+router.get(
+  '/assignments/summary',
+  adminController.getAssignmentSummary
+);
+
+router.post(
+  '/assignments/teacher-counts',
+  adminController.getTeacherAssignmentCounts
+);
+
+// =================== Course-Aware Assignment ===================
+
+router.get(
+  '/assignments/eligible-students/:teacherId',
+  adminController.getEligibleStudentsForTeacher
+);
+
+router.get(
+  '/assignments/eligible-teachers/:studentId',
+  adminController.getEligibleTeachersForStudent
+);
+
 module.exports = router;

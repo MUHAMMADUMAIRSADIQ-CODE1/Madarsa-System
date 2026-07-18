@@ -43,6 +43,14 @@ const updateProfileRules = [
     .optional()
     .isArray()
     .withMessage('Skills must be an array'),
+  body('canTeachCourses')
+    .optional()
+    .isArray()
+    .withMessage('Courses must be an array'),
+  body('canTeachCourses.*')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid course ID'),
 ];
 
 const idParamRules = [

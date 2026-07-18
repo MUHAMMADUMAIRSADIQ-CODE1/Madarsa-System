@@ -52,6 +52,12 @@ export const teacherService = {
 
   removeCourse: (id, courseId) => api.post(`/admin/teachers/${id}/remove-course`, { courseId }),
 
+  bulkAssignCourses: (id, courseIds) => api.post(`/admin/teachers/${id}/bulk-assign-courses`, { courseIds }),
+
+  getAssignedCourses: (id) => api.get(`/admin/teachers/${id}/assigned-courses`),
+
+  getAssignableCourses: (id) => api.get(`/admin/teachers/${id}/assignable-courses`),
+
   // User-level admin actions
   blockUser: (userId, reason) => api.patch(`/admin/block-user/${userId}`, { reason }),
 

@@ -227,9 +227,19 @@ const slugParamRules = [
     .withMessage('Teacher slug is required'),
 ];
 
+const bulkAssignCoursesRules = [
+  body('courseIds')
+    .isArray({ min: 1 })
+    .withMessage('Course IDs must be a non-empty array'),
+  body('courseIds.*')
+    .isMongoId()
+    .withMessage('Each course ID must be a valid Mongo ID'),
+];
+
 module.exports = {
   createTeacherRules,
   updateTeacherRules,
   idParamRules,
   slugParamRules,
+  bulkAssignCoursesRules,
 };

@@ -290,9 +290,26 @@ const removeCourse = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Course removed successfully', teacher));
 });
 
+const bulkAssignCourses = asyncHandler(async (req, res) => {
+  const { courseIds } = req.body;
+  const teacher = await TeacherService.bulkAssignCourses(req.params.id, courseIds, req.user.id);
+  res.status(200).json(ApiResponse.success('Courses assigned successfully', teacher));
+});
+
+const getAssignedCourses = asyncHandler(async (req, res) => {
+  const data = await TeacherService.getTeacherAssignedCourses(req.params.id);
+  res.status(200).json(ApiResponse.success('Assigned courses fetched successfully', data));
+});
+
+const getAssignableCourses = asyncHandler(async (req, res) => {
+  const courses = await TeacherService.getAssignableCourses(req.params.id);
+  res.status(200).json(ApiResponse.success('Assignable courses fetched successfully', courses));
+});
+
 module.exports = {
   getAll, getById, getBySlug, update,
   deleteTeacher, restoreTeacher, publishTeacher, unpublishTeacher,
   archiveTeacher, duplicateTeacher, getStats, getPublished,
   assignCourse, removeCourse,
+  bulkAssignCourses, getAssignedCourses, getAssignableCourses,
 };
