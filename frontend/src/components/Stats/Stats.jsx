@@ -55,7 +55,7 @@ function StatCard({ stat, index }) {
 
   return (
     <div
-      className="group relative bg-white rounded-2xl border border-border-light p-6 sm:p-7 lg:p-8 text-center transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
+      className="group relative bg-white rounded-2xl border border-border-light p-6 sm:p-7 lg:p-8 text-center transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.12)] hover:-translate-y-1 animate-fade-in-up"
       style={{ animationDelay: `${index * 100}ms` }}
     >
       <div className="w-12 h-12 lg:w-14 lg:h-14 mx-auto rounded-xl bg-primary-light text-primary flex items-center justify-center mb-4 transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
@@ -88,7 +88,7 @@ export default function Stats() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 justify-items-center">
           {stats.map((stat, i) => (
             <StatCard key={stat.id} stat={stat} index={i} />
           ))}

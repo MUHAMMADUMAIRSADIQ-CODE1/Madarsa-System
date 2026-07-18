@@ -1,11 +1,11 @@
 export default function CourseCard({ course, index = 0 }) {
   return (
     <article
-      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.12)] hover:-translate-y-1 animate-fade-in-up"
+      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.15)] hover:-translate-y-2 animate-fade-in-up flex flex-col"
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Course Image Placeholder */}
-      <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${course.color}`}>
+      <div className={`relative h-40 sm:h-48 lg:h-52 overflow-hidden bg-gradient-to-br flex-shrink-0 ${course.color}`}>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cG9seWdvbiBwb2ludHM9IjMwLDAgNjAsMzAgMzAsNjAgMCwzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9zdmc+')] opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
@@ -26,7 +26,7 @@ export default function CourseCard({ course, index = 0 }) {
       </div>
 
       {/* Content */}
-      <div className="p-6 lg:p-7">
+      <div className="p-6 lg:p-7 flex flex-col flex-1">
         <h3 className="font-heading text-xl font-bold text-text-dark group-hover:text-primary transition-colors duration-300">
           {course.title}
         </h3>
@@ -59,8 +59,8 @@ export default function CourseCard({ course, index = 0 }) {
           </span>
         </div>
 
-        {/* CTA */}
-        <div className="mt-6 pt-5 border-t border-border-light">
+        {/* CTA - pushes to bottom with mt-auto */}
+        <div className="mt-auto pt-5">
           <a
             href={`#course-${course.id}`}
             className="group/btn inline-flex items-center justify-between w-full px-5 py-3 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary-dark transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30"

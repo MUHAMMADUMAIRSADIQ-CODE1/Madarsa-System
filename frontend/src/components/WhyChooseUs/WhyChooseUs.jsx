@@ -50,10 +50,10 @@ export default function WhyChooseUs() {
           {whyChooseUs.map((item, i) => (
             <div
               key={item.id}
-              className="group relative bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
+              className="group relative bg-white rounded-2xl border border-border-light p-5 sm:p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.12)] hover:-translate-y-1 animate-fade-in-up"
               style={{ animationDelay: `${i * 100}ms` }}
             >
-              <div className="w-14 h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-4 sm:mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
                 {iconMap[item.icon]}
               </div>
               <h3 className="font-heading text-lg font-bold text-text-dark group-hover:text-primary transition-colors duration-300">

@@ -19,19 +19,19 @@ export default function CTA() {
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-gold/5 rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-        <h2 className="font-heading text-3xl sm:text-4xl lg:text-[clamp(2rem,3.2vw,3.5rem)] font-bold text-white leading-tight">
+        <h2 className="font-heading text-3xl sm:text-4xl lg:text-[clamp(2rem,3.2vw,3.5rem)] font-bold text-white leading-tight animate-fade-in-up">
           Ready to Begin Your{' '}
           <span className="text-gold">Islamic Education</span> Journey?
         </h2>
-        <p className="mt-4 text-base sm:text-lg text-gold-light/80 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-4 text-base sm:text-lg text-gold-light/80 max-w-2xl mx-auto leading-relaxed animate-fade-in-up stagger-2">
           Join thousands of students worldwide in learning the Quran and Islamic sciences
           from qualified scholars. Take the first step today.
         </p>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-8 flex flex-wrap justify-center gap-4 animate-fade-in-up stagger-3">
           <a
             href="#apply"
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-gold text-white font-semibold rounded-2xl hover:bg-gold-dark transition-all duration-300 shadow-2xl shadow-gold/30 hover:shadow-gold/40 hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-gold text-white font-semibold rounded-2xl hover:bg-gold-dark transition-all duration-300 shadow-2xl shadow-gold/30 hover:shadow-gold/40 hover:-translate-y-1 hover:scale-105"
           >
             <span>Apply Now</span>
             <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +40,7 @@ export default function CTA() {
           </a>
           <a
             href="#contact"
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-0.5"
+            className="group inline-flex items-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-1"
           >
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M3 3h14a1 1 0 011 1v12a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

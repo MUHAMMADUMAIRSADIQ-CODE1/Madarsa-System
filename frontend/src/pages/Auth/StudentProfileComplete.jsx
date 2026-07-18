@@ -672,8 +672,7 @@ const [coursesLoading, setCoursesLoading] = useState(false);
     </p>
   </div>
 </div>
-          </div>
-        </div>
+         
       </div>
 
       {/* Dynamic Course Selection */}

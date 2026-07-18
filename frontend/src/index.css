@@ -174,3 +174,32 @@ button:not([disabled]),
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Smooth button transitions */
+button,
+a[role="button"],
+.btn {
+  transition: all 0.3s ease;
+}
+
+button:hover,
+a[role="button"]:hover {
+  transform: translateY(-1px);
+}
+
+button:active,
+a[role="button"]:active {
+  transform: translateY(0);
+}

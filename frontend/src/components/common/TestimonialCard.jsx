@@ -3,10 +3,11 @@ export default function TestimonialCard({ testimonial, index = 0 }) {
 
   return (
     <div
-      className="flex-shrink-0 w-[18rem] xs:w-[20rem] sm:w-[24rem] lg:w-[26rem] animate-fade-in-up"
+      className="flex-shrink-0 w-[85vw] max-w-[20rem] sm:max-w-none sm:w-[20rem] md:w-[24rem] lg:w-[26rem] animate-fade-in-up"
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="bg-white rounded-2xl border border-border-light p-7 lg:p-8 h-full transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.08)]">
+      <div className="bg-white rounded-2xl border border-border-light p-7 lg:p-8 h-full transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.1)] hover:-translate-y-1 flex flex-col">
+        <div className="flex-1 flex flex-col">
         {/* Rating */}
         <div className="flex items-center gap-1 mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
@@ -39,6 +40,7 @@ export default function TestimonialCard({ testimonial, index = 0 }) {
           </span>
         </div>
       </div>
+    </div>
     </div>
   );
 }

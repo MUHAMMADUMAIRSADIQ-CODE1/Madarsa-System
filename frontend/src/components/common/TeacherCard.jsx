@@ -1,26 +1,51 @@
+import { useState } from 'react';
+
+const fallbackImages = [
+  'https://images.unsplash.com/photo-1583408835381-8f004a88d09a?w=600&q=80',
+  'https://images.unsplash.com/photo-1609186987056-e0b6532af9e8?w=600&q=80',
+  'https://images.unsplash.com/photo-1604480132715-57c9b3f37fef?w=600&q=80',
+  'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=600&q=80',
+];
+
 export default function TeacherCard({ teacher, index = 0 }) {
   const t = teacher || {};
+  const [imgError, setImgError] = useState(false);
   const initial = t.name ? t.name.charAt(0) : '?';
   const subjects = Array.isArray(t.subjects) ? t.subjects : [];
   const studentCount = typeof t.students === 'number' ? t.students.toLocaleString() : (t.students || '0');
+  const imageSrc = t.image || fallbackImages[index % fallbackImages.length];
 
   return (
     <article
-      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.1)] hover:-translate-y-1 animate-fade-in-up"
+      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.15)] hover:-translate-y-2 animate-fade-in-up flex flex-col"
       style={{ animationDelay: `${index * 120}ms` }}
     >
       {/* Image */}
-      <div className="relative h-64 overflow-hidden bg-gradient-to-br from-primary/10 to-gold/10">
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg">
-            <span className="font-heading text-3xl font-bold text-white">{initial}</span>
+      <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden bg-gradient-to-br from-primary/10 to-gold/10">
+        {!imgError ? (
+          <>
+            <img
+              src={imageSrc}
+              alt={t.name || 'Scholar'}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+              onError={() => setImgError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg animate-bounce-in">
+              <span className="font-heading text-3xl font-bold text-white">{initial}</span>
+            </div>
           </div>
-        </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent" />
       </div>
 
       {/* Content */}
-      <div className="p-6 lg:p-7">
+      <div className="p-6 lg:p-7 flex flex-col flex-1">
         <h3 className="font-heading text-xl font-bold text-text-dark group-hover:text-primary transition-colors duration-300">
           {t.name || 'Teacher'}
         </h3>
@@ -74,8 +99,8 @@ export default function TeacherCard({ teacher, index = 0 }) {
           </div>
         )}
 
-        {/* View Profile */}
-        <div className="mt-5 pt-4 border-t border-border-light">
+        {/* View Profile - pushes to bottom with mt-auto */}
+        <div className="mt-auto pt-5">
           <a
             href={`#teacher-${t.id || 0}`}
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-dark transition-colors duration-300"
