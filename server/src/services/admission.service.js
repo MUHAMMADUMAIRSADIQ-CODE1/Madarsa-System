@@ -8,7 +8,7 @@ class AdmissionService extends BaseService {
   constructor() {
     super(Admission, 'Admission');
     this.searchFields = [
-      'applicationNumber', 'studentName', 'fatherName', 'guardianName',
+      'applicationNumber', 'studentName', 'fatherName',
       'email', 'phone', 'country',
     ];
   }
@@ -129,7 +129,6 @@ class AdmissionService extends BaseService {
     const studentData = {
       studentName: admission.studentName,
       fatherName: admission.fatherName,
-      guardianName: admission.guardianName,
       gender: admission.gender,
       dateOfBirth: admission.dateOfBirth,
       email: admission.email,
@@ -149,9 +148,6 @@ class AdmissionService extends BaseService {
       preferredTiming: admission.preferredTiming,
       learningMode: admission.learningMode,
       studentPhoto: admission.studentPhoto,
-      cnicFront: admission.cnicFront,
-      cnicBack: admission.cnicBack,
-      passport: admission.passport,
       reasonForJoining: admission.reasonForJoining,
       previousQuranEducation: admission.previousQuranEducation,
       admissionReference: admission._id,

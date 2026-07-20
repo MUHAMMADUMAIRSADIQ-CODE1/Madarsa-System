@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import TeacherWelcomeSection from '../components/Dashboard/TeacherWelcomeSection';
 import TeacherTodaysClassesSection from '../components/Dashboard/TeacherTodaysClassesSection';
@@ -17,9 +18,12 @@ import { teacherDashboardData } from '../data/teacherDashboardData';
 import teacherPortalService from '../services/teacherPortalService';
 import teacherAcademicService from '../services/teacherAcademicService';
 import attendanceService from '../services/attendanceService';
+import courseService from '../services/courseService';
+import uploadService from '../services/uploadService';
 import {
   FiUsers, FiBook, FiBookOpen, FiFileText, FiCheckCircle, FiCalendar, FiAward,
-  FiMessageCircle, FiBarChart2, FiMail, FiBell, FiClock, FiArrowLeft, FiRefreshCw
+  FiMessageCircle, FiBarChart2, FiMail, FiBell, FiClock, FiArrowLeft, FiRefreshCw,
+  FiUpload, FiTrash2, FiCheck, FiPlus
 } from 'react-icons/fi';
 
 export default function TeacherDashboardPage() {
@@ -31,7 +35,19 @@ export default function TeacherDashboardPage() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [profileForm, setProfileForm] = useState({});
+  const [profileForm, setProfileForm] = useState({
+    fullName: '', gender: '', dateOfBirth: '', nationality: '',
+    phone: '', whatsapp: '', country: '', city: '', address: '',
+    qualification: '', degree: '', experience: '', specialization: '',
+    subjects: [], shortBio: '', teachingLanguages: [], skills: [],
+    certificates: [], teachingMode: '', availability: '',
+    profilePhoto: '', resume: '', additionalDocuments: []
+  });
+  const [certInput, setCertInput] = useState({ title: '', issuer: '', year: '' });
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [studentSearch, setStudentSearch] = useState('');
@@ -70,27 +86,142 @@ export default function TeacherDashboardPage() {
   const section = location.pathname.split('/').pop();
   const activeSection = section || 'dashboard';
 
+  useEffect(() => {
+    const loadCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const res = await courseService.getPublishedCourses({ limit: 200 });
+        if (res?.data?.data) {
+          setAvailableCourses(res.data.data);
+        }
+      } catch (_) { }
+      setCoursesLoading(false);
+    };
+    loadCourses();
+  }, []);
+
+  const handleProfileChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleArrayChange = (field, value) => {
+    setProfileForm(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  };
+
+  const toggleCourse = (courseId) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
+  const handleFileUpload = async (fieldName, file) => {
+    if (!file) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadFile(file);
+      const url = res?.data?.url || res?.url;
+      if (url) {
+        setProfileForm(prev => ({ ...prev, [fieldName]: url }));
+      }
+    } catch (err) {
+      toast.error('Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
+
+  const handleMultiFileUpload = async (fieldName, files) => {
+    if (!files || files.length === 0) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadMultiple(Array.from(files));
+      const urls = res?.data?.files?.map(f => f.url) || [];
+      if (urls.length > 0) {
+        setProfileForm(prev => ({
+          ...prev,
+          [fieldName]: [...(prev[fieldName] || []), ...urls],
+        }));
+      }
+    } catch (err) {
+      toast.error('Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
+
+  const removeSingleFile = (fieldName) => {
+    setProfileForm(prev => ({ ...prev, [fieldName]: '' }));
+  };
+
+  const removeArrayFile = (fieldName, index) => {
+    setProfileForm(prev => {
+      const current = prev[fieldName] || [];
+      return {
+        ...prev,
+        [fieldName]: current.filter((_, i) => i !== index),
+      };
+    });
+  };
+
+  const addCertificate = () => {
+    if (!certInput.title.trim()) return;
+    setProfileForm(prev => ({
+      ...prev,
+      certificates: [...(prev.certificates || []), { ...certInput, year: parseInt(certInput.year) || new Date().getFullYear() }],
+    }));
+    setCertInput({ title: '', issuer: '', year: '' });
+  };
+
+  const removeCertificate = (index) => {
+    setProfileForm(prev => ({
+      ...prev,
+      certificates: (prev.certificates || []).filter((_, i) => i !== index),
+    }));
+  };
+
   const fetchProfile = useCallback(async () => {
     try {
       const res = await teacherPortalService.getProfile();
       if (res?.data) {
-        setProfile(res.data);
+        const existing = res.data;
+        setProfile(existing);
+        if (existing.canTeachCourses && Array.isArray(existing.canTeachCourses)) {
+          const courseIds = existing.canTeachCourses.map(c => c._id || c);
+          setSelectedCourses(courseIds);
+        }
         setProfileForm({
-          phone: res.data.phone || '',
-          whatsapp: res.data.whatsapp || '',
-          biography: res.data.biography || '',
-          shortBio: res.data.shortBio || '',
-          country: res.data.country || '',
-          city: res.data.city || '',
-          subjects: res.data.subjects || [],
-          teachingLanguages: res.data.teachingLanguages || [],
-          skills: res.data.skills || [],
+          fullName: existing.fullName || user?.fullName || '',
+          gender: existing.gender || '',
+          dateOfBirth: existing.dateOfBirth ? existing.dateOfBirth.split('T')[0] : '',
+          nationality: existing.nationality || '',
+          phone: existing.phone || user?.phone || '',
+          whatsapp: existing.whatsapp || '',
+          country: existing.country || user?.country || '',
+          city: existing.city || user?.city || '',
+          address: existing.address || '',
+          qualification: existing.qualification || '',
+          degree: existing.degree || '',
+          experience: existing.experience || '',
+          specialization: existing.specialization || '',
+          subjects: existing.subjects || [],
+          shortBio: existing.shortBio || '',
+          teachingLanguages: existing.teachingLanguages || [],
+          skills: existing.skills || [],
+          certificates: existing.certificates || [],
+          teachingMode: existing.teachingMode || '',
+          availability: existing.availability || '',
+          profilePhoto: existing.profilePhoto || '',
+          resume: existing.resume || '',
+          additionalDocuments: existing.additionalDocuments || [],
         });
       }
     } catch (err) {
       setError(err.message);
     }
-  }, []);
+  }, [user]);
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
@@ -181,6 +312,12 @@ export default function TeacherDashboardPage() {
   }, [fetchDashboard]);
 
   useEffect(() => {
+    if (activeSection === 'profile') {
+      fetchProfile();
+    }
+  }, [activeSection, fetchProfile]);
+
+  useEffect(() => {
     if (profile?._id) {
       if (activeSection === 'courses') fetchCourses(profile._id);
       if (activeSection === 'students') fetchStudents(profile._id, studentPage);
@@ -269,8 +406,9 @@ export default function TeacherDashboardPage() {
       });
       setAttendanceFormData({ student: '', course: '', status: 'present', classDate: '', remarks: '' });
       fetchTeacherAttendance(profile._id, attendanceDate);
+      toast.success('Attendance marked successfully');
     } catch (err) {
-      alert(err.message || 'Failed to mark attendance');
+      toast.error(err.message || 'Failed to mark attendance');
     } finally {
       setMarkingAttendance(false);
     }
@@ -280,13 +418,19 @@ export default function TeacherDashboardPage() {
     e.preventDefault();
     if (!profile?._id) return;
     setSaving(true);
-    setSaveMessage(null);
     try {
-      const res = await teacherPortalService.updateProfile(profile._id, profileForm);
+      const submitData = {
+        ...profileForm,
+        subjects: (profileForm.subjects || []).map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean),
+        teachingLanguages: (profileForm.teachingLanguages || []).map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean),
+        skills: (profileForm.skills || []).map(s => typeof s === 'string' ? s.trim() : s).filter(Boolean),
+        canTeachCourses: selectedCourses,
+      };
+      const res = await teacherPortalService.updateProfile(profile._id, submitData);
       if (res?.data) setProfile(res.data);
-      setSaveMessage({ type: 'success', text: 'Profile updated successfully' });
+      toast.success('Profile updated successfully');
     } catch (err) {
-      setSaveMessage({ type: 'error', text: err.message || 'Failed to update profile' });
+      toast.error(err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -826,80 +970,287 @@ export default function TeacherDashboardPage() {
     <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
       <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">My Profile</h1>
 
-      {saveMessage && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-semibold ${
-          saveMessage.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
-        }`}>
-          {saveMessage.text}
-        </div>
-      )}
 
-      <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
-        <div className="flex items-center gap-6 mb-8">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white text-2xl font-bold">
-            {profile?.fullName?.charAt(0) || 'T'}
+      <form onSubmit={handleProfileUpdate} className="space-y-6">
+        <div className="space-y-6">
+          {/* ── STEP 1: PERSONAL INFORMATION ── */}
+          <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+            <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">1</span>
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Full Name *</label>
+                <input type="text" name="fullName" value={profileForm.fullName} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Gender *</label>
+                <select name="gender" value={profileForm.gender} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth *</label>
+                <input type="date" name="dateOfBirth" value={profileForm.dateOfBirth} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Nationality *</label>
+                <input type="text" name="nationality" value={profileForm.nationality} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Phone Number *</label>
+                <input type="tel" name="phone" value={profileForm.phone} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp Number *</label>
+                <input type="tel" name="whatsapp" value={profileForm.whatsapp} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Country *</label>
+                <input type="text" name="country" value={profileForm.country} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">City *</label>
+                <input type="text" name="city" value={profileForm.city} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-text-dark mb-1">Address *</label>
+                <textarea name="address" value={profileForm.address} onChange={handleProfileChange} rows={2} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-text-dark">{profile?.fullName || 'Teacher'}</h2>
-            <p className="text-sm text-text-light">{profile?.email}</p>
-            <p className="text-sm text-text-light mt-1">{profile?.qualification}</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-semibold text-text-dark mb-2">Phone</label>
-            <input
-              type="text"
-              value={profileForm.phone || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-            />
+          {/* ── STEP 2: QUALIFICATION & EXPERIENCE ── */}
+          <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+            <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">2</span>
+              Qualifications & Experiences
+            </h3>
+            
+            {/* Preferred Courses selection */}
+            <div>
+              <label className="block text-sm font-semibold text-text-dark mb-2">
+                Preferred Courses You Can Teach *
+                <span className="text-xs text-text-light font-normal ml-2">(Choose courses)</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-border-light rounded-xl bg-white">
+                {availableCourses.map(course => {
+                  const isSelected = selectedCourses.includes(course._id);
+                  return (
+                    <button
+                      key={course._id}
+                      type="button"
+                      onClick={() => toggleCourse(course._id)}
+                      className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
+                        isSelected ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary/50'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                        isSelected ? 'bg-primary text-white' : 'border border-border-light'
+                      }`}>
+                        {isSelected && <FiCheck className="w-3 h-3" />}
+                      </div>
+                      <span className="text-xs font-semibold text-text-dark truncate">{course.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Highest Qualification *</label>
+                <input type="text" name="qualification" value={profileForm.qualification} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Degree/Certificate Title *</label>
+                <input type="text" name="degree" value={profileForm.degree} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Years of Teaching Experience *</label>
+                <input type="number" name="experience" value={profileForm.experience} onChange={handleProfileChange} required min="0"
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Area of Specialization *</label>
+                <input type="text" name="specialization" value={profileForm.specialization} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Subjects Can Teach *</label>
+                <input type="text" value={profileForm.subjects.join(', ')} onChange={(e) => handleArrayChange('subjects', e.target.value)} required placeholder="Comma-separated (e.g. Tajweed, Arabic, Hifz)"
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Teaching Languages *</label>
+                <input type="text" value={profileForm.teachingLanguages.join(', ')} onChange={(e) => handleArrayChange('teachingLanguages', e.target.value)} required placeholder="Comma-separated (e.g. Arabic, Urdu, English)"
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-text-dark mb-1">Short Bio *</label>
+                <textarea name="shortBio" value={profileForm.shortBio} onChange={handleProfileChange} rows={3} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp</label>
-            <input
-              type="text"
-              value={profileForm.whatsapp || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, whatsapp: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-            />
+
+          {/* ── STEP 3: SKILLS & AVAILABILITY ── */}
+          <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+            <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">3</span>
+              Skills & Availability
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Skills *</label>
+                <input type="text" value={profileForm.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} required placeholder="Comma-separated (e.g. Online teaching, Quran recitation)"
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-1">Teaching Mode *</label>
+                <select name="teachingMode" value={profileForm.teachingMode} onChange={handleProfileChange} required
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
+                  <option value="">Select Mode</option>
+                  <option value="online">Online</option>
+                  <option value="physical">Physical</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-text-dark mb-1">Availability (Time & Days) *</label>
+                <input type="text" name="availability" value={profileForm.availability} onChange={handleProfileChange} required placeholder="e.g. 5:00 PM - 9:00 PM EST, Mon-Fri"
+                  className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-dark mb-2">Country</label>
-            <input
-              type="text"
-              value={profileForm.country || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, country: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold text-text-dark mb-2">City</label>
-            <input
-              type="text"
-              value={profileForm.city || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-text-dark mb-2">Short Bio</label>
-            <textarea
-              rows={3}
-              value={profileForm.shortBio || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, shortBio: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-text-dark mb-2">Biography</label>
-            <textarea
-              rows={5}
-              value={profileForm.biography || ''}
-              onChange={(e) => setProfileForm({ ...profileForm, biography: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-            />
+
+
+
+          {/* ── STEP 4: DOCUMENTS ── */}
+          <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+            <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+              <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">4</span>
+              Documents & Uploads
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Profile Photo */}
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-2">Profile Photo *</label>
+                {profileForm.profilePhoto && (
+                  <div className="mb-2 relative inline-block">
+                    <img src={profileForm.profilePhoto} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />
+                    <button type="button" onClick={() => removeSingleFile('profilePhoto')}
+                      className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
+                      <FiTrash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all rounded-xl">
+                  {uploading.profilePhoto ? (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FiUpload className="w-4 h-4 text-text-light" />
+                  )}
+                  <span className="text-xs text-text-light">{profileForm.profilePhoto ? 'Replace' : 'Upload'} Photo</span>
+                  <input type="file" accept="image/*" onChange={(e) => handleFileUpload('profilePhoto', e.target.files[0])} className="hidden" disabled={uploading.profilePhoto} />
+                </label>
+              </div>
+
+              {/* Resume */}
+              <div>
+                <label className="block text-sm font-medium text-text-dark mb-2">Resume / CV *</label>
+                {profileForm.resume && (
+                  <div className="mb-2 flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-border-light text-xs max-w-full truncate">
+                    <span className="truncate">{profileForm.resume.split('/').pop()}</span>
+                    <button type="button" onClick={() => removeSingleFile('resume')}
+                      className="text-red-500 hover:text-red-700 ml-auto">
+                      <FiTrash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all rounded-xl">
+                  {uploading.resume ? (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FiUpload className="w-4 h-4 text-text-light" />
+                  )}
+                  <span className="text-xs text-text-light">{profileForm.resume ? 'Replace' : 'Upload'} Resume</span>
+                  <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => handleFileUpload('resume', e.target.files[0])} className="hidden" disabled={uploading.resume} />
+                </label>
+              </div>
+
+              {/* Certificates */}
+              <div className="md:col-span-2 p-3 sm:p-4 bg-bg-light/30 rounded-xl border border-border-light space-y-4">
+                <label className="block text-sm font-semibold text-text-dark">Educational Certificates / Degrees</label>
+                {profileForm.certificates && profileForm.certificates.length > 0 && (
+                  <div className="space-y-2">
+                    {profileForm.certificates.map((cert, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border border-border-light">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-text-dark truncate">{cert.title}</p>
+                          <p className="text-xs text-text-light">{cert.issuer}{cert.year ? ` (${cert.year})` : ''}</p>
+                        </div>
+                        <button type="button" onClick={() => removeCertificate(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 ml-2">
+                          <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                  <input type="text" value={certInput.title} onChange={e => setCertInput(p => ({ ...p, title: e.target.value }))} placeholder="Certificate title" className="w-full sm:flex-1 px-3 sm:px-4 py-2 rounded-xl border border-border-light focus:border-primary outline-none text-sm bg-white" />
+                  <input type="text" value={certInput.issuer} onChange={e => setCertInput(p => ({ ...p, issuer: e.target.value }))} placeholder="Issuer" className="w-full sm:flex-1 px-3 sm:px-4 py-2 rounded-xl border border-border-light focus:border-primary outline-none text-sm bg-white" />
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <input type="number" value={certInput.year} onChange={e => setCertInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="flex-1 sm:w-24 px-3 py-2 rounded-xl border border-border-light focus:border-primary outline-none text-sm min-w-0 bg-white" />
+                    <button type="button" onClick={addCertificate} className="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0">
+                      <FiPlus className="w-4 h-4" /> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Documents */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-text-dark mb-2">Additional Documents (Optional)</label>
+                <div className="space-y-2 mb-2">
+                  {profileForm.additionalDocuments?.map((doc, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-border-light text-xs">
+                      <span className="truncate">{doc.split('/').pop()}</span>
+                      <button type="button" onClick={() => removeArrayFile('additionalDocuments', index)}
+                        className="text-red-500 hover:text-red-700 ml-auto">
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all rounded-xl">
+                  {uploading.additionalDocuments ? (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FiUpload className="w-4 h-4 text-text-light" />
+                  )}
+                  <span className="text-xs text-text-light">Upload Additional Document(s)</span>
+                  <input type="file" multiple accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => handleMultiFileUpload('additionalDocuments', e.target.files)} className="hidden" disabled={uploading.additionalDocuments} />
+                </label>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -911,11 +1262,6 @@ export default function TeacherDashboardPage() {
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
-          {saveMessage && (
-            <span className={`text-sm font-semibold ${saveMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-              {saveMessage.text}
-            </span>
-          )}
         </div>
       </form>
     </div>

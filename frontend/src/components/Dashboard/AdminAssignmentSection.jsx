@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import assignmentService from '../../services/assignmentService';
 import teacherService from '../../services/teacherService';
+import { toast } from 'react-toastify';
 import {
   FiUser, FiMail, FiBookOpen, FiBriefcase, FiCheck, FiX,
   FiChevronLeft, FiSearch, FiUsers, FiUserPlus, FiUserX,
@@ -68,8 +69,6 @@ function AssignModal({ teacher, onClose, onSuccess }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
   const [assignedStudents, setAssignedStudents] = useState([]);
   const [activeTab, setActiveTab] = useState('available'); // 'available' | 'assigned'
   const [refreshKey, setRefreshKey] = useState(0);
@@ -155,35 +154,29 @@ function AssignModal({ teacher, onClose, onSuccess }) {
   const handleAssign = async () => {
     if (selectedIds.size === 0) return;
     setSubmitting(true);
-    setError(null);
-    setSuccessMsg(null);
     try {
       const studentIds = Array.from(selectedIds);
       const res = await assignmentService.bulkAssignStudents(teacher._id, studentIds);
-      // Get actual result from backend response
       const result = res?.data || res;
       const totalAssigned = result?.totalAssigned ?? result?.results?.assigned?.length ?? studentIds.length;
       const skippedCount = (result?.results?.noCourseOverlap?.length || 0) + (result?.results?.skipped?.length || 0);
       const alreadyAssignedCount = result?.results?.alreadyAssigned?.length || 0;
       
       setSelectedIds(new Set());
-      // Re-fetch assigned students, then trigger a refresh of available list
       await loadAssignedStudents();
       setRefreshKey((k) => k + 1);
       
       if (totalAssigned > 0) {
-        setSuccessMsg(`${totalAssigned} student${totalAssigned !== 1 ? 's' : ''} assigned successfully`);
+        toast.success(`${totalAssigned} student${totalAssigned !== 1 ? 's' : ''} assigned successfully`);
       } else if (skippedCount > 0 || alreadyAssignedCount > 0) {
-        setError(`${skippedCount} student${skippedCount !== 1 ? 's' : ''} could not be assigned (no course overlap or validation issues). ${alreadyAssignedCount} already had a teacher.`);
+        toast.error(`${skippedCount} student${skippedCount !== 1 ? 's' : ''} could not be assigned (no course overlap or validation issues). ${alreadyAssignedCount} already had a teacher.`);
       } else {
-        setError('No students could be assigned. They may be ineligible or already assigned to a teacher.');
+        toast.error('No students could be assigned. They may be ineligible or already assigned to a teacher.');
       }
       
-      // Notify parent to refresh teacher assignment counts immediately
       if (onSuccess && totalAssigned > 0) onSuccess();
-      setTimeout(() => { setSuccessMsg(null); setError(null); }, 5000);
     } catch (err) {
-      setError(err.message || 'Failed to assign students');
+      toast.error(err.message || 'Failed to assign students');
     } finally {
       setSubmitting(false);
     }
@@ -191,14 +184,14 @@ function AssignModal({ teacher, onClose, onSuccess }) {
 
   const handleRemove = async (studentId) => {
     setSubmitting(true);
-    setError(null);
     try {
       await assignmentService.removeStudent(teacher._id, studentId);
       setRemoveConfirm(null);
       await Promise.all([loadAssignedStudents(), loadStudents()]);
+      toast.success('Student removed successfully');
       if (onSuccess) onSuccess();
     } catch (err) {
-      setError(err.message || 'Failed to remove student');
+      toast.error(err.message || 'Failed to remove student');
     } finally {
       setSubmitting(false);
     }
@@ -206,13 +199,13 @@ function AssignModal({ teacher, onClose, onSuccess }) {
 
   const handleReassign = async (newTeacherId, studentId) => {
     setSubmitting(true);
-    setError(null);
     try {
       await assignmentService.reassignStudent(newTeacherId, studentId);
       setReassignModal(null);
       await Promise.all([loadAssignedStudents(), loadStudents()]);
+      toast.success('Student reassigned successfully');
     } catch (err) {
-      setError(err.message || 'Failed to reassign student');
+      toast.error(err.message || 'Failed to reassign student');
     } finally {
       setSubmitting(false);
     }
@@ -238,19 +231,6 @@ function AssignModal({ teacher, onClose, onSuccess }) {
         </div>
 
         <div className="p-6 sm:p-8 space-y-6">
-          {successMsg && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center gap-2">
-              <FiCheck size={16} />
-              {successMsg}
-            </div>
-          )}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
-              <FiAlertTriangle size={16} />
-              {error}
-            </div>
-          )}
-
           {/* ── Teacher Profile Card ── */}
           <div className="bg-gradient-to-r from-primary/5 to-primary/[0.02] rounded-2xl border border-primary/10 p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">

@@ -1,10 +1,12 @@
 import {
   FiMail, FiPhone, FiGlobe, FiMapPin, FiCalendar,
   FiUser, FiShield, FiAward, FiBookOpen, FiBriefcase,
-  FiHeart, FiDroplet, FiClock, FiMonitor, FiCheckCircle,
+  FiClock, FiMonitor, FiCheckCircle,
   FiExternalLink, FiDownload, FiFile, FiImage,
-  FiLinkedin, FiFacebook, FiInstagram, FiPhoneCall,
+  FiPhoneCall,
   FiInfo, FiFlag, FiStar, FiHome, FiPaperclip,
+  FiHeart,
+  FiBook,
 } from 'react-icons/fi';
 
 // ─── Helpers ─────────────────────────────────────────────
@@ -353,7 +355,7 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
   const isTeacher = type === 'teacher';
 
   // ── Status helpers ──
-  const userStatus = user?.status || 'pending';
+  const userStatus = user?.status;
   const userStatusLabel =
     statusMaps?.userStatus?.[userStatus]?.label ||
     capitalize(userStatus) ||
@@ -361,27 +363,18 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
   const userStatusVariant =
     statusMaps?.userStatus?.[userStatus]?.variant || userStatus;
 
-  const verifStatus = user?.profileVerificationStatus || 'not_submitted';
+  const verifStatus = user?.profileVerificationStatus;
   const verifLabel =
     statusMaps?.verification?.[verifStatus]?.label || 'Not Submitted';
   const verifVariant =
     statusMaps?.verification?.[verifStatus]?.variant || 'not_submitted';
 
-  const completionPct = user?.completionPercentage || (user?.profileComplete ? 100 : 0);
+  const completionPct = user?.completionPercentage ?? 0;
   const profileCompleteVariant = completionPct >= 100 ? 'complete' : 'incomplete';
 
   const name = isTeacher ? entity?.fullName : entity?.studentName;
   const photo = isTeacher ? entity?.profilePhoto : entity?.studentPhoto;
-  const bio = isTeacher ? entity?.shortBio || entity?.biography : entity?.bio;
-
-  // ── Social links ──
-  const socialLinks = [
-    { url: entity?.website, icon: FiGlobe, label: 'Website' },
-    { url: entity?.linkedin, icon: FiLinkedin, label: 'LinkedIn' },
-    { url: entity?.facebook, icon: FiFacebook, label: 'Facebook' },
-    { url: entity?.instagram, icon: FiInstagram, label: 'Instagram' },
-    { url: entity?.twitter, icon: FiGlobe, label: 'Twitter' },
-  ].filter((s) => s.url);
+  const bio = isTeacher ? entity?.shortBio || entity?.bio : entity?.bio;
 
   // ── Documents ──
   const allDocs = isTeacher
@@ -390,30 +383,14 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
         ...(entity?.additionalDocuments?.map((d) =>
           typeof d === 'string' ? { url: d, type: 'additional' } : d
         ) || []),
-
       ]
     : [
         ...(entity?.educationalCertificates?.map((c) =>
           typeof c === 'string' ? { url: c, type: 'certificate' } : c
         ) || []),
-        ...(entity?.additionalDocuments?.map((d) =>
-          typeof d === 'string' ? { url: d, type: 'additional' } : d
-        ) || []),
       ];
 
-  // ── Emergency Contact ──
-  const emergencyContact = isTeacher
-    ? {
-        name: entity?.emergencyContact,
-        phone: entity?.emergencyPhone,
-        relation: null,
-      }
-    : {
-        name: entity?.guardianName,
-        phone: entity?.guardianPhone,
-        relation: entity?.guardianRelation,
-      };
-  const hasEmergencyContact = emergencyContact.name || emergencyContact.phone;
+
 
   // ── Account Timeline ──
   const timelineEvents = [
@@ -531,20 +508,7 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
             show: true,
           },
         ]
-      : [
-          {
-            icon: FiBookOpen,
-            label: 'Course',
-            value: entity?.assignedCourse || entity?.enrolledCourse || notAssigned,
-            show: true,
-          },
-          {
-            icon: FiMonitor,
-            label: 'Class',
-            value: entity?.currentClass || notAssigned,
-            show: true,
-          },
-        ]),
+      : []),
     {
       icon: FiMapPin,
       label: 'Country',
@@ -698,12 +662,12 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
         <div className="flex-1 min-w-[200px] sm:min-w-[210px]">
           <AccountStatusCard
             label="Approval Status"
-            value={isTeacher ? entity?.status || 'draft' : 'Active'}
+            value={userStatusLabel}
             icon={FiFlag}
-            color={entity?.status === 'published' || !isTeacher ? 'green' : 'yellow'}
+            color={userStatus === 'active' ? 'green' : userStatus === 'blocked' ? 'red' : userStatus === 'pending' ? 'yellow' : 'gray'}
             badge={{
-              label: isTeacher ? entity?.status || 'draft' : 'Active',
-              variant: entity?.status === 'published' || !isTeacher ? 'active' : 'draft',
+              label: userStatusLabel,
+              variant: userStatusVariant,
             }}
           />
         </div>
@@ -724,253 +688,202 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
       {/* ══════════════════════════════════════════════════════
           2-COLUMN CONTENT GRID
       ══════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* ── PERSONAL INFORMATION ── */}
-        <SectionCard title="Personal Information" icon={FiUser} cols={2}>
-          <Field label="Full Name" value={name} icon={FiUser} />
-          <Field label="Email" value={entity?.email} icon={FiMail} />
-          <Field label="Phone" value={entity?.phone} icon={FiPhone} />
-          <Field label="WhatsApp" value={entity?.whatsapp} icon={FiPhoneCall} />
-          <Field
-            label="Gender"
-            value={entity?.gender ? capitalize(entity.gender) : null}
-            icon={FiUser}
-          />
-          <Field label="Date of Birth" value={fmtDate(entity?.dateOfBirth)} icon={FiCalendar} />
-          <Field label="Nationality" value={entity?.nationality} icon={FiGlobe} />
-          <Field label="Religion" value={entity?.religion} icon={FiHeart} />
-          <Field label="Blood Group" value={entity?.bloodGroup} icon={FiDroplet} />
-          <Field label="CNIC / Passport" value={entity?.cnicPassport} icon={FiShield} />
-        </SectionCard>
+      {/* role-specific content */}
+      {isTeacher ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ── TEACHER: PERSONAL INFORMATION ── */}
+            <SectionCard title="Personal Information" icon={FiUser} cols={2}>
+              <Field label="Full Name" value={entity?.fullName} icon={FiUser} />
+              <Field label="Gender" value={entity?.gender ? capitalize(entity.gender) : null} icon={FiUser} />
+              <Field label="Date of Birth" value={fmtShortDate(entity?.dateOfBirth)} icon={FiCalendar} />
+              <Field label="Nationality" value={entity?.nationality} icon={FiGlobe} />
+              <Field label="Phone" value={entity?.phone} icon={FiPhone} />
+              <Field label="WhatsApp" value={entity?.whatsapp} icon={FiPhoneCall} />
+              <Field label="Country" value={entity?.country} icon={FiGlobe} />
+              <Field label="City" value={entity?.city} icon={FiMapPin} />
+              <Field label="Address" value={entity?.address} icon={FiHome} fullWidth />
+            </SectionCard>
 
-        {/* ── ADDRESS ── */}
-        <SectionCard title="Address" icon={FiMapPin} cols={2}>
-          <Field label="Country" value={entity?.country} icon={FiGlobe} />
-          <Field label="City" value={entity?.city} icon={FiMapPin} />
-          <Field label="Province / State" value={entity?.province || entity?.state} />
-          <Field label="Postal Code" value={entity?.postalCode} />
-          <Field label="Full Address" value={entity?.address} icon={FiHome} fullWidth />
-          {mapsUrl && (
-            <div className="sm:col-span-2 pt-1">
-              <a
-                href={mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-200"
-              >
-                <FiMapPin size={14} />
-                View on Google Maps
-                <FiExternalLink size={12} />
-              </a>
-            </div>
-          )}
-        </SectionCard>
-
-        {/* ── EDUCATION ── */}
-        <SectionCard title="Education" icon={FiBookOpen} cols={2}>
-          <Field
-            label="Qualification"
-            value={isTeacher ? entity?.qualification : entity?.currentQualification}
-            icon={FiAward}
-          />
-          <Field label="Degree" value={entity?.degree} icon={FiBookOpen} />
-          <Field
-            label="Institute / School"
-            value={entity?.institute || entity?.previousEducation}
-            icon={FiMonitor}
-          />
-          <Field label="Passing Year" value={entity?.passingYear} icon={FiCalendar} />
-          {!isTeacher && (
-            <>
-              <Field label="Previous Education" value={entity?.previousEducation} icon={FiBookOpen} />
-              <Field label="Student ID" value={entity?.studentId} icon={FiUser} />
-            </>
-          )}
-        </SectionCard>
-
-        {/* ── TEACHER: PROFESSIONAL ── */}
-        {isTeacher && (
-          <SectionCard title="Professional Information" icon={FiBriefcase} cols={2}>
-            <Field
-              label="Experience"
-              value={entity?.experience ? `${entity.experience} years` : null}
-              icon={FiClock}
-            />
-            <Field label="Specialization" value={entity?.specialization} icon={FiAward} />
-            <Field
-              label="Teaching Mode"
-              value={entity?.teachingMode ? capitalize(entity.teachingMode) : null}
-              icon={FiMonitor}
-            />
-            <Field label="Availability" value={entity?.availability} icon={FiCalendar} />
-            {/* Subjects */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiBookOpen size={12} /> Subjects
-              </p>
-              <TagList items={entity?.subjects} color="primary" />
-            </div>
-            {/* Languages */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiGlobe size={12} /> Languages
-              </p>
-              <TagList items={languages} color="blue" />
-            </div>
-            {/* Skills */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiCheckCircle size={12} /> Skills
-              </p>
-              <TagList items={skills} color="green" />
-            </div>
-            {/* Certificates */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiAward size={12} /> Certificates
-              </p>
-              {entity?.certificates?.length > 0 ? (
-                <div className="space-y-2">
-                  {entity.certificates.map((cert, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-3 bg-bg-light rounded-xl hover:bg-primary/5 hover:border-primary/20 transition-all border border-transparent"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-text-dark">{cert.title}</p>
-                        <p className="text-xs text-text-light">
-                          {cert.issuer}
-                          {cert.year ? ` (${cert.year})` : ''}
-                        </p>
-                      </div>
-                      {cert.url && (
-                        <a
-                          href={cert.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-primary text-xs font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors"
-                        >
-                          <FiExternalLink size={12} /> View
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                NA
-              )}
-            </div>
-            {/* Awards */}
-            {entity?.awards?.length > 0 && (
+            {/* ── TEACHER: QUALIFICATION & EXPERIENCE ── */}
+            <SectionCard title="Qualification & Experience" icon={FiAward} cols={2}>
               <div className="sm:col-span-2">
                 <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                  <FiStar size={12} /> Awards
+                  <FiBook size={12} /> Courses You Can Teach
                 </p>
-                <div className="space-y-2">
-                  {entity.awards.map((award, i) => (
-                    <div key={i} className="p-3 bg-gradient-to-r from-yellow-50/50 to-white rounded-xl border border-yellow-100">
-                      <p className="text-sm font-bold text-text-dark">
-                        {award.title}
-                        {award.year ? ` (${award.year})` : ''}
-                      </p>
-                      {award.description && (
-                        <p className="text-xs text-text-light mt-0.5">{award.description}</p>
-                      )}
+                {entity?.canTeachCourses?.length > 0 ? (
+                  <TagList items={entity.canTeachCourses.map(c => c.title || c.name || c)} color="primary" />
+                ) : (
+                  NA
+                )}
+              </div>
+              <Field label="Qualification" value={entity?.qualification} icon={FiAward} />
+              <Field label="Degree" value={entity?.degree} icon={FiBookOpen} />
+              <Field label="Experience (years)" value={entity?.experience} icon={FiClock} />
+              <Field label="Specialization" value={entity?.specialization} icon={FiAward} />
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiBookOpen size={12} /> Subjects
+                </p>
+                <TagList items={entity?.subjects} color="primary" />
+              </div>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiGlobe size={12} /> Teaching Languages
+                </p>
+                <TagList items={languages} color="blue" />
+              </div>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1">
+                  <FiInfo size={12} /> Short Biography
+                </p>
+                <p className="text-sm font-semibold text-text-dark leading-relaxed break-words whitespace-pre-line bg-gradient-to-r from-bg-light/50 to-white rounded-xl p-4 border border-border-light">{entity?.shortBio || NA}</p>
+              </div>
+            </SectionCard>
+
+            {/* ── TEACHER: SKILLS & AVAILABILITY ── */}
+            <SectionCard title="Skills & Availability" icon={FiStar} cols={2}>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiCheckCircle size={12} /> Skills
+                </p>
+                <TagList items={skills} color="green" />
+              </div>
+              <Field label="Teaching Mode" value={entity?.teachingMode ? capitalize(entity.teachingMode) : null} icon={FiMonitor} />
+              <Field label="Availability" value={entity?.availability} icon={FiCalendar} />
+            </SectionCard>
+
+
+          </div>
+
+          {/* ── TEACHER: DOCUMENTS ── */}
+          {(entity?.profilePhoto || entity?.resume || entity?.certificates?.length > 0 || entity?.additionalDocuments?.length > 0) && (
+            <SectionCard title="Documents" icon={FiFile} cols={1}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {entity?.profilePhoto && (
+                  <div className="bg-white rounded-xl border border-border-light overflow-hidden hover:shadow-lg transition-all duration-200 p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-text-light mb-2">Profile Photo</p>
+                    <div className="w-20 h-20 rounded-lg overflow-hidden border mb-2">
+                      <img src={entity.profilePhoto} alt="Profile Photo" className="w-full h-full object-cover" />
                     </div>
-                  ))}
+                    <a href={entity.profilePhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                      <FiExternalLink size={12} /> View Image
+                    </a>
+                  </div>
+                )}
+                {entity?.resume && (
+                  <DocumentCard doc={{ url: entity.resume, name: 'Resume' }} index={0} />
+                )}
+                {entity?.additionalDocuments?.map((docUrl, idx) => (
+                  <DocumentCard key={idx} doc={{ url: docUrl, name: `Additional Document ${idx + 1}` }} index={idx} />
+                ))}
+              </div>
+
+              {/* Certificates */}
+              {entity?.certificates?.length > 0 && (
+                <div className="mt-6 border-t border-border-light pt-6">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-text-light mb-3">Certificates</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {entity.certificates.map((cert, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-bg-light rounded-xl border border-border-light">
+                        <div>
+                          <p className="text-sm font-semibold text-text-dark">{cert.title}</p>
+                          <p className="text-xs text-text-light">{cert.issuer}{cert.year ? ` (${cert.year})` : ''}</p>
+                        </div>
+                        {cert.url && (
+                          <a href={cert.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary text-xs font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+                            <FiExternalLink size={12} /> View
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </SectionCard>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* ── STUDENT: PERSONAL INFORMATION ── */}
+            <SectionCard title="Personal Information" icon={FiUser} cols={2}>
+              <Field label="Full Name" value={entity?.studentName} icon={FiUser} />
+              <Field label="Father Name" value={entity?.fatherName} icon={FiUser} />
+              <Field label="Date of Birth" value={fmtShortDate(entity?.dateOfBirth)} icon={FiCalendar} />
+              <Field label="Gender" value={entity?.gender ? capitalize(entity.gender) : null} icon={FiUser} />
+              <Field label="Nationality" value={entity?.nationality} icon={FiGlobe} />
+            </SectionCard>
+
+            {/* ── STUDENT: CONTACT & ADDRESS ── */}
+            <SectionCard title="Contact & Address" icon={FiMapPin} cols={2}>
+              <Field label="Phone Number" value={entity?.phone} icon={FiPhone} />
+              <Field label="WhatsApp Number" value={entity?.whatsapp} icon={FiPhoneCall} />
+              <Field label="Email" value={entity?.email} icon={FiMail} />
+              <Field label="Country" value={entity?.country} icon={FiGlobe} />
+              <Field label="City" value={entity?.city} icon={FiMapPin} />
+              <Field label="Postal Code" value={entity?.postalCode} />
+              <Field label="Address" value={entity?.address} icon={FiHome} fullWidth />
+              <Field label="Emergency Contact Name" value={entity?.emergencyContact} icon={FiUser} />
+              <Field label="Emergency Contact Phone" value={entity?.emergencyPhone} icon={FiPhone} />
+            </SectionCard>
+
+            {/* ── STUDENT: EDUCATION & COURSES ── */}
+            <SectionCard title="Education & Courses" icon={FiBookOpen} cols={2}>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiBook size={12} /> Selected Courses
+                </p>
+                {entity?.courses?.length > 0 ? (
+                  <TagList items={entity.courses.filter(c => c.course).map(c => c.course.title || c.course.name || c.course)} color="primary" />
+                ) : (
+                  NA
+                )}
+              </div>
+              <Field label="Previous Institute / School" value={entity?.previousEducation} icon={FiHome} fullWidth />
+              <Field label="Current Qualification" value={entity?.currentQualification} icon={FiAward} fullWidth />
+            </SectionCard>
+
+            {/* ── STUDENT: BIO & SKILLS ── */}
+            <SectionCard title="Bio & Skills" icon={FiStar} cols={2}>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1">
+                  <FiInfo size={12} /> Bio
+                </p>
+                <p className="text-sm font-semibold text-text-dark leading-relaxed break-words whitespace-pre-line bg-gradient-to-r from-bg-light/50 to-white rounded-xl p-4 border border-border-light">{entity?.bio || NA}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiGlobe size={12} /> Languages
+                </p>
+                <TagList items={languages} color="blue" />
+              </div>
+              <div className="sm:col-span-2">
+                <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
+                  <FiCheckCircle size={12} /> Skills
+                </p>
+                <TagList items={skills} color="green" />
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* ── STUDENT: DOCUMENTS ── */}
+          {entity?.studentPhoto && (
+            <SectionCard title="Documents" icon={FiFile} cols={1}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="bg-white rounded-xl border border-border-light overflow-hidden hover:shadow-lg transition-all duration-200 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-text-light mb-2">Profile Photo</p>
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border mb-2">
+                    <img src={entity.studentPhoto} alt="Profile Photo" className="w-full h-full object-cover" />
+                  </div>
+                  <a href={entity.studentPhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                    <FiExternalLink size={12} /> View Image
+                  </a>
                 </div>
               </div>
-            )}
-          </SectionCard>
-        )}
-
-        {/* ── STUDENT INFORMATION ── */}
-        {!isTeacher && (
-          <SectionCard title="Student Information" icon={FiUser} cols={2}>
-            <Field label="Father Name" value={entity?.fatherName} icon={FiUser} />
-            <Field label="Mother Name" value={entity?.motherName} icon={FiUser} />
-            <Field label="Guardian Name" value={entity?.guardianName} icon={FiUser} />
-            <Field label="Guardian Relation" value={entity?.guardianRelation} />
-            <Field label="Guardian Phone" value={entity?.guardianPhone} icon={FiPhone} />
-            <Field label="Guardian Email" value={entity?.guardianEmail} icon={FiMail} />
-            <Field label="Current Class" value={entity?.currentClass} icon={FiBookOpen} />
-            <Field
-              label="Assigned Course"
-              value={entity?.assignedCourse || entity?.enrolledCourse}
-              icon={FiAward}
-            />
-            <Field label="Previous School" value={entity?.previousEducation} icon={FiMonitor} />
-            <Field label="Admission Date" value={fmtDate(entity?.enrollmentDate)} icon={FiCalendar} />
-            <Field
-              label="Learning Mode"
-              value={entity?.learningMode ? capitalize(entity.learningMode) : null}
-              icon={FiMonitor}
-            />
-            {/* Languages */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiGlobe size={12} /> Languages
-              </p>
-              <TagList items={languages} color="blue" />
-            </div>
-            {/* Skills */}
-            <div className="sm:col-span-2">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-light mb-1.5">
-                <FiCheckCircle size={12} /> Skills
-              </p>
-              <TagList items={skills} color="green" />
-            </div>
-          </SectionCard>
-        )}
-      </div>
-
-      {/* ── EMERGENCY CONTACT ── */}
-      <SectionCard title="Emergency Contact" icon={FiPhoneCall} cols={2}>
-        <Field label="Contact Name" value={emergencyContact.name} icon={FiUser} />
-        <Field label="Relationship" value={emergencyContact.relation} icon={FiHeart} />
-        <Field label="Phone Number" value={emergencyContact.phone} icon={FiPhone} />
-        <Field label="Email" value={emergencyContact.email} icon={FiMail} />
-      </SectionCard>
-
-      {/* ══════════════════════════════════════════════════════
-          BIOGRAPHY
-      ══════════════════════════════════════════════════════ */}
-      {bio && (
-        <SectionCard title={`${isTeacher ? 'Professional' : 'Personal'} Biography`} icon={FiInfo} cols={1}>
-          <div className="col-span-1">
-            <div className="bg-gradient-to-r from-bg-light/50 to-white rounded-xl p-5 border border-border-light">
-              <p className="text-sm text-text-dark leading-relaxed whitespace-pre-line">
-                {bio}
-              </p>
-            </div>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          DOCUMENTS
-      ══════════════════════════════════════════════════════ */}
-      {allDocs.length > 0 && (
-        <SectionCard title={`Documents (${allDocs.length})`} icon={FiFile} cols={1}>
-          <div className="col-span-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {allDocs.map((doc, i) => (
-              <DocumentCard key={i} doc={doc} index={i} />
-            ))}
-          </div>
-        </SectionCard>
-      )}
-
-      {/* ══════════════════════════════════════════════════════
-          SOCIAL LINKS
-      ══════════════════════════════════════════════════════ */}
-      {socialLinks.length > 0 && (
-        <SectionCard title="Social Links" icon={FiGlobe} cols={1}>
-          <div className="col-span-1 flex flex-wrap gap-3">
-            {socialLinks.map((link, i) => (
-              <SocialLinkButton key={i} href={link.url} icon={link.icon} label={link.label} />
-            ))}
-          </div>
-        </SectionCard>
+            </SectionCard>
+          )}
+        </div>
       )}
 
       {/* ══════════════════════════════════════════════════════

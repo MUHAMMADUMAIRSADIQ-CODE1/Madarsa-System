@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
-import { FiEye, FiCheck, FiX, FiRefreshCw, FiAward, FiUsers, FiClipboard, FiAlertTriangle, FiCheckCircle, FiBookmark } from 'react-icons/fi';
+import { FiEye, FiCheck, FiX, FiRefreshCw, FiAward, FiUsers, FiClipboard, FiBookmark, FiCheckCircle } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 const ROLE_LABELS = { student: 'Student', teacher: 'Teacher' };
 const ROLE_COLORS = {
@@ -23,8 +24,6 @@ export default function AdminProfileVerificationSection() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -35,7 +34,6 @@ export default function AdminProfileVerificationSection() {
 
   const fetchUsers = useCallback(async (p = 1) => {
     setLoading(true);
-    setError(null);
     try {
       const q = new URLSearchParams();
       q.set('page', p); q.set('limit', 20);
@@ -43,16 +41,14 @@ export default function AdminProfileVerificationSection() {
       if (roleFilter) q.set('role', roleFilter);
 
       const res = await api.get(`/admin/pending-profile-verifications?${q.toString()}`);
-      const d = res?.data || res;
-      if (d?.users) {
-        setUsers(d.users);
-        setPage(d.pagination?.page || 1);
-        setTotalPages(d.pagination?.totalPages || 1);
-        setTotal(d.pagination?.total || 0);
+      if (res?.data) {
+        setUsers(res.data.users);
+        setStats(res.data.stats);
+        setTotalPages(res.data.totalPages);
+        setTotal(res.data.total);
       }
-      if (d?.stats) setStats(d.stats);
     } catch (err) {
-      setError(err.message || 'Failed to fetch');
+      toast.error(err.message || 'Failed to fetch pending verifications');
     } finally {
       setLoading(false);
     }
@@ -60,18 +56,17 @@ export default function AdminProfileVerificationSection() {
 
   useEffect(() => { fetchUsers(page); }, [page, fetchUsers]);
   useEffect(() => { setPage(1); }, [search, roleFilter]);
-  useEffect(() => { if (successMsg) setTimeout(() => setSuccessMsg(''), 4000); }, [successMsg]);
 
   const handleVerify = async () => {
     if (!selectedUser) return;
     setActionLoading(true);
     try {
       await api.patch(`/admin/approve-profile-verification/${selectedUser._id}`);
-      setSuccessMsg(`✓ ${selectedUser.fullName} profile verified successfully`);
+      toast.success(`${selectedUser.fullName} profile verified successfully`);
       closeAll();
       fetchUsers(page);
     } catch (err) {
-      setError(err.message || 'Failed to verify');
+      toast.error(err.message || 'Failed to verify');
     } finally {
       setActionLoading(false);
     }
@@ -82,12 +77,12 @@ export default function AdminProfileVerificationSection() {
     setActionLoading(true);
     try {
       await api.patch(`/admin/reject-profile-verification/${selectedUser._id}`, { reason: rejectionReason.trim() });
-      setSuccessMsg(`✗ ${selectedUser.fullName} verification rejected`);
+      toast.success(`${selectedUser.fullName} verification rejected`);
       closeAll();
       setRejectionReason('');
       fetchUsers(page);
     } catch (err) {
-      setError(err.message || 'Failed to reject');
+      toast.error(err.message || 'Failed to reject');
     } finally {
       setActionLoading(false);
     }
@@ -99,7 +94,6 @@ export default function AdminProfileVerificationSection() {
     setShowRejectModal(false);
     setSelectedUser(null);
     setRejectionReason('');
-    setError(null);
   };
 
   return (
@@ -123,19 +117,6 @@ export default function AdminProfileVerificationSection() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 lg:p-8">
-        {successMsg && (
-          <div className="mb-4 px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
-            <FiCheck className="inline-block flex-shrink-0" /><span>{successMsg}</span>
-            <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-500 hover:text-emerald-700"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 px-5 py-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium animate-fade-in flex items-center gap-3">
-            <FiAlertTriangle className="inline-block flex-shrink-0" /><span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-          </div>
-        )}
-
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users..." className="flex-1 px-4 py-3 rounded-xl border border-border-light focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" />
           <div className="flex rounded-xl border border-border-light overflow-hidden">

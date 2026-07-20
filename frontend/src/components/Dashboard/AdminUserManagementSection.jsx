@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { adminDashboardData } from '../../data/adminDashboardData';
 import { FiUsers, FiUser, FiSettings, FiAward, FiUserCheck, FiClipboard, FiList, FiCheck, FiCheckCircle, FiX, FiXCircle, FiClock, FiAlertTriangle, FiBookmark, FiEye } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 const ROLE_LABELS = {
   student: 'Student',
@@ -57,9 +58,7 @@ export default function AdminUserManagementSection() {
   const [rejectedTotalPages, setRejectedTotalPages] = useState(1);
   const [rejectedTotal, setRejectedTotal] = useState(0);
 
-  // Shared state
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
+
 
   // Modals
   const [selectedUser, setSelectedUser] = useState(null);
@@ -73,7 +72,6 @@ export default function AdminUserManagementSection() {
   // Fetch pending users
   const fetchPendingUsers = useCallback(async (p = 1) => {
     setPendingLoading(true);
-    setError(null);
     try {
       const queryParams = new URLSearchParams();
       queryParams.set('page', p);
@@ -94,7 +92,7 @@ export default function AdminUserManagementSection() {
         setPendingStats(responseData.stats);
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch pending users');
+      toast.error(err.message || 'Failed to fetch pending users');
     } finally {
       setPendingLoading(false);
     }
@@ -103,7 +101,6 @@ export default function AdminUserManagementSection() {
   // Fetch rejected users
   const fetchRejectedUsers = useCallback(async (p = 1) => {
     setRejectedLoading(true);
-    setError(null);
     try {
       const queryParams = new URLSearchParams();
       queryParams.set('page', p);
@@ -124,7 +121,7 @@ export default function AdminUserManagementSection() {
         setRejectedStats(responseData.stats);
       }
     } catch (err) {
-      setError(err.message || 'Failed to fetch rejected users');
+      toast.error(err.message || 'Failed to fetch rejected users');
     } finally {
       setRejectedLoading(false);
     }
@@ -147,22 +144,16 @@ export default function AdminUserManagementSection() {
     }
   }, [pendingSearch, pendingRoleFilter, rejectedSearch, rejectedRoleFilter, activeTab]);
 
-  useEffect(() => {
-    if (!successMsg) return;
-    const timer = setTimeout(() => setSuccessMsg(''), 4000);
-    return () => clearTimeout(timer);
-  }, [successMsg]);
-
   const handleApprove = async () => {
     if (!selectedUser) return;
     setActionLoading(true);
     try {
       await api.patch(`/admin/approve-user/${selectedUser._id}`);
-      setSuccessMsg(`✓ ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been approved successfully`);
+      toast.success(`${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been approved successfully`);
       closeAllModals();
       fetchPendingUsers(pendingPage);
     } catch (err) {
-      setError(err.message || 'Failed to approve user');
+      toast.error(err.message || 'Failed to approve user');
     } finally {
       setActionLoading(false);
     }
@@ -171,18 +162,18 @@ export default function AdminUserManagementSection() {
   const handleReject = async () => {
     if (!selectedUser) return;
     if (!rejectionReason.trim()) {
-      setError('Please provide a rejection reason');
+      toast.error('Please provide a rejection reason');
       return;
     }
     setActionLoading(true);
     try {
       await api.patch(`/admin/reject-user/${selectedUser._id}`, { reason: rejectionReason.trim() });
-      setSuccessMsg(`✗ ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been rejected`);
+      toast.success(`${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been rejected`);
       closeAllModals();
       setRejectionReason('');
       fetchPendingUsers(pendingPage);
     } catch (err) {
-      setError(err.message || 'Failed to reject user');
+      toast.error(err.message || 'Failed to reject user');
     } finally {
       setActionLoading(false);
     }
@@ -193,11 +184,11 @@ export default function AdminUserManagementSection() {
     setActionLoading(true);
     try {
       await api.patch(`/admin/approve-user/${selectedUser._id}`);
-      setSuccessMsg(`✓ ${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been re-approved successfully`);
+      toast.success(`${selectedUser.fullName} (${ROLE_LABELS[selectedUser.role]}) has been re-approved successfully`);
       closeAllModals();
       fetchRejectedUsers(rejectedPage);
     } catch (err) {
-      setError(err.message || 'Failed to re-approve user');
+      toast.error(err.message || 'Failed to re-approve user');
     } finally {
       setActionLoading(false);
     }
@@ -380,32 +371,6 @@ export default function AdminUserManagementSection() {
         <h1 className="font-heading text-3xl font-bold text-text-dark">User Management</h1>
         <p className="text-text-light mt-1">Review and manage user registrations</p>
       </div>
-
-      {/* Success Message */}
-      {successMsg && (
-        <div className="px-5 py-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-medium animate-fade-in flex items-center gap-3">
-          <FiCheck className="text-emerald-500 text-lg" size={20} />
-          <span>{successMsg}</span>
-          <button onClick={() => setSuccessMsg('')} className="ml-auto text-emerald-500 hover:text-emerald-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="px-5 py-4 bg-red-50 border border-red-200 rounded-xl text-red-700 font-medium animate-fade-in flex items-center gap-3">
-          <FiAlertTriangle className="text-red-500 text-lg" size={20} />
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto text-red-500 hover:text-red-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">

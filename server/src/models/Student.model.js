@@ -35,11 +35,6 @@ const studentSchema = createBaseSchema(
       trim: true,
       maxlength: 100,
     },
-    guardianName: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-    },
     gender: {
       type: String,
       enum: ['male', 'female', 'other'],
@@ -85,16 +80,6 @@ const studentSchema = createBaseSchema(
       trim: true,
       maxlength: 100,
     },
-    religion: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-    },
-    bloodGroup: {
-      type: String,
-      trim: true,
-      maxlength: 10,
-    },
     postalCode: {
       type: String,
       trim: true,
@@ -133,11 +118,6 @@ const studentSchema = createBaseSchema(
       type: String,
       trim: true,
       maxlength: 50,
-    },
-    motherName: {
-      type: String,
-      trim: true,
-      maxlength: 100,
     },
     guardianRelation: {
       type: String,
@@ -188,23 +168,7 @@ const studentSchema = createBaseSchema(
       type: String,
       default: '',
     },
-    cnicFront: {
-      type: String,
-      default: '',
-    },
-    cnicBack: {
-      type: String,
-      default: '',
-    },
-    passport: {
-      type: String,
-      default: '',
-    },
     educationalCertificates: [{
-      type: String,
-      trim: true,
-    }],
-    additionalDocuments: [{
       type: String,
       trim: true,
     }],
@@ -303,8 +267,6 @@ studentSchema.methods.toPublicJSON = function () {
     enrollmentNumber: this.enrollmentNumber,
     studentName: this.studentName,
     fatherName: this.fatherName,
-    motherName: this.motherName,
-    guardianName: this.guardianName,
     guardianRelation: this.guardianRelation,
     gender: this.gender,
     dateOfBirth: this.dateOfBirth,
@@ -316,8 +278,6 @@ studentSchema.methods.toPublicJSON = function () {
     address: this.address,
     postalCode: this.postalCode,
     nationality: this.nationality,
-    religion: this.religion,
-    bloodGroup: this.bloodGroup,
     emergencyContact: this.emergencyContact,
     emergencyPhone: this.emergencyPhone,
     bio: this.bio,

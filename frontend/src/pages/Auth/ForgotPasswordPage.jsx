@@ -1,25 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { toast } from 'react-toastify';
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
     setIsSubmitting(true);
 
     try {
       const response = await api.post('/auth/forgot-password', { email });
-      setMessage(response.message || 'If an account with that email exists, a password reset link has been sent.');
+      toast.success(response.message || 'If an account with that email exists, a password reset link has been sent.');
     } catch (err) {
-      setError(err.message || 'Failed to send reset email. Please try again.');
+      toast.error(err.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -38,18 +35,6 @@ export default function ForgotPasswordPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 sm:p-10">
-          {message && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 animate-fade-in">
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-fade-in">
-              {error}
-            </div>
-          )}
-
           <div className="mb-6">
             <label htmlFor="email" className="block text-sm font-semibold text-text-dark mb-2.5">
               Email Address

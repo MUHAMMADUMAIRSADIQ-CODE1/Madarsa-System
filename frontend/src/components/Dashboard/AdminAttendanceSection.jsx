@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import attendanceService from '../../services/attendanceService';
+import { toast } from 'react-toastify';
 
 const STATUS_BADGES = {
   present: 'bg-green-100 text-green-800',
@@ -73,8 +74,9 @@ export default function AdminAttendanceSection() {
       setFormData({ student: '', course: '', classDate: '', classTime: '', status: 'present', batch: '', remarks: '' });
       fetchRecords(1);
       fetchStats();
+      toast.success('Attendance record created successfully');
     } catch (err) {
-      alert(err.message || 'Failed to create attendance record');
+      toast.error(err.message || 'Failed to create attendance record');
     } finally {
       setSaving(false);
     }
@@ -86,8 +88,9 @@ export default function AdminAttendanceSection() {
       await attendanceService.deleteAttendance(id);
       fetchRecords(page);
       fetchStats();
+      toast.success('Attendance record deleted successfully');
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message || 'Failed to delete attendance record');
     }
   };
 
@@ -96,8 +99,9 @@ export default function AdminAttendanceSection() {
       await attendanceService.restoreAttendance(id);
       fetchRecords(page);
       fetchStats();
+      toast.success('Attendance record restored successfully');
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message || 'Failed to restore attendance record');
     }
   };
 

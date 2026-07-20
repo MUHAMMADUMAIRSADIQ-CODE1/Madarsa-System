@@ -5,13 +5,12 @@ const { httpStatus, messages } = require('../constants');
 const ALLOWED_UPDATE_FIELDS = [
   'phone', 'whatsapp', 'address', 'city', 'country', 'guardianPhone',
   'guardianEmail', 'preferredBatch', 'preferredTiming', 'notes',
-  'studentPhoto', 'studentName', 'fatherName', 'motherName',
-  'guardianName', 'dateOfBirth', 'gender', 'nationality',
-  'religion', 'bloodGroup', 'postalCode', 'emergencyContact',
+  'studentPhoto', 'studentName', 'fatherName',
+  'dateOfBirth', 'gender', 'nationality',
+  'postalCode', 'emergencyContact',
   'emergencyPhone', 'previousEducation', 'currentQualification',
-  'bio', 'languages', 'skills', 'cnicPassport', 'cnicFront',
-  'cnicBack', 'passport', 'socialLinks', 'guardianRelation',
-  'educationalCertificates', 'additionalDocuments',
+  'bio', 'languages', 'skills', 'cnicPassport',
+  'socialLinks', 'guardianRelation',
   'selectedCourses',
 ];
 
@@ -133,7 +132,7 @@ class StudentPortalService {
       .populate('courses.course', 'title slug')
       .populate({
         path: 'assignedTeacher',
-        select: 'fullName profilePhoto qualification specialization subjects experience email phone availability biography shortBio teachingLanguages certificates awards officeAddress emergencyContact emergencyPhone teachingMode',
+        select: 'fullName profilePhoto qualification specialization subjects experience email phone availability shortBio teachingLanguages officeAddress emergencyContact emergencyPhone teachingMode',
       })
       .lean();
 
@@ -146,7 +145,7 @@ class StudentPortalService {
         .populate('courses.course', 'title slug')
         .populate({
           path: 'assignedTeacher',
-          select: 'fullName profilePhoto qualification specialization subjects experience email phone availability biography shortBio teachingLanguages certificates awards officeAddress emergencyContact emergencyPhone teachingMode',
+          select: 'fullName profilePhoto qualification specialization subjects experience email phone availability shortBio teachingLanguages officeAddress emergencyContact emergencyPhone teachingMode',
         })
         .lean();
       console.log('Fallback lookup by user field found:', !!student);

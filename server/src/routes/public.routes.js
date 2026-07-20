@@ -27,9 +27,6 @@ router.post(
   '/admissions/apply',
   uploadFields([
     { name: 'studentPhoto', maxCount: 1 },
-    { name: 'cnicFront', maxCount: 1 },
-    { name: 'cnicBack', maxCount: 1 },
-    { name: 'passport', maxCount: 1 },
   ]),
   validate(admissionValidator.submitApplicationRules),
   admissionController.submitApplication

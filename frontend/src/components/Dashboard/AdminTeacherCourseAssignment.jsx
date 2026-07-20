@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import teacherService from '../../services/teacherService';
 import courseService from '../../services/courseService';
+import { toast } from 'react-toastify';
 import {
   FiUser, FiMail, FiBookOpen, FiBriefcase, FiCheck, FiX,
   FiChevronLeft, FiSearch, FiBook, FiCheckSquare,
@@ -51,13 +52,10 @@ export default function AdminTeacherCourseAssignment({ teacher, onClose, onSucce
   const [assignedCourseIds, setAssignedCourseIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [search, setSearch] = useState('');
 
   const loadData = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       // Load the teacher's canTeachCourses (assignable) and currently assigned courses
       const [assignableRes, assignedRes] = await Promise.all([
@@ -75,7 +73,7 @@ export default function AdminTeacherCourseAssignment({ teacher, onClose, onSucce
       const assigned = (assignedData.assignedCourses || []).map(c => c._id || c);
       setAssignedCourseIds(new Set(assigned));
     } catch (err) {
-      setError(err.message || 'Failed to load course data');
+      toast.error(err.message || 'Failed to load course data');
     } finally {
       setLoading(false);
     }
@@ -99,16 +97,13 @@ export default function AdminTeacherCourseAssignment({ teacher, onClose, onSucce
 
   const handleSave = async () => {
     setSaving(true);
-    setError(null);
-    setSuccess(null);
     try {
       const courseIds = Array.from(assignedCourseIds);
       await teacherService.bulkAssignCourses(teacher._id, courseIds);
-      setSuccess('Courses assigned successfully');
+      toast.success('Courses assigned successfully');
       if (onSuccess) onSuccess();
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to assign courses');
+      toast.error(err.message || 'Failed to assign courses');
     } finally {
       setSaving(false);
     }
@@ -142,19 +137,6 @@ export default function AdminTeacherCourseAssignment({ teacher, onClose, onSucce
         </div>
 
         <div className="p-6 sm:p-8 space-y-6">
-          {success && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700 flex items-center gap-2">
-              <FiCheck size={16} />
-              {success}
-            </div>
-          )}
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
-              <FiX size={16} />
-              {error}
-            </div>
-          )}
-
           {/* ── Teacher Profile Card ── */}
           <div className="bg-gradient-to-r from-primary/5 to-primary/[0.02] rounded-2xl border border-primary/10 p-5 sm:p-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">

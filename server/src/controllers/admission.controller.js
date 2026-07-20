@@ -33,9 +33,6 @@ const update = asyncHandler(async (req, res) => {
 
   if (req.files) {
     if (req.files.studentPhoto) data.studentPhoto = `/uploads/${req.files.studentPhoto[0].filename}`;
-    if (req.files.cnicFront) data.cnicFront = `/uploads/${req.files.cnicFront[0].filename}`;
-    if (req.files.cnicBack) data.cnicBack = `/uploads/${req.files.cnicBack[0].filename}`;
-    if (req.files.passport) data.passport = `/uploads/${req.files.passport[0].filename}`;
   }
 
   data.updatedBy = req.user.id;
@@ -167,9 +164,6 @@ const submitApplication = asyncHandler(async (req, res) => {
 
   if (req.files) {
     if (req.files.studentPhoto) data.studentPhoto = `/uploads/${req.files.studentPhoto[0].filename}`;
-    if (req.files.cnicFront) data.cnicFront = `/uploads/${req.files.cnicFront[0].filename}`;
-    if (req.files.cnicBack) data.cnicBack = `/uploads/${req.files.cnicBack[0].filename}`;
-    if (req.files.passport) data.passport = `/uploads/${req.files.passport[0].filename}`;
   }
 
   data.createdBy = req.user?.id;

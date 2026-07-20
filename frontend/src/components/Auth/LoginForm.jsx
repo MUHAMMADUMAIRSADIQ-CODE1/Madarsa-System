@@ -2,20 +2,19 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FiEye, FiEyeOff, FiRefreshCw } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 export default function LoginForm({ onSignupClick }) {
   const navigate = useNavigate();
-  const { login, isLoading, error } = useAuth();
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalError('');
     setIsSubmitting(true);
 
     try {
@@ -53,7 +52,7 @@ export default function LoginForm({ onSignupClick }) {
         navigate(dashboard);
       }, 500);
     } catch (err) {
-      setLocalError(err.message);
+      toast.error(err.message || 'Failed to sign in');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +90,7 @@ export default function LoginForm({ onSignupClick }) {
           </div>
 
           {/* Password Field */}
-          <div className="animate-fade-in-up stagger-1">
+          <div className="animate-fade-in-up">
             <label htmlFor="password" className="block text-sm font-semibold text-text-dark mb-2.5">
               Password
             </label>
@@ -119,17 +118,8 @@ export default function LoginForm({ onSignupClick }) {
             </div>
           </div>
 
-          {/* Error Message */}
-          {(localError || error) && (
-            <div className="px-4 py-3 bg-red-50 border-l-4 border-red-500 rounded animate-fade-in">
-              <p className="text-red-700 text-sm font-medium">
-                {localError || error}
-              </p>
-            </div>
-          )}
-
           {/* Remember & Forgot */}
-          <div className="flex items-center justify-between pt-2 animate-fade-in-up stagger-2">
+          <div className="flex items-center justify-between pt-2 animate-fade-in-up">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -151,13 +141,13 @@ export default function LoginForm({ onSignupClick }) {
           <button
             type="submit"
             disabled={isSubmitting || isLoading}
-            className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-300 animate-fade-in-up stagger-3 ${
+            className={`w-full py-3.5 rounded-xl font-semibold transition-all duration-300 animate-fade-in-up ${
               isSubmitting || isLoading
                 ? 'bg-text-light text-white cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20 hover:shadow-xl'
             }`}
           >
-{isSubmitting || isLoading ? (
+            {isSubmitting || isLoading ? (
               <span className="flex items-center justify-center gap-2">
                 <FiRefreshCw className="w-5 h-5 animate-spin" />
                 Logging in...
@@ -168,7 +158,7 @@ export default function LoginForm({ onSignupClick }) {
           </button>
 
           {/* Divider */}
-          <div className="relative py-4 animate-fade-in-up stagger-4">
+          <div className="relative py-4 animate-fade-in-up">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border-light" />
             </div>
@@ -180,7 +170,7 @@ export default function LoginForm({ onSignupClick }) {
           {/* Google Sign In */}
           <button
             type="button"
-            className="w-full py-3.5 rounded-xl border-2 border-border-light hover:border-primary hover:bg-primary-light transition-all duration-300 font-semibold text-text-dark flex items-center justify-center gap-2 animate-fade-in-up stagger-5"
+            className="w-full py-3.5 rounded-xl border-2 border-border-light hover:border-primary hover:bg-primary-light transition-all duration-300 font-semibold text-text-dark flex items-center justify-center gap-2 animate-fade-in-up"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -193,7 +183,7 @@ export default function LoginForm({ onSignupClick }) {
         </form>
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-border-light text-center animate-fade-in-up stagger-6">
+        <div className="mt-8 pt-6 border-t border-border-light text-center animate-fade-in-up">
           <p className="text-text-body">
             Don't have an account?{' '}
             <button
@@ -204,8 +194,6 @@ export default function LoginForm({ onSignupClick }) {
             </button>
           </p>
         </div>
-
-
       </div>
     </div>
   );

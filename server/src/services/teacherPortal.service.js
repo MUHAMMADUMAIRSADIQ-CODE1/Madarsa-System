@@ -9,14 +9,14 @@ const { ApiError } = require('../utils');
 const { httpStatus, messages } = require('../constants');
 
 const ALLOWED_PROFILE_FIELDS = [
-  'phone', 'whatsapp', 'biography', 'shortBio', 'country', 'city', 'timezone',
+  'phone', 'whatsapp', 'shortBio', 'country', 'city', 'timezone',
   'nationality', 'linkedin', 'facebook', 'instagram', 'youtube', 'website',
   'subjects', 'teachingLanguages', 'skills', 'fullName', 'gender',
   'dateOfBirth', 'qualification', 'degree', 'experience', 'specialization',
-  'certificates', 'awards', 'availableForOnline', 'teachingMode',
+  'certificates', 'teachingMode',
   'availability', 'emergencyContact', 'emergencyPhone', 'cnicPassport',
-  'cnicFront', 'cnicBack', 'profilePhoto', 'coverPhoto',
-  'address', 'postalCode', 'bloodGroup', 'religion',
+  'cnicFront', 'cnicBack', 'profilePhoto',
+  'address', 'postalCode',
   'resume', 'additionalDocuments',
   'canTeachCourses',
 ];
@@ -127,7 +127,6 @@ class TeacherPortalService {
         email: teacher.email,
         phone: teacher.phone,
         profilePhoto: teacher.profilePhoto,
-        biography: teacher.biography,
         shortBio: teacher.shortBio,
         qualification: teacher.qualification,
         specialization: teacher.specialization,
@@ -154,7 +153,7 @@ class TeacherPortalService {
   }
 
   async getAssignedCourses(teacherId, query = {}) {
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses').lean();
+    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses').lean();
 
     if (!teacher) {
       throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
@@ -192,7 +191,7 @@ class TeacherPortalService {
     const limit = parseInt(query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses').lean();
+    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const courseIds = teacher.assignedCourses || [];
@@ -261,10 +260,10 @@ class TeacherPortalService {
   // =================== ASSIGNMENT MANAGEMENT ===================
 
   async getAssignments(teacherId, query = {}) {
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses').lean();
+    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
-    const filter = { teacher: teacherId };
+    const filter = { teacher: teacher._id };
 
     if (query.course) filter.course = query.course;
     if (query.search) {
@@ -296,17 +295,15 @@ class TeacherPortalService {
   }
 
   async createAssignment(data, userId) {
-    const teacher = await Teacher.findOne({
-      _id: data.teacher,
-      assignedCourses: data.course,
-    });
-
-    if (!teacher) {
+    const teacher = await Teacher.findOne({ user: userId });
+    
+    if (!teacher || !teacher.assignedCourses.includes(data.course)) {
       throw new ApiError(httpStatus.FORBIDDEN, 'You are not assigned to this course');
     }
 
     const assignment = await Assignment.create({
       ...data,
+      teacher: teacher._id,
       createdBy: userId,
     });
 
@@ -314,7 +311,10 @@ class TeacherPortalService {
   }
 
   async updateAssignment(id, data, userId) {
-    const assignment = await Assignment.findOne({ _id: id, teacher: data.teacher });
+    const teacher = await Teacher.findOne({ user: userId });
+    if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
+
+    const assignment = await Assignment.findOne({ _id: id, teacher: teacher._id });
 
     if (!assignment) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Assignment not found');
@@ -333,7 +333,10 @@ class TeacherPortalService {
   }
 
   async deleteAssignment(id, teacherId) {
-    const assignment = await Assignment.findOneAndDelete({ _id: id, teacher: teacherId });
+    const teacher = await Teacher.findOne({ user: teacherId });
+    if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
+
+    const assignment = await Assignment.findOneAndDelete({ _id: id, teacher: teacher._id });
     if (!assignment) {
       throw new ApiError(httpStatus.NOT_FOUND, 'Assignment not found');
     }
@@ -366,8 +369,9 @@ class TeacherPortalService {
       throw new ApiError(httpStatus.NOT_FOUND, messages.COURSE_NOT_FOUND);
     }
 
-    // Get students enrolled in this course
+    // Get students enrolled in this course AND assigned to this teacher
     const students = await Student.find({
+      _id: { $in: teacher.assignedStudents || [] },
       'courses.course': courseId,
       isDeleted: false,
     })
@@ -429,7 +433,7 @@ class TeacherPortalService {
   // =================== SCHEDULE ===================
 
   async getSchedule(teacherId, query = {}) {
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses').lean();
+    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const courseIds = teacher.assignedCourses || [];

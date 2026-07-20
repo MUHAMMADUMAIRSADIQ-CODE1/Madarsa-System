@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import studentService from '../../services/studentService';
 import courseService from '../../services/courseService';
-import assignmentService from '../../services/assignmentService';
+import uploadService from '../../services/uploadService';
 
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
@@ -17,7 +17,10 @@ import {
   FiTrash2,
   FiUser,
   FiBook,
-  FiUserCheck
+  FiUserCheck,
+  FiUpload,
+  FiFile,
+  FiCheck,
 } from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
@@ -44,15 +47,16 @@ const VERIFICATION_STATUS_MAP = {
 };
 
 const defaultForm = {
-  studentName: '', fatherName: '', motherName: '', guardianName: '',
-  guardianRelation: '', gender: '', dateOfBirth: '',
+  studentName: '', fatherName: '',
+  gender: '', dateOfBirth: '',
   email: '', phone: '', whatsapp: '',
   country: '', city: '', address: '', postalCode: '',
-  nationality: '', religion: '', bloodGroup: '',
-  cnicPassport: '', emergencyContact: '', emergencyPhone: '',
-  guardianPhone: '', guardianEmail: '',
+  nationality: '',
+  emergencyContact: '', emergencyPhone: '',
   previousEducation: '', currentQualification: '',
   bio: '', languages: [], skills: [],
+  studentPhoto: '',
+  selectedCourses: [],
 };
 
 function Badge({ children, variant = 'default' }) {
@@ -97,7 +101,7 @@ const [availableCourses, setAvailableCourses] = useState([]);
 const [selectedCourseId, setSelectedCourseId] = useState('');
 const [enrolling, setEnrolling] = useState(false);
 
-const [assignedTeachers, setAssignedTeachers] = useState({});
+const [uploading, setUploading] = useState({});
 
   const loadStudents = useCallback(async () => {
     try {
@@ -117,38 +121,40 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
 
   useEffect(() => { loadStudents(); loadStats(); }, [loadStudents, loadStats]);
 
-  // Lazy-load assigned teacher when student detail view is opened
-  const loadStudentTeacher = useCallback(async (student) => {
-    try {
-      const res = await assignmentService.getAssignedTeacher(student._id);
-      const data = res.data || {};
-      setAssignedTeachers((prev) => ({
-        ...prev,
-        [student._id]: data.assignedTeacher || null,
-      }));
-    } catch (_) {
-      setAssignedTeachers((prev) => ({ ...prev, [student._id]: null }));
-    }
-  }, []);
-
   function handleViewStudent(student) {
     setViewingStudent(student);
-    // Load assigned teacher on every open to avoid stale cache
-    loadStudentTeacher(student);
   }
 
   function resetForm() {
     setForm(defaultForm);
     setEditingId(null); setError(null); setSuccess(null);
+    setUploading({});
+  }
+
+  function toggleEditCourse(courseId) {
+    setForm(prev => {
+      const current = prev.selectedCourses || [];
+      const updated = current.includes(courseId)
+        ? current.filter(id => id !== courseId)
+        : [...current, courseId];
+      return { ...prev, selectedCourses: updated };
+    });
   }
 
   function startEdit(student) {
+    if (availableCourses.length === 0) {
+      courseService.getAdminCourses({ status: 'published' })
+        .then(res => setAvailableCourses(res.data?.data || res.data || []))
+        .catch(() => {});
+    }
+
+    const courseIds = student.courses && Array.isArray(student.courses)
+      ? student.courses.filter(c => c.course && (c.course._id || c.course)).map(c => c.course._id || c.course)
+      : [];
+
     setForm({
       studentName: student.studentName || '',
       fatherName: student.fatherName || '',
-      motherName: student.motherName || '',
-      guardianName: student.guardianName || '',
-      guardianRelation: student.guardianRelation || '',
       gender: student.gender || '',
       dateOfBirth: student.dateOfBirth ? student.dateOfBirth.split('T')[0] : '',
       email: student.email || '',
@@ -159,18 +165,15 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
       address: student.address || '',
       postalCode: student.postalCode || '',
       nationality: student.nationality || '',
-      religion: student.religion || '',
-      bloodGroup: student.bloodGroup || '',
-      cnicPassport: student.cnicPassport || '',
       emergencyContact: student.emergencyContact || '',
       emergencyPhone: student.emergencyPhone || '',
-      guardianPhone: student.guardianPhone || '',
-      guardianEmail: student.guardianEmail || '',
       previousEducation: student.previousEducation || '',
       currentQualification: student.currentQualification || '',
       bio: student.bio || '',
       languages: student.languages || [],
       skills: student.skills || [],
+      studentPhoto: student.studentPhoto || '',
+      selectedCourses: courseIds,
     });
     setEditingId(student._id);
     setShowEditModal(true);
@@ -179,6 +182,30 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  }
+
+  function handleArrayChange(field, value) {
+    setForm(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  }
+
+  async function handleFileUpload(fieldName, file) {
+    if (!file) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadFile(file);
+      const url = res?.data?.url || res?.url;
+      if (url) {
+        setForm(prev => ({ ...prev, [fieldName]: url }));
+      }
+    } catch (err) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  }
+
+  function removeSingleFile(fieldName) {
+    setForm(prev => ({ ...prev, [fieldName]: '' }));
   }
 
   async function handleSave(e) {
@@ -482,11 +509,11 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
                         </span>
                       </td>
                       <td className="px-4 sm:px-6 py-3.5 text-center">
-                        {assignedTeachers[student._id] ? (
+                        {student.assignedTeacher ? (
                           <div className="flex items-center justify-center gap-1.5">
                             <FiUserCheck size={12} className="text-primary" />
                             <span className="text-xs font-semibold text-text-dark truncate max-w-[120px]">
-                              {assignedTeachers[student._id]?.fullName || 'Assigned'}
+                              {student.assignedTeacher?.fullName || 'Assigned'}
                             </span>
                           </div>
                         ) : (
@@ -513,53 +540,89 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
           onClick={() => setViewingStudent(null)}>
           <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4 sm:mb-6 sticky top-0 bg-white pb-3 z-10 border-b border-border-light/50">
+            <div className="flex items-center justify-between p-4 mb-4 sm:mb-6 sticky -top-8 bg-white  z-100 border-b border-border-light/50">
               <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Student Details</h3>
               <button onClick={() => setViewingStudent(null)}
                 className="w-8 h-8 rounded-xl bg-bg-light hover:bg-border-light text-text-light hover:text-text-dark flex items-center justify-center transition-colors text-lg">&times;</button>
             </div>
 
             {/* Assigned Teacher Info */}
-            {assignedTeachers[viewingStudent._id] && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-primary/5 to-primary/[0.02] border border-primary/10 rounded-2xl">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-heading font-bold text-text-dark text-sm flex items-center gap-2">
-                    <FiUserCheck size={16} className="text-primary" />
-                    Assigned Teacher
-                  </h4>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-base flex-shrink-0">
-                    {assignedTeachers[viewingStudent._id]?.fullName?.charAt(0)?.toUpperCase() || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-text-dark">{assignedTeachers[viewingStudent._id]?.fullName || 'Teacher'}</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1.5">
-                      {assignedTeachers[viewingStudent._id]?.email && (
-                        <p className="text-xs text-text-light flex items-center gap-1">
-                          <span className="font-medium">Email:</span> {assignedTeachers[viewingStudent._id].email}
-                        </p>
-                      )}
-                      {assignedTeachers[viewingStudent._id]?.phone && (
-                        <p className="text-xs text-text-light flex items-center gap-1">
-                          <span className="font-medium">Phone:</span> {assignedTeachers[viewingStudent._id].phone}
-                        </p>
-                      )}
-                      {assignedTeachers[viewingStudent._id]?.qualification && (
-                        <p className="text-xs text-text-light flex items-center gap-1">
-                          <span className="font-medium">Qualification:</span> {assignedTeachers[viewingStudent._id].qualification}
-                        </p>
-                      )}
-                      {assignedTeachers[viewingStudent._id]?.specialization && (
-                        <p className="text-xs text-text-light flex items-center gap-1">
-                          <span className="font-medium">Specialization:</span> {assignedTeachers[viewingStudent._id].specialization}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {viewingStudent.assignedTeacher && (
+  <div className="mb-6 rounded-2xl border border-primary/10 bg-gradient-to-r from-primary/5 to-primary/[0.02] p-4 sm:p-5">
+    {/* Header */}
+    <div className="flex items-center justify-between mb-4">
+      <h4 className="flex items-center gap-2 text-sm sm:text-base font-bold text-text-dark">
+        <FiUserCheck size={18} className="text-primary" />
+        Assigned Teacher
+      </h4>
+    </div>
+
+    {/* Content */}
+    <div className="flex flex-col sm:flex-row items-start gap-4">
+      {/* Avatar */}
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg flex-shrink-0 mx-auto sm:mx-0">
+        {viewingStudent.assignedTeacher?.fullName
+          ?.charAt(0)
+          ?.toUpperCase() || "?"}
+      </div>
+
+      {/* Details */}
+      <div className="flex-1 min-w-0 w-full">
+        <h5 className="text-base sm:text-lg font-bold text-text-dark text-center sm:text-left break-words">
+          {viewingStudent.assignedTeacher?.fullName || "Teacher"}
+        </h5>
+
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+
+          {viewingStudent.assignedTeacher?.email && (
+            <div className="rounded-xl bg-white/70 border border-border-light p-3">
+              <p className="text-[11px] uppercase tracking-wide font-semibold text-text-light">
+                Email
+              </p>
+              <p className="text-sm text-text-dark break-all">
+                {viewingStudent.assignedTeacher.email}
+              </p>
+            </div>
+          )}
+
+          {viewingStudent.assignedTeacher?.phone && (
+            <div className="rounded-xl bg-white/70 border border-border-light p-3">
+              <p className="text-[11px] uppercase tracking-wide font-semibold text-text-light">
+                Phone
+              </p>
+              <p className="text-sm text-text-dark break-words">
+                {viewingStudent.assignedTeacher.phone}
+              </p>
+            </div>
+          )}
+
+          {viewingStudent.assignedTeacher?.qualification && (
+            <div className="rounded-xl bg-white/70 border border-border-light p-3">
+              <p className="text-[11px] uppercase tracking-wide font-semibold text-text-light">
+                Qualification
+              </p>
+              <p className="text-sm text-text-dark break-words">
+                {viewingStudent.assignedTeacher.qualification}
+              </p>
+            </div>
+          )}
+
+          {viewingStudent.assignedTeacher?.specialization && (
+            <div className="rounded-xl bg-white/70 border border-border-light p-3">
+              <p className="text-[11px] uppercase tracking-wide font-semibold text-text-light">
+                Specialization
+              </p>
+              <p className="text-sm text-text-dark break-words">
+                {viewingStudent.assignedTeacher.specialization}
+              </p>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
             <AdminDetailView entity={viewingStudent} type="student" statusMaps={studentStatusMap} />
           </div>
@@ -583,174 +646,205 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
             {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{success}</div>}
 
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-heading font-semibold text-text-dark">Personal Information</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Student Name *</label>
-                    <input type="text" name="studentName" value={form.studentName} onChange={handleChange} required
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6">
+                {/* ── STEP 1: PERSONAL INFORMATION ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">1</span>
+                    Personal Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Father Name</label>
-                      <input type="text" name="fatherName" value={form.fatherName} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Full Name *</label>
+                      <input type="text" name="studentName" value={form.studentName} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Mother Name</label>
-                      <input type="text" name="motherName" value={form.motherName} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Guardian Name</label>
-                      <input type="text" name="guardianName" value={form.guardianName} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Father Name *</label>
+                      <input type="text" name="fatherName" value={form.fatherName} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Guardian Relation</label>
-                      <input type="text" name="guardianRelation" value={form.guardianRelation} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth *</label>
+                      <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-text-dark mb-1">Gender *</label>
                       <select name="gender" value={form.gender} onChange={handleChange} required
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
-                        <option value="">Select</option>
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth *</label>
-                      <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} required
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Nationality</label>
-                      <input type="text" name="nationality" value={form.nationality} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Religion</label>
-                      <input type="text" name="religion" value={form.religion} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Blood Group</label>
-                      <input type="text" name="bloodGroup" value={form.bloodGroup} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">CNIC/Passport</label>
-                      <input type="text" name="cnicPassport" value={form.cnicPassport} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Country</label>
-                      <input type="text" name="country" value={form.country} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">City</label>
-                      <input type="text" name="city" value={form.city} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Address</label>
-                    <textarea name="address" value={form.address} onChange={handleChange} rows={2}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Postal Code</label>
-                    <input type="text" name="postalCode" value={form.postalCode} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-
-                  <h3 className="font-heading font-semibold text-text-dark pt-2">Contact</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Email</label>
-                    <input type="email" name="email" value={form.email} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Phone *</label>
-                      <input type="tel" name="phone" value={form.phone} onChange={handleChange} required
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp</label>
-                      <input type="tel" name="whatsapp" value={form.whatsapp} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Guardian Phone</label>
-                      <input type="tel" name="guardianPhone" value={form.guardianPhone} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Guardian Email</label>
-                      <input type="email" name="guardianEmail" value={form.guardianEmail} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact</label>
-                      <input type="text" name="emergencyContact" value={form.emergencyContact} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Phone</label>
-                      <input type="tel" name="emergencyPhone" value={form.emergencyPhone} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Nationality *</label>
+                      <input type="text" name="nationality" value={form.nationality} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-heading font-semibold text-text-dark">Education & Career</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Previous Education</label>
-                    <textarea name="previousEducation" value={form.previousEducation} onChange={handleChange} rows={2}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
+                {/* ── STEP 2: CONTACT & ADDRESS ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">2</span>
+                    Contact & Address
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Phone Number *</label>
+                      <input type="tel" name="phone" value={form.phone} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp Number *</label>
+                      <input type="tel" name="whatsapp" value={form.whatsapp} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Email (Read Only)</label>
+                      <input type="email" name="email" value={form.email} readOnly
+                        className="w-full px-4 py-2 border border-border-light rounded-xl bg-gray-50 outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Country *</label>
+                      <input type="text" name="country" value={form.country} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">City *</label>
+                      <input type="text" name="city" value={form.city} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Postal Code</label>
+                      <input type="text" name="postalCode" value={form.postalCode} onChange={handleChange}
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-text-dark mb-1">Address *</label>
+                      <textarea name="address" value={form.address} onChange={handleChange} rows={2} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact Name *</label>
+                      <input type="text" name="emergencyContact" value={form.emergencyContact} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact Phone *</label>
+                      <input type="tel" name="emergencyPhone" value={form.emergencyPhone} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
                   </div>
+                </div>
+
+                {/* ── STEP 3: EDUCATION & COURSES ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">3</span>
+                    Education & Courses
+                  </h3>
+                  
+                  {/* Dynamic Course Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Current Qualification</label>
-                    <textarea name="currentQualification" value={form.currentQualification} onChange={handleChange} rows={2}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
+                    <label className="block text-sm font-semibold text-text-dark mb-2">
+                      Select Courses *
+                      <span className="text-xs text-text-light font-normal ml-2">(Choose courses)</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-border-light rounded-xl bg-white">
+                      {availableCourses.map(course => {
+                        const isSelected = form.selectedCourses?.includes(course._id);
+                        return (
+                          <button
+                            key={course._id}
+                            type="button"
+                            onClick={() => toggleEditCourse(course._id)}
+                            className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border-light hover:border-primary/50'
+                            }`}
+                          >
+                            <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                              isSelected ? 'bg-primary text-white' : 'border border-border-light'
+                            }`}>
+                              {isSelected && <FiCheck className="w-3 h-3" />}
+                            </div>
+                            <span className="text-xs font-semibold text-text-dark truncate">{course.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Languages</label>
-                    <input type="text" name="languages" value={form.languages} onChange={handleChange}
-                      placeholder="Comma-separated languages"
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Previous Institute / School (Optional)</label>
+                      <textarea name="previousEducation" value={form.previousEducation} onChange={handleChange} rows={2}
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Current Qualification (Optional)</label>
+                      <textarea name="currentQualification" value={form.currentQualification} onChange={handleChange} rows={2}
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                    </div>
                   </div>
+                </div>
+
+                {/* ── STEP 4: DOCUMENTS ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">4</span>
+                    Documents
+                  </h3>
                   <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Skills</label>
-                    <input type="text" name="skills" value={form.skills} onChange={handleChange}
-                      placeholder="Comma-separated skills"
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    <label className="block text-sm font-medium text-text-dark mb-2">Student Photo</label>
+                    {form.studentPhoto && (
+                      <div className="mb-2 relative inline-block">
+                        <img src={form.studentPhoto} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />
+                        <button type="button" onClick={() => removeSingleFile('studentPhoto')}
+                          className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
+                          <FiTrash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                      {uploading.studentPhoto ? (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <FiUpload className="w-4 h-4 text-text-light" />
+                      )}
+                      <span className="text-xs text-text-light">{form.studentPhoto ? 'Replace' : 'Upload'} Photo</span>
+                      <input type="file" accept="image/*" onChange={(e) => handleFileUpload('studentPhoto', e.target.files[0])} className="hidden" disabled={uploading.studentPhoto} />
+                    </label>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Bio</label>
-                    <textarea name="bio" value={form.bio} onChange={handleChange} rows={3}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
+                </div>
+
+                {/* ── STEP 5: BIO & SKILLS ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">5</span>
+                    Bio & Skills
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-text-dark mb-1">Bio *</label>
+                      <textarea name="bio" value={form.bio} onChange={handleChange} rows={3} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Languages *</label>
+                      <input type="text" value={form.languages.join(', ')} onChange={(e) => handleArrayChange('languages', e.target.value)} required placeholder="e.g. Urdu, English, Arabic"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Skills *</label>
+                      <input type="text" value={form.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} required placeholder="e.g. Quran recitation, Tajweed"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -830,16 +924,22 @@ const [assignedTeachers, setAssignedTeachers] = useState({});
             <p className="text-sm text-text-body mb-4">
               Select a course to enroll <strong>{enrollStudent?.studentName || 'this student'}</strong> in:
             </p>
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-text-dark mb-1">Course</label>
               <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}
                 className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
                 <option value="">Select a course...</option>
-                {availableCourses.map((c) => (
-                  <option key={c._id} value={c._id}>{c.title}</option>
-                ))}
+                {(() => {
+                  const studentPreferredCourseIds = enrollStudent?.courses?.map(c => (c.course?._id || c.course)) || [];
+                  const filtered = availableCourses.filter(c => studentPreferredCourseIds.includes(c._id));
+                  return filtered.map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ));
+                })()}
               </select>
             </div>
+
             <div className="flex gap-3">
               <button onClick={handleEnrollCourse} disabled={enrolling || !selectedCourseId}
                 className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">

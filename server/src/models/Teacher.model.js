@@ -25,15 +25,6 @@ const teacherSchema = createBaseSchema(
       type: String,
       default: '',
     },
-    coverPhoto: {
-      type: String,
-      default: '',
-    },
-    biography: {
-      type: String,
-      trim: true,
-      maxlength: 5000,
-    },
     shortBio: {
       type: String,
       trim: true,
@@ -146,16 +137,6 @@ const teacherSchema = createBaseSchema(
       trim: true,
       maxlength: 20,
     },
-    bloodGroup: {
-      type: String,
-      trim: true,
-      maxlength: 10,
-    },
-    religion: {
-      type: String,
-      trim: true,
-      maxlength: 100,
-    },
     cnicPassport: {
       type: String,
       trim: true,
@@ -199,16 +180,7 @@ const teacherSchema = createBaseSchema(
       type: String,
       trim: true,
     }],
-    awards: [{
-      title: { type: String, trim: true },
-      year: { type: Number },
-      description: { type: String, trim: true },
-    }],
     featured: {
-      type: Boolean,
-      default: false,
-    },
-    availableForOnline: {
       type: Boolean,
       default: false,
     },
@@ -294,8 +266,6 @@ teacherSchema.methods.toPublicJSON = function () {
     fullName: this.fullName,
     slug: this.slug,
     profilePhoto: this.profilePhoto,
-    coverPhoto: this.coverPhoto,
-    biography: this.biography,
     shortBio: this.shortBio,
     qualification: this.qualification,
     degree: this.degree,
@@ -315,11 +285,8 @@ teacherSchema.methods.toPublicJSON = function () {
     website: this.website,
     certificates: this.certificates,
     skills: this.skills,
-    awards: this.awards,
     address: this.address,
     postalCode: this.postalCode,
-    bloodGroup: this.bloodGroup,
-    religion: this.religion,
     cnicPassport: this.cnicPassport,
     cnicFront: this.cnicFront,
     cnicBack: this.cnicBack,
@@ -328,7 +295,6 @@ teacherSchema.methods.toPublicJSON = function () {
     teachingMode: this.teachingMode,
     availability: this.availability,
     featured: this.featured,
-    availableForOnline: this.availableForOnline,
     displayOrder: this.displayOrder,
     publishedAt: this.publishedAt,
     createdAt: this.createdAt,

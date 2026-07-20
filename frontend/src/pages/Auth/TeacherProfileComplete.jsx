@@ -14,7 +14,6 @@ import {
   FiUser,
   FiAward,
   FiStar,
-  FiLink,
   FiBook,
   FiCheck,
 } from "react-icons/fi";
@@ -23,7 +22,6 @@ const STEPS = [
   { id: 'personal', label: 'Personal', icon: FiUser },
   { id: 'qualification', label: 'Qualification', icon: FiAward },
   { id: 'skills', label: 'Skills', icon: FiStar },
-  { id: 'social', label: 'Social Links', icon: FiLink },
   { id: 'documents', label: 'Documents', icon: FiFile },
 ];
 
@@ -45,25 +43,19 @@ const INITIAL_FORM = {
   experience: '',
   specialization: '',
   subjects: [],
-  biography: '',
   shortBio: '',
   teachingLanguages: [],
   skills: [],
   certificates: [],
-  awards: [],
   linkedin: '',
   facebook: '',
   instagram: '',
   youtube: '',
   website: '',
-  availableForOnline: false,
   teachingMode: '',
   availability: '',
-  bloodGroup: '',
-  religion: '',
   cnicPassport: '',
   profilePhoto: '',
-  coverPhoto: '',
   resume: '',
   additionalDocuments: [],
 };
@@ -79,7 +71,6 @@ export default function TeacherProfileComplete() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState({});
   const [certInput, setCertInput] = useState({ title: '', issuer: '', year: '' });
-  const [awardInput, setAwardInput] = useState({ title: '', year: '', description: '' });
   const [availableCourses, setAvailableCourses] = useState([]);
   const [selectedCourses, setSelectedCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(false);
@@ -132,25 +123,19 @@ export default function TeacherProfileComplete() {
             experience: existing.experience || '',
             specialization: existing.specialization || '',
             subjects: existing.subjects || [],
-            biography: existing.biography || '',
             shortBio: existing.shortBio || '',
             teachingLanguages: existing.teachingLanguages || [],
             skills: existing.skills || [],
             certificates: existing.certificates || [],
-            awards: existing.awards || [],
             linkedin: existing.linkedin || '',
             facebook: existing.facebook || '',
             instagram: existing.instagram || '',
             youtube: existing.youtube || '',
             website: existing.website || '',
-            availableForOnline: existing.availableForOnline || false,
             teachingMode: existing.teachingMode || '',
             availability: existing.availability || '',
-            bloodGroup: existing.bloodGroup || '',
-            religion: existing.religion || '',
             cnicPassport: existing.cnicPassport || '',
             profilePhoto: existing.profilePhoto || '',
-            coverPhoto: existing.coverPhoto || '',
             resume: existing.resume || '',
             additionalDocuments: existing.additionalDocuments || [],
           }));
@@ -264,31 +249,31 @@ export default function TeacherProfileComplete() {
     }));
   };
 
-  const addAward = () => {
-    if (!awardInput.title.trim()) return;
-    setFormData(prev => ({
-      ...prev,
-      awards: [...prev.awards, { ...awardInput, year: parseInt(awardInput.year) || new Date().getFullYear() }],
-    }));
-    setAwardInput({ title: '', year: '', description: '' });
-  };
-
-  const removeAward = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      awards: prev.awards.filter((_, i) => i !== index),
-    }));
-  };
-
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 0) {
       if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
       if (!formData.gender) newErrors.gender = 'Gender is required';
+      if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
       if (!formData.nationality.trim()) newErrors.nationality = 'Nationality is required';
       if (!formData.phone.match(/^[\d\s\-+()]{7,30}$/)) newErrors.phone = 'Valid phone number is required';
-      if (!formData.city.trim()) newErrors.city = 'City is required';
+      if (!formData.whatsapp.match(/^[\d\s\-+()]{7,30}$/)) newErrors.whatsapp = 'Valid WhatsApp number is required';
       if (!formData.country.trim()) newErrors.country = 'Country is required';
+      if (!formData.city.trim()) newErrors.city = 'City is required';
+      if (!formData.address.trim()) newErrors.address = 'Address is required';
+    } else if (step === 1) {
+      if (selectedCourses.length === 0) newErrors.courses = 'Please select at least one course';
+      if (!formData.qualification.trim()) newErrors.qualification = 'Qualification is required';
+      if (!formData.degree.trim()) newErrors.degree = 'Degree is required';
+      if (formData.experience === '' || formData.experience === undefined) newErrors.experience = 'Experience is required';
+      if (!formData.specialization.trim()) newErrors.specialization = 'Specialization is required';
+      if (formData.subjects.length === 0) newErrors.subjects = 'At least one subject is required';
+      if (formData.teachingLanguages.length === 0) newErrors.teachingLanguages = 'At least one teaching language is required';
+      if (!formData.shortBio.trim()) newErrors.shortBio = 'Short biography is required';
+    } else if (step === 2) {
+      if (formData.skills.length === 0) newErrors.skills = 'At least one skill is required';
+      if (!formData.teachingMode) newErrors.teachingMode = 'Teaching mode is required';
+      if (!formData.availability.trim()) newErrors.availability = 'Availability is required';
     }
     return newErrors;
   };
@@ -478,9 +463,10 @@ export default function TeacherProfileComplete() {
         {errors.gender && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.gender}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Date of Birth</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Date of Birth *</label>
         <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.dateOfBirth ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.dateOfBirth && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.dateOfBirth}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Nationality *</label>
@@ -489,35 +475,16 @@ export default function TeacherProfileComplete() {
         {errors.nationality && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.nationality}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Religion</label>
-        <input type="text" name="religion" value={formData.religion} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Blood Group</label>
-        <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base">
-          <option value="">Select</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
-        </select>
-      </div>
-      <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Phone *</label>
         <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
           className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.phone ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
         {errors.phone && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.phone}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp *</label>
         <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.whatsapp ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.whatsapp && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.whatsapp}</p>}
       </div>
       <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Country *</label>
@@ -532,9 +499,10 @@ export default function TeacherProfileComplete() {
         {errors.city && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.city}</p>}
       </div>
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Address</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Address *</label>
         <textarea name="address" value={formData.address} onChange={handleChange} rows={2}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all resize-none text-sm sm:text-base ${errors.address ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.address && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.address}</p>}
       </div>
     </div>
   );
@@ -557,6 +525,7 @@ export default function TeacherProfileComplete() {
           Courses You Can Teach *
           <span className="text-xs text-text-light ml-2 font-normal">(Select the courses you are qualified to teach)</span>
         </label>
+        {errors.courses && <p className="text-red-600 text-xs sm:text-sm mb-2">{errors.courses}</p>}
         {coursesLoading ? (
           <div className="flex items-center gap-3 p-4 bg-bg-light rounded-xl">
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -609,44 +578,46 @@ export default function TeacherProfileComplete() {
       </div>
 
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Qualification</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Qualification *</label>
         <input type="text" name="qualification" value={formData.qualification} onChange={handleChange} placeholder="e.g. Masters in Islamic Studies"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.qualification ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.qualification && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.qualification}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Degree</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Degree *</label>
         <input type="text" name="degree" value={formData.degree} onChange={handleChange} placeholder="e.g. PhD, Masters"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.degree ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.degree && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.degree}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Experience (years)</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Experience (years) *</label>
         <input type="number" name="experience" value={formData.experience} onChange={handleChange} min="0" max="70"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.experience ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.experience && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.experience}</p>}
       </div>
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Specialization</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Specialization *</label>
         <input type="text" name="specialization" value={formData.specialization} onChange={handleChange} placeholder="e.g. Quran & Tafseer"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.specialization ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.specialization && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.specialization}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Subjects (comma separated)</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Subjects *</label>
         <input type="text" value={formData.subjects.join(', ')} onChange={(e) => handleArrayChange('subjects', e.target.value)} placeholder="Quran, Hadith, Fiqh"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.subjects ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.subjects && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.subjects}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Languages (comma separated)</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Languages *</label>
         <input type="text" value={formData.teachingLanguages.join(', ')} onChange={(e) => handleArrayChange('teachingLanguages', e.target.value)} placeholder="Urdu, English, Arabic"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.teachingLanguages ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.teachingLanguages && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.teachingLanguages}</p>}
       </div>
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Short Bio</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Short Biography *</label>
         <textarea name="shortBio" value={formData.shortBio} onChange={handleChange} rows={3} placeholder="Brief introduction about yourself"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Biography</label>
-        <textarea name="biography" value={formData.biography} onChange={handleChange} rows={4} placeholder="Detailed biography"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all resize-none text-sm sm:text-base ${errors.shortBio ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.shortBio && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.shortBio}</p>}
       </div>
     </div>
   );
@@ -663,68 +634,27 @@ export default function TeacherProfileComplete() {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Skills (comma separated)</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Skills *</label>
         <input type="text" value={formData.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} placeholder="Tajweed, Tafseer, Arabic grammar"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.skills ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.skills && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.skills}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Mode</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Teaching Mode *</label>
         <select name="teachingMode" value={formData.teachingMode} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base">
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.teachingMode ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`}>
           <option value="">Select Mode</option>
           <option value="online">Online</option>
           <option value="physical">Physical</option>
           <option value="both">Both</option>
         </select>
+        {errors.teachingMode && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.teachingMode}</p>}
       </div>
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Availability</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Availability *</label>
         <input type="text" name="availability" value={formData.availability} onChange={handleChange} placeholder="e.g. Weekdays 9AM-5PM"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div className="flex items-center gap-3 pt-4">
-        <input type="checkbox" name="availableForOnline" checked={formData.availableForOnline} onChange={handleChange}
-          className="w-5 h-5 rounded border-2 border-border-light accent-primary flex-shrink-0" />
-        <label className="text-sm font-semibold text-text-dark">Available for online teaching</label>
-      </div>
-    </div>
-  );
-
-  const renderSocialLinks = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-      <div className="sm:col-span-2">
-        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
-          <FiLink size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
-          <div className="min-w-0">
-            <h3 className="font-semibold text-text-dark text-sm sm:text-base">Social Links (Optional)</h3>
-            <p className="text-xs sm:text-sm text-text-light">Connect your professional profiles</p>
-          </div>
-        </div>
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">LinkedIn</label>
-        <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Facebook</label>
-        <input type="url" name="facebook" value={formData.facebook} onChange={handleChange} placeholder="https://facebook.com/..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Instagram</label>
-        <input type="url" name="instagram" value={formData.instagram} onChange={handleChange} placeholder="https://instagram.com/..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">YouTube</label>
-        <input type="url" name="youtube" value={formData.youtube} onChange={handleChange} placeholder="https://youtube.com/@..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-      <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Website</label>
-        <input type="url" name="website" value={formData.website} onChange={handleChange} placeholder="https://..."
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.availability ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.availability && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.availability}</p>}
       </div>
     </div>
   );
@@ -743,7 +673,6 @@ export default function TeacherProfileComplete() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {renderFileUpload('profilePhoto', 'Profile Photo', 'image/*')}
-        {renderFileUpload('coverPhoto', 'Cover Photo', 'image/*')}
         {renderFileUpload('resume', 'Resume / CV', '.pdf,.doc,.docx')}
       </div>
 
@@ -777,38 +706,8 @@ export default function TeacherProfileComplete() {
         </div>
       </div>
 
-      {/* Awards */}
-      <div className="p-3 sm:p-4 bg-bg-light rounded-xl">
-        <label className="block text-sm font-semibold text-text-dark mb-3">Awards</label>
-        {formData.awards.length > 0 && (
-          <div className="space-y-2 mb-3">
-            {formData.awards.map((award, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg border border-border-light">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-text-dark truncate">{award.title}</p>
-                  <p className="text-xs text-text-light">{award.year}{award.description ? ` - ${award.description}` : ''}</p>
-                </div>
-                <button onClick={() => removeAward(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0 ml-2">
-                  <FiTrash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <input type="text" value={awardInput.title} onChange={e => setAwardInput(p => ({ ...p, title: e.target.value }))} placeholder="Award title" className="w-full sm:flex-1 px-3 sm:px-4 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <input type="number" value={awardInput.year} onChange={e => setAwardInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="w-full sm:w-24 px-3 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm" />
-          <div className="flex gap-2 w-full sm:w-auto">
-            <input type="text" value={awardInput.description} onChange={e => setAwardInput(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="flex-1 px-3 py-2.5 rounded-xl border border-border-light focus:border-primary outline-none text-sm min-w-0" />
-            <button onClick={addAward} className="px-4 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0">
-              <FiPlus className="w-4 h-4" /> Add
-            </button>
-          </div>
-        </div>
-      </div>
-
       <div>
-        {renderFileUpload('additionalDocuments', 'Additional Documents', 'image/*,.pdf', true)}
+        {renderFileUpload('additionalDocuments', 'Additional Documents (Optional)', 'image/*,.pdf', true)}
       </div>
     </div>
   );
@@ -854,8 +753,7 @@ export default function TeacherProfileComplete() {
             {currentStep === 0 && renderPersonalInfo()}
             {currentStep === 1 && renderQualification()}
             {currentStep === 2 && renderSkills()}
-            {currentStep === 3 && renderSocialLinks()}
-            {currentStep === 4 && renderDocuments()}
+            {currentStep === 3 && renderDocuments()}
           </div>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-between gap-3 mt-8 pt-6 border-t border-border-light">

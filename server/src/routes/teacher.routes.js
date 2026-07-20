@@ -18,7 +18,6 @@ router.put(
   '/:id',
   uploadFields([
     { name: 'profilePhoto', maxCount: 1 },
-    { name: 'coverPhoto', maxCount: 1 },
   ]),
   validate(teacherValidator.updateTeacherRules),
   validate(teacherValidator.idParamRules),

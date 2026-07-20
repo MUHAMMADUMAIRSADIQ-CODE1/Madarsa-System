@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import teacherPortalService from '../../services/teacherPortalService';
 import { useAuth } from '../../context/AuthContext';
 import ActionDropdown from '../common/ActionDropdown';
@@ -57,7 +58,21 @@ export default function TeacherAssignedStudentsSection() {
 
       const res = await teacherPortalService.getAssignedStudents(teacherId, params);
       const responseData = res?.data || res;
-      setStudents(responseData?.students || []);
+      
+      // DEBUG: Log API response data for first student
+      const debugStudents = responseData?.students || [];
+      if (debugStudents.length > 0) {
+        const s0 = debugStudents[0];
+        console.log('[DEBUG TeacherAssignedStudents] API response first student user:', s0.user);
+        console.log('[DEBUG TeacherAssignedStudents] user keys:', s0.user ? Object.keys(s0.user) : 'NO USER');
+        console.log('[DEBUG TeacherAssignedStudents] user.status:', s0.user?.status);
+        console.log('[DEBUG TeacherAssignedStudents] user.profileVerificationStatus:', s0.user?.profileVerificationStatus);
+        console.log('[DEBUG TeacherAssignedStudents] user.completionPercentage:', s0.user?.completionPercentage);
+        console.log('[DEBUG TeacherAssignedStudents] user.profileComplete:', s0.user?.profileComplete);
+        console.log('[DEBUG TeacherAssignedStudents] user.createdAt:', s0.user?.createdAt);
+      }
+      
+      setStudents(debugStudents);
       setTotal(responseData?.pagination?.total || 0);
       setTotalPages(responseData?.pagination?.totalPages || 1);
     } catch (err) {
@@ -105,248 +120,42 @@ export default function TeacherAssignedStudentsSection() {
   // ==================== STUDENT DETAIL MODAL ====================
 
   const renderStudentDetail = (student) => {
-    const userData = student.user || {};
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-6 pb-10 overflow-y-auto"
-        onClick={() => setSelectedStudent(null)}
-      >
-        <div
-          className="bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-4 relative max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="sticky top-0 bg-white z-10 border-b border-border-light px-6 sm:px-8 py-4 flex items-center justify-between rounded-t-2xl">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSelectedStudent(null)}
-                className="p-2 hover:bg-bg-light rounded-lg transition-colors text-text-light hover:text-text-dark"
-              >
-                <FiX size={20} />
-              </button>
-              <h2 className="font-heading text-xl font-bold text-text-dark">Student Details</h2>
-            </div>
+    // DEBUG: Log selected student before rendering AdminDetailView
+    console.log('[DEBUG renderStudentDetail] student.user:', student.user);
+    console.log('[DEBUG renderStudentDetail] user keys:', student.user ? Object.keys(student.user) : 'NO USER');
+    console.log('[DEBUG renderStudentDetail] user.status:', student.user?.status);
+    console.log('[DEBUG renderStudentDetail] user.profileVerificationStatus:', student.user?.profileVerificationStatus);
+    console.log('[DEBUG renderStudentDetail] user.completionPercentage:', student.user?.completionPercentage);
+    console.log('[DEBUG renderStudentDetail] user.profileComplete:', student.user?.profileComplete);
+    return createPortal(
+      <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 pt-6 sm:pt-10 pb-6 sm:pb-10 overflow-y-auto"
+        onClick={() => setSelectedStudent(null)}>
+        <div className="bg-white rounded-2xl shadow-xl p-5 sm:p-6 lg:p-8 w-full max-w-4xl mx-3 sm:mx-4 relative max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-4 sm:mb-6 sticky -top-8 bg-white pb-3 z-100 border-b border-border-light/50">
+            <h3 className="font-heading text-lg sm:text-xl font-bold text-text-dark">Student Details</h3>
+            <button onClick={() => setSelectedStudent(null)}
+              className="w-8 h-8 rounded-xl bg-bg-light hover:bg-border-light text-text-light hover:text-text-dark flex items-center justify-center transition-colors text-lg">&times;</button>
           </div>
 
-          <div className="p-6 sm:p-8">
-            {/* Quick Action Buttons */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/5 text-primary rounded-xl text-sm font-semibold hover:bg-primary/10 transition-colors border border-primary/10">
-                <FiEye size={14} /> View Profile
-              </button>
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-bg-light text-text-body rounded-xl text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors border border-border-light">
-                <FiPrinter size={14} /> Print
-              </button>
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-bg-light text-text-body rounded-xl text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors border border-border-light">
-                <FiMessageSquare size={14} /> Message
-              </button>
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-bg-light text-text-body rounded-xl text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors border border-border-light">
-                <FiCheckSquare size={14} /> Attendance
-              </button>
-              <button className="inline-flex items-center gap-1.5 px-4 py-2 bg-bg-light text-text-body rounded-xl text-sm font-semibold hover:bg-primary/5 hover:text-primary transition-colors border border-border-light">
-                <FiAward size={14} /> Marks
-              </button>
-            </div>
-
-            {/* Profile Header Card */}
-            <div className="bg-gradient-to-br from-primary via-primary-dark to-[#1a3a6b] rounded-2xl overflow-hidden shadow-xl mb-6 relative">
-              <div className="absolute inset-0 opacity-[0.04]">
-                <div className="w-full h-full" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-              </div>
-              <div className="absolute top-0 right-0 opacity-[0.07]">
-                <svg className="w-64 h-64" viewBox="0 0 400 400" fill="none">
-                  <circle cx="250" cy="150" r="180" stroke="currentColor" strokeWidth="0.5" />
-                  <circle cx="250" cy="150" r="120" stroke="currentColor" strokeWidth="0.5" />
-                </svg>
-              </div>
-              <div className="relative z-10 p-6 sm:p-8">
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                  {/* Photo */}
-                  <div className="flex-shrink-0 relative">
-                    {student.studentPhoto ? (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                        <img src={student.studentPhoto} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                        <FiUser size={40} className="text-white/60" />
-                      </div>
-                    )}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-green-400 border-2 border-white rounded-full shadow-lg" />
-                  </div>
-                  {/* Basic Info */}
-                  <div className="flex-1 min-w-0 text-center sm:text-left">
-                    <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white break-words">
-                      {student.studentName || 'Unknown'}
-                    </h2>
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-2">
-                      {student.studentId && (
-                        <span className="text-green-100/80 text-sm font-mono">ID: {student.studentId}</span>
-                      )}
-                      {student.email && (
-                        <span className="text-green-100/60 text-sm flex items-center gap-1">
-                          <FiMail size={12} /> {student.email}
-                        </span>
-                      )}
-                      {student.phone && (
-                        <span className="text-green-100/60 text-sm flex items-center gap-1">
-                          <FiPhone size={12} /> {student.phone}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
-                      {getStatusBadge(student.status)}
-                      {getProfileStatusBadge(userData?.profileVerificationStatus)}
-                      {student.gender && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border bg-white/15 text-white border-white/20">
-                          {student.gender}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {/* Quick Stats */}
-                  <div className="grid grid-cols-2 gap-2 flex-shrink-0">
-                    {student.selectedCourse?.title && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/10 text-center">
-                        <FiBookOpen size={14} className="text-white/60 mx-auto mb-0.5" />
-                        <p className="text-xs font-bold text-white truncate max-w-[80px]">{student.selectedCourse.title}</p>
-                      </div>
-                    )}
-                    {student.currentClass && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 border border-white/10 text-center">
-                        <FiGrid size={14} className="text-white/60 mx-auto mb-0.5" />
-                        <p className="text-xs font-bold text-white">{student.currentClass}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Information Sections using AdminDetailView */}
-            <AdminDetailView entity={student} type="student" statusMaps={{
-              userStatus: {
-                active: { label: 'Active', variant: 'active' },
-                inactive: { label: 'Inactive', variant: 'inactive' },
-                graduated: { label: 'Graduated', variant: 'graduated' },
-                suspended: { label: 'Suspended', variant: 'suspended' },
-                transferred: { label: 'Transferred', variant: 'transferred' },
-              },
-              verification: {
-                not_submitted: { label: 'Not Submitted', variant: 'not_submitted' },
-                pending: { label: 'Pending', variant: 'pending' },
-                verified: { label: 'Verified', variant: 'verified' },
-                rejected: { label: 'Rejected', variant: 'rejected' },
-                changes_requested: { label: 'Changes Required', variant: 'changes_requested' },
-              },
-            }} />
-
-            {/* Assignment Date */}
-            {student.createdAt && (
-              <div className="mt-6 bg-gradient-to-r from-primary/5 to-primary/[0.02] rounded-2xl border border-primary/10 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <FiCalendar size={16} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-text-light">Assignment Date</p>
-                    <p className="text-sm font-bold text-text-dark mt-0.5">
-                      {formatDate(student.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Documents Section - Teacher can VIEW only */}
-            {((student.educationalCertificates && student.educationalCertificates.length > 0) ||
-              (student.additionalDocuments && student.additionalDocuments.length > 0)) && (
-              <div className="mt-6">
-                <h3 className="font-heading text-lg font-bold text-text-dark mb-4 flex items-center gap-2">
-                  <FiFlag size={18} className="text-primary" />
-                  Documents
-                </h3>
-                <div className="space-y-2">
-                  {student.educationalCertificates?.map((doc, i) => {
-                    const url = typeof doc === 'string' ? doc : doc?.url || '';
-                    const name = typeof doc === 'string' ? `Certificate ${i + 1}` : doc?.name || `Certificate ${i + 1}`;
-                    if (!url) return null;
-                    return (
-                      <div key={i} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
-                        <span className="text-sm font-semibold text-text-dark">{name}</span>
-                        <a href={url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary text-xs font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
-                          <FiEye size={12} /> View
-                        </a>
-                      </div>
-                    );
-                  })}
-                  {student.additionalDocuments?.map((doc, i) => {
-                    const url = typeof doc === 'string' ? doc : doc?.url || '';
-                    const name = typeof doc === 'string' ? `Document ${i + 1}` : doc?.name || `Document ${i + 1}`;
-                    if (!url) return null;
-                    return (
-                      <div key={`add-${i}`} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
-                        <span className="text-sm font-semibold text-text-dark">{name}</span>
-                        <a href={url} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-primary text-xs font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
-                          <FiEye size={12} /> View
-                        </a>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Emergency Contact */}
-            {(student.guardianName || student.guardianPhone) && (
-              <div className="mt-6">
-                <h3 className="font-heading text-lg font-bold text-text-dark mb-4 flex items-center gap-2">
-                  <FiPhoneCall size={18} className="text-primary" />
-                  Emergency Contact
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {student.guardianName && (
-                    <div className="p-4 bg-bg-light rounded-xl">
-                      <p className="text-xs font-bold uppercase tracking-wider text-text-light">Guardian Name</p>
-                      <p className="text-sm font-bold text-text-dark mt-1">{student.guardianName}</p>
-                    </div>
-                  )}
-                  {student.guardianPhone && (
-                    <div className="p-4 bg-bg-light rounded-xl">
-                      <p className="text-xs font-bold uppercase tracking-wider text-text-light">Guardian Phone</p>
-                      <p className="text-sm font-bold text-text-dark mt-1">{student.guardianPhone}</p>
-                    </div>
-                  )}
-                  {student.guardianRelation && (
-                    <div className="p-4 bg-bg-light rounded-xl">
-                      <p className="text-xs font-bold uppercase tracking-wider text-text-light">Relation</p>
-                      <p className="text-sm font-bold text-text-dark mt-1 capitalize">{student.guardianRelation}</p>
-                    </div>
-                  )}
-                  {student.guardianEmail && (
-                    <div className="p-4 bg-bg-light rounded-xl">
-                      <p className="text-xs font-bold uppercase tracking-wider text-text-light">Guardian Email</p>
-                      <p className="text-sm font-bold text-text-dark mt-1">{student.guardianEmail}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-white border-t border-border-light px-6 sm:px-8 py-4 rounded-b-2xl">
-            <button
-              onClick={() => setSelectedStudent(null)}
-              className="w-full px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors"
-            >
-              Close
-            </button>
-          </div>
+          <AdminDetailView entity={student} type="student" statusMaps={{
+            userStatus: {
+              pending: { label: 'Pending', variant: 'pending' },
+              active: { label: 'Active', variant: 'active' },
+              rejected: { label: 'Rejected', variant: 'rejected' },
+              blocked: { label: 'Blocked', variant: 'blocked' },
+            },
+            verification: {
+              not_submitted: { label: 'Not Submitted', variant: 'not_submitted' },
+              pending: { label: 'Pending', variant: 'pending' },
+              verified: { label: 'Verified', variant: 'verified' },
+              rejected: { label: 'Rejected', variant: 'rejected' },
+              changes_requested: { label: 'Changes Requested', variant: 'changes_requested' },
+            },
+          }} />
         </div>
-      </div>
+      </div>,
+      document.body
     );
   };
 

@@ -11,11 +11,6 @@ const updateProfileRules = [
     .trim()
     .matches(/^[\d\s\-\+\(\)]{7,30}$/)
     .withMessage('Invalid WhatsApp number'),
-  body('biography')
-    .optional()
-    .trim()
-    .isLength({ max: 5000 })
-    .withMessage('Biography must not exceed 5000 characters'),
   body('shortBio')
     .optional()
     .trim()

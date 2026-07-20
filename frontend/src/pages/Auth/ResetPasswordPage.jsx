@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
+import { toast } from 'react-toastify';
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -13,8 +14,6 @@ export default function ResetPasswordPage() {
     confirmPassword: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData(prev => ({
@@ -25,18 +24,16 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
     setIsSubmitting(true);
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       setIsSubmitting(false);
       return;
     }
 
     if (formData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters');
+      toast.error('Password must be at least 8 characters');
       setIsSubmitting(false);
       return;
     }
@@ -47,12 +44,12 @@ export default function ResetPasswordPage() {
         email,
         newPassword: formData.newPassword,
       });
-      setMessage(response.message || 'Password reset successful! Redirecting to login...');
+      toast.success(response.message || 'Password reset successful! Redirecting to login...');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to reset password. The link may have expired.');
+      toast.error(err.message || 'Failed to reset password. The link may have expired.');
     } finally {
       setIsSubmitting(false);
     }
@@ -90,18 +87,6 @@ export default function ResetPasswordPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 sm:p-10">
-          {message && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 animate-fade-in">
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-fade-in">
-              {error}
-            </div>
-          )}
-
           <div className="mb-6">
             <label htmlFor="newPassword" className="block text-sm font-semibold text-text-dark mb-2.5">
               New Password

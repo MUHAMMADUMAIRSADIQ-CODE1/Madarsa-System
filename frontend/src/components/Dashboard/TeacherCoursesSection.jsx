@@ -5,6 +5,7 @@ import {
   FiUsers, FiBook, FiCalendar, FiClock, FiSearch,
   FiChevronLeft, FiChevronRight, FiExternalLink
 } from 'react-icons/fi';
+import CourseCard from '../common/CourseCard';
 
 export default function TeacherCoursesSection({ onViewCourse }) {
   const { user } = useAuth();
@@ -122,79 +123,22 @@ export default function TeacherCoursesSection({ onViewCourse }) {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {courses.map((course) => (
-            <div
-              key={course._id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl border border-border-light hover:border-primary hover:shadow-md transition-all cursor-pointer"
-              onClick={() => onViewCourse && onViewCourse(course)}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-text-dark text-lg truncate">
-                    {course.title}
-                  </h3>
-                  {course.code && (
-                    <span className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs font-mono font-bold">
-                      {course.code}
-                    </span>
-                  )}
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold capitalize ${getLevelColor(course.level)}`}>
-                    {course.level}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-text-light">
-                  {course.shortDescription && (
-                    <p className="w-full text-text-body text-xs mb-1 line-clamp-1">
-                      {course.shortDescription}
-                    </p>
-                  )}
-                  <div className="flex flex-wrap gap-x-6 gap-y-2">
-                    {course.batch && (
-                      <span className="flex items-center gap-1">
-                        <FiUsers className="w-4 h-4" />
-                        Batch: {course.batch}
-                      </span>
-                    )}
-                    {course.section && (
-                      <span className="flex items-center gap-1">
-                        <FiBook className="w-4 h-4" />
-                        Section: {course.section}
-                      </span>
-                    )}
-                    {course.academicYear && (
-                      <span className="flex items-center gap-1">
-                        <FiCalendar className="w-4 h-4" />
-                        {course.academicYear}
-                      </span>
-                    )}
-                    {course.enrolledCount > 0 && (
-                      <span className="flex items-center gap-1">
-                        <FiUsers className="w-4 h-4" />
-                        {course.enrolledCount} Students
-                      </span>
-                    )}
-                    {course.createdAt && (
-                      <span className="flex items-center gap-1">
-                        <FiClock className="w-4 h-4" />
-                        {formatDate(course.createdAt)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onViewCourse && onViewCourse(course); }}
-                  className="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark transition-colors text-sm whitespace-nowrap"
-                >
-                  <FiExternalLink className="w-4 h-4 inline mr-1.5" />
-                  View Details
-                </button>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.map((course, i) => (
+            <CourseCard
+              key={course._id || course.id}
+              course={{
+                ...course,
+                color: course.color || 'from-primary to-primary-dark',
+                rating: course.rating || '4.5',
+                duration: course.duration || '3 Months',
+                teacher: course.teacher || 'Admin Assigned',
+                students: course.enrolledCount || 0
+              }}
+              index={i}
+              actionText="View Details"
+              onAction={onViewCourse}
+            />
           ))}
         </div>
       )}

@@ -20,9 +20,6 @@ router.put(
   '/:id',
   uploadFields([
     { name: 'studentPhoto', maxCount: 1 },
-    { name: 'cnicFront', maxCount: 1 },
-    { name: 'cnicBack', maxCount: 1 },
-    { name: 'passport', maxCount: 1 },
   ]),
   validate(admissionValidator.updateAdmissionRules),
   validate(admissionValidator.idParamRules),

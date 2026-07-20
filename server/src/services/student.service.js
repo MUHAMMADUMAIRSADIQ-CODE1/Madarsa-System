@@ -7,7 +7,7 @@ class StudentService extends BaseService {
   constructor() {
     super(Student, 'Student');
     this.searchFields = [
-      'studentId', 'studentName', 'fatherName', 'guardianName',
+      'studentId', 'studentName', 'fatherName',
       'email', 'phone', 'country', 'rollNumber', 'enrollmentNumber',
     ];
   }
@@ -36,6 +36,62 @@ class StudentService extends BaseService {
   }
 
   async update(id, data, options = {}) {
+    // Process selectedCourses into the courses array format
+    if (data.selectedCourses && Array.isArray(data.selectedCourses)) {
+      const Course = require('../models/Course.model');
+      // Validate all course IDs exist
+      const validCourses = await Course.find({
+        _id: { $in: data.selectedCourses },
+        isDeleted: false,
+      }).select('_id').lean();
+
+      const validIds = new Set(validCourses.map(c => c._id.toString()));
+
+      // Preserve existing non-pending enrollments (active, completed, dropped)
+      // Only update/replace entries with status 'pending'
+      const preservedCourses = [];
+      const selectedSet = new Set(data.selectedCourses.map(id => id.toString()));
+
+      // Check if the student already has a profile to preserve existing enrollments
+      if (id) {
+        try {
+          const existingProfile = await this.model.findById(id).select('courses').lean();
+          if (existingProfile && existingProfile.courses) {
+            for (const ec of existingProfile.courses) {
+              const cid = ec.course ? ec.course.toString() : null;
+              if (cid) {
+                if (ec.status === 'pending') {
+                  // Only keep pending courses that are still selected
+                  if (selectedSet.has(cid)) {
+                    preservedCourses.push(ec);
+                    selectedSet.delete(cid); // Mark as handled
+                  }
+                } else {
+                  // Preserve non-pending enrollments regardless of selection
+                  preservedCourses.push(ec);
+                  selectedSet.delete(cid);
+                }
+              }
+            }
+          }
+        } catch (_) { /* profile may not exist yet */ }
+      }
+
+      // Add remaining selected courses as new pending entries
+      for (const courseId of selectedSet) {
+        if (validIds.has(courseId)) {
+          preservedCourses.push({
+            course: courseId,
+            enrolledAt: new Date(),
+            status: 'pending',
+          });
+        }
+      }
+
+      data.courses = preservedCourses;
+      delete data.selectedCourses;
+    }
+
     return super.update(id, data, options);
   }
 

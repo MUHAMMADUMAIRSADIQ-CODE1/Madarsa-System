@@ -9,7 +9,7 @@ class TeacherService extends BaseService {
     super(Teacher, 'Teacher');
     this.searchFields = [
       'fullName', 'qualification', 'specialization', 'subjects',
-      'country', 'biography', 'shortBio',
+      'country', 'shortBio',
     ];
   }
 
@@ -232,21 +232,20 @@ class TeacherService extends BaseService {
     const User = require('../models/User.model');
     const { roles, USER_STATUS } = require('../constants');
 
-    const [total, published, draft, archived, featured, online,
+    const [total, published, draft, archived, featured,
       pendingUsers, activeUsers, rejectedUsers, blockedUsers] = await Promise.all([
       this.count({ isDeleted: false }),
       this.count({ status: 'published', isDeleted: false }),
       this.count({ status: 'draft', isDeleted: false }),
       this.count({ status: 'archived', isDeleted: false }),
       this.count({ featured: true, status: 'published', isDeleted: false }),
-      this.count({ availableForOnline: true, status: 'published', isDeleted: false }),
       User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.PENDING }),
       User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.ACTIVE }),
       User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.REJECTED }),
       User.countDocuments({ role: roles.TEACHER, status: USER_STATUS.BLOCKED }),
     ]);
 
-    return { total, published, draft, archived, featured, availableForOnline: online,
+    return { total, published, draft, archived, featured,
       pendingUsers, activeUsers, rejectedUsers, blockedUsers };
   }
 }

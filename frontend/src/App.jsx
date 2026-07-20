@@ -52,11 +52,15 @@ function ScrollToTop() {
   return null;
 }
 
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 export default function App() {
   return (
     <Suspense fallback={<PageLoader />}>
       <ToastProvider>
       <ScrollToTop />
+      <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} newestOnTop={true} closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="colored" />
       <Routes>
         {/* Teacher Dashboard Routes - must come BEFORE PublicLayout to prevent /teacher/:slug conflict */}
         <Route

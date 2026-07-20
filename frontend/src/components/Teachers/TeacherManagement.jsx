@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import teacherService from '../../services/teacherService';
 import courseService from '../../services/courseService';
 import assignmentService from '../../services/assignmentService';
+import uploadService from '../../services/uploadService';
 
 import ActionDropdown from '../common/ActionDropdown';
 import AdminDetailView from '../common/AdminDetailView';
@@ -24,6 +25,10 @@ import {
   FiStar,
   FiBook,
   FiBookOpen,
+  FiPlus,
+  FiFile,
+  FiCheck,
+  FiPhoneCall,
 } from 'react-icons/fi';
 
 const USER_STATUS_MAP = {
@@ -42,15 +47,18 @@ const VERIFICATION_STATUS_MAP = {
 };
 
 const defaultForm = {
-  fullName: '', shortBio: '', biography: '', qualification: '', degree: '',
+  fullName: '', shortBio: '', qualification: '', degree: '',
   experience: 0, specialization: '', subjects: [], teachingLanguages: [],
-  country: '', city: '', address: '', postalCode: '',
+  country: '', city: '', address: '',
   email: '', phone: '', whatsapp: '',
   gender: '', dateOfBirth: '', nationality: '',
-  bloodGroup: '', religion: '', cnicPassport: '',
-  emergencyContact: '', emergencyPhone: '',
   teachingMode: '', availability: '',
-  linkedin: '', facebook: '', instagram: '', youtube: '', website: '',
+  skills: [],
+  profilePhoto: '',
+  resume: '',
+  additionalDocuments: [],
+  certificates: [],
+  canTeachCourses: [],
 };
 
 function Badge({ children, variant = 'default' }) {
@@ -97,6 +105,8 @@ export default function AdminTeacherManagementSection() {
   const [assigningCoursesTo, setAssigningCoursesTo] = useState(null);
   const [assignedCounts, setAssignedCounts] = useState({});
   const [assignRefreshKey, setAssignRefreshKey] = useState(0);
+  const [uploading, setUploading] = useState({});
+  const [certInput, setCertInput] = useState({ title: '', issuer: '', year: '' });
 
   const loadTeachers = useCallback(async () => {
     try {
@@ -137,13 +147,30 @@ export default function AdminTeacherManagementSection() {
   function resetForm() {
     setForm(defaultForm);
     setEditingId(null); setError(null); setSuccess(null);
+    setUploading({});
+    setCertInput({ title: '', issuer: '', year: '' });
+  }
+
+  function toggleEditCourse(courseId) {
+    setForm(prev => {
+      const current = prev.canTeachCourses || [];
+      const updated = current.includes(courseId)
+        ? current.filter(id => id !== courseId)
+        : [...current, courseId];
+      return { ...prev, canTeachCourses: updated };
+    });
   }
 
   function startEdit(teacher) {
+    if (availableCourses.length === 0) {
+      courseService.getAdminCourses({ status: 'published' })
+        .then(res => setAvailableCourses(res.data?.data || res.data || []))
+        .catch(() => {});
+    }
+
     setForm({
       fullName: teacher.fullName || '',
       shortBio: teacher.shortBio || '',
-      biography: teacher.biography || '',
       qualification: teacher.qualification || '',
       degree: teacher.degree || '',
       experience: teacher.experience || 0,
@@ -153,26 +180,26 @@ export default function AdminTeacherManagementSection() {
       country: teacher.country || '',
       city: teacher.city || '',
       address: teacher.address || '',
-      postalCode: teacher.postalCode || '',
+
       email: teacher.email || '',
       phone: teacher.phone || '',
       whatsapp: teacher.whatsapp || '',
       gender: teacher.gender || '',
       dateOfBirth: teacher.dateOfBirth ? teacher.dateOfBirth.split('T')[0] : '',
       nationality: teacher.nationality || '',
-      bloodGroup: teacher.bloodGroup || '',
-      religion: teacher.religion || '',
-      cnicPassport: teacher.cnicPassport || '',
-      emergencyContact: teacher.emergencyContact || '',
+
+
       emergencyPhone: teacher.emergencyPhone || '',
       teachingMode: teacher.teachingMode || '',
       availability: teacher.availability || '',
-      linkedin: teacher.linkedin || '',
-      facebook: teacher.facebook || '',
-      instagram: teacher.instagram || '',
-      youtube: teacher.youtube || '',
-      website: teacher.website || '',
+      skills: teacher.skills || [],
+      profilePhoto: teacher.profilePhoto || '',
+      resume: teacher.resume || '',
+      additionalDocuments: teacher.additionalDocuments || [],
+      certificates: teacher.certificates || [],
+      canTeachCourses: teacher.canTeachCourses ? teacher.canTeachCourses.map(c => c._id || c) : [],
     });
+    setCertInput({ title: '', issuer: '', year: '' });
     setEditingId(teacher._id);
     setShowEditModal(true);
   }
@@ -180,6 +207,72 @@ export default function AdminTeacherManagementSection() {
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  }
+
+  function handleArrayChange(field, value) {
+    setForm(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  }
+
+  async function handleFileUpload(fieldName, file) {
+    if (!file) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadFile(file);
+      const url = res?.data?.url || res?.url;
+      if (url) {
+        setForm(prev => ({ ...prev, [fieldName]: url }));
+      }
+    } catch (err) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  }
+
+  async function handleMultiFileUpload(fieldName, files) {
+    if (!files || files.length === 0) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadMultiple(Array.from(files));
+      const urls = res?.data?.files?.map(f => f.url) || [];
+      if (urls.length > 0) {
+        setForm(prev => ({
+          ...prev,
+          [fieldName]: [...(prev[fieldName] || []), ...urls],
+        }));
+      }
+    } catch (err) {
+      setError(err.message || 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  }
+
+  function removeSingleFile(fieldName) {
+    setForm(prev => ({ ...prev, [fieldName]: '' }));
+  }
+
+  function removeMultiFile(fieldName, index) {
+    setForm(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].filter((_, i) => i !== index),
+    }));
+  }
+
+  function addCertificate() {
+    if (!certInput.title.trim()) return;
+    setForm(prev => ({
+      ...prev,
+      certificates: [...prev.certificates, { ...certInput, year: parseInt(certInput.year) || new Date().getFullYear() }],
+    }));
+    setCertInput({ title: '', issuer: '', year: '' });
+  }
+
+  function removeCertificate(index) {
+    setForm(prev => ({
+      ...prev,
+      certificates: prev.certificates.filter((_, i) => i !== index),
+    }));
   }
 
   async function handleSave(e) {
@@ -585,191 +678,284 @@ export default function AdminTeacherManagementSection() {
             {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{success}</div>}
 
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-heading font-semibold text-text-dark">Personal Information</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Full Name *</label>
-                    <input type="text" name="fullName" value={form.fullName} onChange={handleChange} required
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-6">
+                {/* ── STEP 1: PERSONAL INFORMATION ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">1</span>
+                    Personal Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Gender</label>
-                      <select name="gender" value={form.gender} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
-                        <option value="">Select</option>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Full Name *</label>
+                      <input type="text" name="fullName" value={form.fullName} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Gender *</label>
+                      <select name="gender" value={form.gender} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
+                        <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth</label>
-                      <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Nationality</label>
-                      <input type="text" name="nationality" value={form.nationality} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth *</label>
+                      <input type="date" name="dateOfBirth" value={form.dateOfBirth} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Religion</label>
-                      <input type="text" name="religion" value={form.religion} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Blood Group</label>
-                      <input type="text" name="bloodGroup" value={form.bloodGroup} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Nationality *</label>
+                      <input type="text" name="nationality" value={form.nationality} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">CNIC/Passport</label>
-                      <input type="text" name="cnicPassport" value={form.cnicPassport} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Country</label>
-                      <input type="text" name="country" value={form.country} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Phone *</label>
+                      <input type="tel" name="phone" value={form.phone} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">City</label>
-                      <input type="text" name="city" value={form.city} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Address</label>
-                    <textarea name="address" value={form.address} onChange={handleChange} rows={2}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Postal Code</label>
-                    <input type="text" name="postalCode" value={form.postalCode} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-
-                  <h3 className="font-heading font-semibold text-text-dark pt-2">Contact</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Email</label>
-                    <input type="email" name="email" value={form.email} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Phone</label>
-                      <input type="tel" name="phone" value={form.phone} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp *</label>
+                      <input type="tel" name="whatsapp" value={form.whatsapp} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp</label>
-                      <input type="tel" name="whatsapp" value={form.whatsapp} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact</label>
-                      <input type="text" name="emergencyContact" value={form.emergencyContact} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Country *</label>
+                      <input type="text" name="country" value={form.country} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Emergency Phone</label>
-                      <input type="tel" name="emergencyPhone" value={form.emergencyPhone} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">City *</label>
+                      <input type="text" name="city" value={form.city} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
-                  </div>
-
-                  <h3 className="font-heading font-semibold text-text-dark pt-2">Professional</h3>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Short Bio</label>
-                    <textarea name="shortBio" value={form.shortBio} onChange={handleChange} rows={2}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Biography</label>
-                    <textarea name="biography" value={form.biography} onChange={handleChange} rows={4}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none" />
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-text-dark mb-1">Address *</label>
+                      <textarea name="address" value={form.address} onChange={handleChange} rows={2} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-heading font-semibold text-text-dark">Qualifications & Skills</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Qualification</label>
-                      <input type="text" name="qualification" value={form.qualification} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Degree</label>
-                      <input type="text" name="degree" value={form.degree} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Experience (Years)</label>
-                      <input type="number" name="experience" value={form.experience} onChange={handleChange} min={0} max={70}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Specialization</label>
-                      <input type="text" name="specialization" value={form.specialization} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                  </div>
+                {/* ── STEP 2: QUALIFICATION & EXPERIENCE ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">2</span>
+                    Qualification & Experience
+                  </h3>
+                  
+                  {/* Dynamic Course Selection */}
                   <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Teaching Mode</label>
-                    <select name="teachingMode" value={form.teachingMode} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
-                      <option value="">Select mode</option>
-                      <option value="online">Online</option>
-                      <option value="physical">Physical</option>
-                      <option value="both">Both</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Availability</label>
-                    <input type="text" name="availability" value={form.availability} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    <label className="block text-sm font-semibold text-text-dark mb-2">
+                      Courses You Can Teach *
+                      <span className="text-xs text-text-light font-normal ml-2">(Select courses)</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-border-light rounded-xl bg-white">
+                      {availableCourses.map(course => {
+                        const isSelected = form.canTeachCourses?.includes(course._id);
+                        return (
+                          <button
+                            key={course._id}
+                            type="button"
+                            onClick={() => toggleEditCourse(course._id)}
+                            className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border-light hover:border-primary/50'
+                            }`}
+                          >
+                            <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                              isSelected ? 'bg-primary text-white' : 'border border-border-light'
+                            }`}>
+                              {isSelected && <FiCheck className="w-3 h-3" />}
+                            </div>
+                            <span className="text-xs font-semibold text-text-dark truncate">{course.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
-                  <h3 className="font-heading font-semibold text-text-dark pt-2">Social Links</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">LinkedIn</label>
-                      <input type="url" name="linkedin" value={form.linkedin} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Qualification *</label>
+                      <input type="text" name="qualification" value={form.qualification} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Facebook</label>
-                      <input type="url" name="facebook" value={form.facebook} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Degree *</label>
+                      <input type="text" name="degree" value={form.degree} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Instagram</label>
-                      <input type="url" name="instagram" value={form.instagram} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Experience (years) *</label>
+                      <input type="number" name="experience" value={form.experience} onChange={handleChange} min="0" required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">YouTube</label>
-                      <input type="url" name="youtube" value={form.youtube} onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                      <label className="block text-sm font-medium text-text-dark mb-1">Specialization *</label>
+                      <input type="text" name="specialization" value={form.specialization} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Subjects *</label>
+                      <input type="text" value={form.subjects.join(', ')} onChange={(e) => handleArrayChange('subjects', e.target.value)} required placeholder="e.g. Quran, Hadith, Fiqh"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Teaching Languages *</label>
+                      <input type="text" value={form.teachingLanguages.join(', ')} onChange={(e) => handleArrayChange('teachingLanguages', e.target.value)} required placeholder="e.g. Urdu, English, Arabic"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-text-dark mb-1">Short Biography *</label>
+                      <textarea name="shortBio" value={form.shortBio} onChange={handleChange} rows={3} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
                     </div>
                   </div>
+                </div>
+
+                {/* ── STEP 3: SKILLS & AVAILABILITY ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">3</span>
+                    Skills & Availability
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-text-dark mb-1">Skills *</label>
+                      <input type="text" value={form.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} required placeholder="e.g. Tajweed, Arabic grammar"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Teaching Mode *</label>
+                      <select name="teachingMode" value={form.teachingMode} onChange={handleChange} required
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
+                        <option value="">Select Mode</option>
+                        <option value="online">Online</option>
+                        <option value="physical">Physical</option>
+                        <option value="both">Both</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-1">Availability *</label>
+                      <input type="text" name="availability" value={form.availability} onChange={handleChange} required placeholder="e.g. Weekdays 9AM-5PM"
+                        className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                    </div>
+                  </div>
+                </div>
+
+
+
+                {/* ── STEP 4: DOCUMENTS ── */}
+                <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                  <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">4</span>
+                    Documents
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Profile Photo */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-2">Profile Photo</label>
+                      {form.profilePhoto && (
+                        <div className="mb-2 relative inline-block">
+                          <img src={form.profilePhoto} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />
+                          <button type="button" onClick={() => removeSingleFile('profilePhoto')}
+                            className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
+                            <FiTrash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                      <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                        {uploading.profilePhoto ? (
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FiUpload className="w-4 h-4 text-text-light" />
+                        )}
+                        <span className="text-xs text-text-light">{form.profilePhoto ? 'Replace' : 'Upload'} Photo</span>
+                        <input type="file" accept="image/*" onChange={(e) => handleFileUpload('profilePhoto', e.target.files[0])} className="hidden" disabled={uploading.profilePhoto} />
+                      </label>
+                    </div>
+
+                    {/* Resume */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-dark mb-2">Resume / CV</label>
+                      {form.resume && (
+                        <div className="mb-2 p-2 bg-white border border-border-light rounded-lg flex items-center justify-between">
+                          <span className="text-xs text-text-dark truncate flex items-center gap-1"><FiFile className="text-primary flex-shrink-0" /> Resume Uploaded</span>
+                          <button type="button" onClick={() => removeSingleFile('resume')} className="text-red-500 hover:text-red-700">
+                            <FiTrash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                      <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                        {uploading.resume ? (
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FiUpload className="w-4 h-4 text-text-light" />
+                        )}
+                        <span className="text-xs text-text-light">{form.resume ? 'Replace' : 'Upload'} Resume</span>
+                        <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => handleFileUpload('resume', e.target.files[0])} className="hidden" disabled={uploading.resume} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Certificates Section */}
+                  <div className="p-3 bg-white rounded-xl border border-border-light">
+                    <label className="block text-xs font-semibold text-text-dark mb-2">Certificates</label>
+                    {form.certificates.length > 0 && (
+                      <div className="space-y-1 mb-2">
+                        {form.certificates.map((cert, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-2 bg-bg-light rounded-lg border border-border-light text-xs">
+                            <div>
+                              <p className="font-semibold text-text-dark">{cert.title}</p>
+                              <p className="text-text-light">{cert.issuer}{cert.year ? ` (${cert.year})` : ''}</p>
+                            </div>
+                            <button type="button" onClick={() => removeCertificate(idx)} className="p-1 text-red-500 hover:bg-red-50 rounded">
+                              <FiTrash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                      <input type="text" value={certInput.title} onChange={e => setCertInput(p => ({ ...p, title: e.target.value }))} placeholder="Title" className="px-3 py-1.5 rounded-lg border border-border-light outline-none text-xs flex-1" />
+                      <input type="text" value={certInput.issuer} onChange={e => setCertInput(p => ({ ...p, issuer: e.target.value }))} placeholder="Issuer" className="px-3 py-1.5 rounded-lg border border-border-light outline-none text-xs flex-1" />
+                      <div className="flex gap-2">
+                        <input type="number" value={certInput.year} onChange={e => setCertInput(p => ({ ...p, year: e.target.value }))} placeholder="Year" className="w-16 px-3 py-1.5 rounded-lg border border-border-light outline-none text-xs" />
+                        <button type="button" onClick={addCertificate} className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors text-xs font-semibold flex items-center gap-1">
+                          <FiPlus className="w-3.5 h-3.5" /> Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Documents */}
                   <div>
-                    <label className="block text-sm font-medium text-text-dark mb-1">Website</label>
-                    <input type="url" name="website" value={form.website} onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                    <label className="block text-sm font-medium text-text-dark mb-2">Additional Documents (Optional)</label>
+                    {form.additionalDocuments.length > 0 && (
+                      <div className="space-y-1 mb-2">
+                        {form.additionalDocuments.map((doc, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-2 bg-white border border-border-light rounded-lg text-xs">
+                            <span className="text-text-dark truncate flex items-center gap-1"><FiFile className="text-primary flex-shrink-0" /> Document {idx + 1}</span>
+                            <button type="button" onClick={() => removeMultiFile('additionalDocuments', idx)} className="text-red-500 hover:text-red-700">
+                              <FiTrash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                      {uploading.additionalDocuments ? (
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <FiUpload className="w-4 h-4 text-text-light" />
+                      )}
+                      <span className="text-xs text-text-light">Upload Documents</span>
+                      <input type="file" multiple accept="image/*,.pdf" onChange={(e) => handleMultiFileUpload('additionalDocuments', e.target.files)} className="hidden" disabled={uploading.additionalDocuments} />
+                    </label>
                   </div>
                 </div>
               </div>
@@ -881,16 +1067,22 @@ export default function AdminTeacherManagementSection() {
             <p className="text-sm text-text-body mb-4">
               Assign a course to <strong>{assignTarget?.fullName || 'this teacher'}</strong>:
             </p>
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-text-dark mb-1">Course</label>
               <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)}
                 className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
                 <option value="">Select a course...</option>
-                {availableCourses.map((c) => (
-                  <option key={c._id} value={c._id}>{c.title}</option>
-                ))}
+                {(() => {
+                  const teacherPreferredCourseIds = assignTarget?.canTeachCourses?.map(c => (c._id || c)) || [];
+                  const filtered = availableCourses.filter(c => teacherPreferredCourseIds.includes(c._id));
+                  return filtered.map((c) => (
+                    <option key={c._id} value={c._id}>{c.title}</option>
+                  ));
+                })()}
               </select>
             </div>
+
             <div className="flex gap-3">
               <button onClick={handleAssignCourse} disabled={assigning || !selectedCourseId}
                 className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary-dark disabled:opacity-50 transition-colors">

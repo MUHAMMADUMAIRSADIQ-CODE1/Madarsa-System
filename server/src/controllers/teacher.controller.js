@@ -14,7 +14,6 @@ const getAll = asyncHandler(async (req, res) => {
   if (req.query.country) query.country = req.query.country;
   if (req.query.status) query.status = req.query.status;
   if (req.query.featured === 'true') query.featured = true;
-  if (req.query.availableForOnline === 'true') query.availableForOnline = true;
 
   // Support filtering by user approval status (pending, active, rejected, blocked)
   if (req.query.userStatus) {
@@ -51,55 +50,7 @@ const getBySlug = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Teacher fetched successfully', teacher.toPublicJSON()));
 });
 
-const create = asyncHandler(async (req, res) => {
-  const data = { ...req.body };
 
-  if (req.files) {
-    if (req.files.profilePhoto) {
-      data.profilePhoto = `/uploads/${req.files.profilePhoto[0].filename}`;
-    }
-    if (req.files.coverPhoto) {
-      data.coverPhoto = `/uploads/${req.files.coverPhoto[0].filename}`;
-    }
-  }
-
-  if (data.subjects && typeof data.subjects === 'string') {
-    data.subjects = JSON.parse(data.subjects);
-  }
-  if (data.teachingLanguages && typeof data.teachingLanguages === 'string') {
-    data.teachingLanguages = JSON.parse(data.teachingLanguages);
-  }
-  if (data.skills && typeof data.skills === 'string') {
-    data.skills = JSON.parse(data.skills);
-  }
-  if (data.certificates && typeof data.certificates === 'string') {
-    data.certificates = JSON.parse(data.certificates);
-  }
-  if (data.awards && typeof data.awards === 'string') {
-    data.awards = JSON.parse(data.awards);
-  }
-  if (data.seoKeywords && typeof data.seoKeywords === 'string') {
-    data.seoKeywords = JSON.parse(data.seoKeywords);
-  }
-
-  data.createdBy = req.user.id;
-  data.updatedBy = req.user.id;
-
-  const teacher = await TeacherService.create(data);
-
-  await AuditService.log({
-    user: req.user.id,
-    action: CMS_AUDIT_ACTIONS.CREATE,
-    module: CMS_MODULES.TEACHERS,
-    resourceId: teacher._id,
-    resourceType: 'teacher',
-    description: `Created teacher: ${teacher.fullName}`,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-  });
-
-  res.status(201).json(ApiResponse.created('Teacher created successfully', teacher));
-});
 
 const update = asyncHandler(async (req, res) => {
   const data = { ...req.body };
@@ -108,9 +59,6 @@ const update = asyncHandler(async (req, res) => {
     if (req.files.profilePhoto) {
       data.profilePhoto = `/uploads/${req.files.profilePhoto[0].filename}`;
     }
-    if (req.files.coverPhoto) {
-      data.coverPhoto = `/uploads/${req.files.coverPhoto[0].filename}`;
-    }
   }
 
   if (data.subjects && typeof data.subjects === 'string') {
@@ -125,11 +73,11 @@ const update = asyncHandler(async (req, res) => {
   if (data.certificates && typeof data.certificates === 'string') {
     data.certificates = JSON.parse(data.certificates);
   }
-  if (data.awards && typeof data.awards === 'string') {
-    data.awards = JSON.parse(data.awards);
-  }
   if (data.seoKeywords && typeof data.seoKeywords === 'string') {
     data.seoKeywords = JSON.parse(data.seoKeywords);
+  }
+  if (data.canTeachCourses && typeof data.canTeachCourses === 'string') {
+    data.canTeachCourses = JSON.parse(data.canTeachCourses);
   }
 
   data.updatedBy = req.user.id;
@@ -265,7 +213,6 @@ const getPublished = asyncHandler(async (req, res) => {
   if (req.query.specialization) query.specialization = req.query.specialization;
   if (req.query.country) query.country = req.query.country;
   if (req.query.featured === 'true') query.featured = true;
-  if (req.query.availableForOnline === 'true') query.availableForOnline = true;
   if (req.query.search) query.search = req.query.search;
 
   const result = await TeacherService.getPublishedTeachers(query, { page, limit, skip, sort });

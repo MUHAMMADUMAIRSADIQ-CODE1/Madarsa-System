@@ -12,11 +12,6 @@ const createStudentRules = [
     .trim()
     .isLength({ max: 100 })
     .withMessage('Father name must not exceed 100 characters'),
-  body('guardianName')
-    .optional()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Guardian name must not exceed 100 characters'),
   body('gender')
     .notEmpty()
     .withMessage('Gender is required')

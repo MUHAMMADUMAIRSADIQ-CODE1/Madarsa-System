@@ -13,9 +13,9 @@ const buildFormData = (data) => {
       fd.append(key, JSON.stringify(value));
     } else if (key === 'certificates' && Array.isArray(value)) {
       fd.append(key, JSON.stringify(value));
-    } else if (key === 'awards' && Array.isArray(value)) {
-      fd.append(key, JSON.stringify(value));
     } else if (key === 'seoKeywords' && Array.isArray(value)) {
+      fd.append(key, JSON.stringify(value));
+    } else if (key === 'canTeachCourses' && Array.isArray(value)) {
       fd.append(key, JSON.stringify(value));
     } else if (value !== undefined && value !== null && value !== '') {
       fd.append(key, value);

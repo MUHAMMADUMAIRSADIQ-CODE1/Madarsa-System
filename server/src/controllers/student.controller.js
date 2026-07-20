@@ -33,7 +33,18 @@ const getAll = asyncHandler(async (req, res) => {
     }
   }
 
-  const result = await StudentService.getAll(query, { page, limit, skip, sort, populate: 'user selectedCourse admissionReference' });
+  const result = await StudentService.getAll(query, {
+    page,
+    limit,
+    skip,
+    sort,
+    populate: [
+      { path: 'user' },
+      { path: 'selectedCourse' },
+      { path: 'admissionReference' },
+      { path: 'assignedTeacher', select: 'fullName email phone qualification specialization' },
+    ],
+  });
 
   res.status(200).json(ApiResponse.success('Students fetched successfully', result));
 });
@@ -41,27 +52,6 @@ const getAll = asyncHandler(async (req, res) => {
 const getById = asyncHandler(async (req, res) => {
   const student = await StudentService.getById(req.params.id, { populate: 'user selectedCourse admissionReference' });
   res.status(200).json(ApiResponse.success('Student fetched successfully', student));
-});
-
-const create = asyncHandler(async (req, res) => {
-  const data = { ...req.body };
-  data.createdBy = req.user.id;
-  data.updatedBy = req.user.id;
-
-  const student = await StudentService.create(data);
-
-  await AuditService.log({
-    user: req.user.id,
-    action: CMS_AUDIT_ACTIONS.CREATE,
-    module: CMS_MODULES.STUDENTS,
-    resourceId: student._id,
-    resourceType: 'student',
-    description: `Created student: ${student.studentName} (${student.studentId})`,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'],
-  });
-
-  res.status(201).json(ApiResponse.created('Student created successfully', student));
 });
 
 const update = asyncHandler(async (req, res) => {

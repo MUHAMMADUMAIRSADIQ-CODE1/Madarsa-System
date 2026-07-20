@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import studentPortalService from '../services/studentPortalService';
+import courseService from '../services/courseService';
+import uploadService from '../services/uploadService';
+import { FiUpload, FiTrash2, FiCheck } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Dashboard/Sidebar';
 import DashboardNavbar from '../components/Dashboard/DashboardNavbar';
 import WelcomeSection from '../components/Dashboard/WelcomeSection';
@@ -16,34 +21,33 @@ import { studentDashboardData } from '../data/studentDashboardData';
 export default function StudentDashboardPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, updateProfile, changePassword, changeEmail, logout } = useAuth();
+  const { user, changePassword, changeEmail, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [profileSuccess, setProfileSuccess] = useState(null);
-  const [profileError, setProfileError] = useState(null);
+  const [studentProfile, setStudentProfile] = useState(null);
   const [profileForm, setProfileForm] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    phone: user?.phone || '',
-    country: user?.country || '',
-    city: user?.city || '',
-    gender: user?.gender || '',
+    studentName: '', fatherName: '', gender: 'male', dateOfBirth: '',
+    nationality: '', phone: '', whatsapp: '', email: '', country: '', city: '',
+    address: '', postalCode: '', emergencyContact: '', emergencyPhone: '',
+    previousEducation: '', currentQualification: '', bio: '',
+    languages: [], skills: [], studentPhoto: ''
   });
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [uploading, setUploading] = useState({});
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-  const [passwordError, setPasswordError] = useState(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(null);
   const [passwordSubmitting, setPasswordSubmitting] = useState(false);
 
   const [emailForm, setEmailForm] = useState({
     newEmail: '',
     password: '',
   });
-  const [emailError, setEmailError] = useState(null);
-  const [emailSuccess, setEmailSuccess] = useState(null);
   const [emailSubmitting, setEmailSubmitting] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(null);
 
@@ -65,24 +69,112 @@ export default function StudentDashboardPage() {
     return () => clearTimeout(timer);
   }, [redirectCountdown, logout, navigate]);
 
+  useEffect(() => {
+    const loadCourses = async () => {
+      setCoursesLoading(true);
+      try {
+        const res = await courseService.getPublishedCourses({ limit: 200 });
+        if (res?.data?.data) {
+          setAvailableCourses(res.data.data);
+        }
+      } catch (_) { }
+      setCoursesLoading(false);
+    };
+    loadCourses();
+
+    const loadProfile = async () => {
+      try {
+        const res = await studentPortalService.getProfile();
+        if (res?.data) {
+          const existing = res.data;
+          setStudentProfile(existing);
+          if (existing.courses && Array.isArray(existing.courses)) {
+            const courseIds = existing.courses
+              .filter(c => c.course && c.course._id)
+              .map(c => c.course._id);
+            setSelectedCourses(courseIds);
+          }
+          setProfileForm({
+            studentName: existing.studentName || user?.fullName || user?.name || '',
+            fatherName: existing.fatherName || '',
+            dateOfBirth: existing.dateOfBirth ? existing.dateOfBirth.split('T')[0] : '',
+            gender: existing.gender || 'male',
+            nationality: existing.nationality || '',
+            phone: existing.phone || user?.phone || '',
+            whatsapp: existing.whatsapp || '',
+            email: existing.email || user?.email || '',
+            address: existing.address || '',
+            city: existing.city || user?.city || '',
+            country: existing.country || user?.country || '',
+            postalCode: existing.postalCode || '',
+            emergencyContact: existing.emergencyContact || '',
+            emergencyPhone: existing.emergencyPhone || '',
+            previousEducation: existing.previousEducation || '',
+            currentQualification: existing.currentQualification || '',
+            bio: existing.bio || '',
+            languages: existing.languages || [],
+            skills: existing.skills || [],
+            studentPhoto: existing.studentPhoto || '',
+          });
+        }
+      } catch (_) {}
+    };
+    loadProfile();
+  }, [user]);
+
   const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfileForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setProfileForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const handleArrayChange = (field, value) => {
+    setProfileForm(prev => ({ ...prev, [field]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+  };
+
+  const toggleCourse = (courseId) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
+  const handleFileUpload = async (fieldName, file) => {
+    if (!file) return;
+    setUploading(prev => ({ ...prev, [fieldName]: true }));
+    try {
+      const res = await uploadService.uploadFile(file);
+      const url = res?.data?.url || res?.url;
+      if (url) {
+        setProfileForm(prev => ({ ...prev, [fieldName]: url }));
+      }
+    } catch (err) {
+      toast.error('Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [fieldName]: false }));
+    }
+  };
+
+  const removeSingleFile = (fieldName) => {
+    setProfileForm(prev => ({ ...prev, [fieldName]: '' }));
   };
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setProfileError(null);
-    setProfileSuccess(null);
+    if (!studentProfile?._id) return;
     try {
       setSaving(true);
-      const result = await updateProfile(profileForm);
-      if (result) {
-        setProfileSuccess('Profile updated successfully');
-        setTimeout(() => setProfileSuccess(null), 3000);
+      const submitData = {
+        ...profileForm,
+        selectedCourses,
+      };
+      const res = await studentPortalService.updateProfile(studentProfile._id, submitData);
+      if (res?.data) {
+        setStudentProfile(res.data);
       }
+      toast.success('Profile updated successfully');
     } catch (err) {
-      setProfileError(err.message || 'Failed to update profile');
+      toast.error(err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -95,26 +187,24 @@ export default function StudentDashboardPage() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    setPasswordError(null);
-    setPasswordSuccess(null);
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
     if (passwordForm.newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      toast.error('Password must be at least 8 characters');
       return;
     }
 
     setPasswordSubmitting(true);
     try {
       const result = await changePassword(passwordForm.currentPassword, passwordForm.newPassword);
-      setPasswordSuccess(result?.message || 'Password changed successfully. Please log in again.');
+      toast.success(result?.message || 'Password changed successfully. Please log in again.');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setRedirectCountdown(3);
     } catch (err) {
-      setPasswordError(err.message || 'Failed to change password');
+      toast.error(err.message || 'Failed to change password');
     } finally {
       setPasswordSubmitting(false);
     }
@@ -127,11 +217,9 @@ export default function StudentDashboardPage() {
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    setEmailError(null);
-    setEmailSuccess(null);
 
     if (!emailForm.newEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setEmailError('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -139,12 +227,12 @@ export default function StudentDashboardPage() {
     try {
       const result = await changeEmail(emailForm.newEmail, emailForm.password);
       if (result) {
-        setEmailSuccess(`Email changed to ${emailForm.newEmail}. Please log in again.`);
+        toast.success(`Email changed to ${emailForm.newEmail}. Please log in again.`);
         setEmailForm({ newEmail: '', password: '' });
         setRedirectCountdown(3);
       }
     } catch (err) {
-      setEmailError(err.message || 'Failed to change email');
+      toast.error(err.message || 'Failed to change email');
     } finally {
       setEmailSubmitting(false);
     }
@@ -178,18 +266,14 @@ export default function StudentDashboardPage() {
       case 'fees':
       case 'messages':
         return (
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-            <h1 className="font-heading text-3xl font-bold text-text-dark mb-6">
-              {activeSection === 'live-classes' ? 'Live Classes' : activeSection === 'fees' ? 'Fee Status' : 'Messages'}
-            </h1>
-            <div className="text-center py-12">
-              <p className="text-text-light">Coming soon...</p>
-            </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center">
+            <h2 className="font-heading text-2xl font-bold text-text-dark mb-4 capitalize">{activeSection.replace('-', ' ')}</h2>
+            <p className="text-text-light max-w-md mx-auto">This section is currently under development. Please check back later.</p>
           </div>
         );
 
       case 'notifications': {
-        const notifications = studentDashboardData.notifications || [];
+        const notifications = studentDashboardData.notifications;
         return (
           <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6">
@@ -258,46 +342,211 @@ export default function StudentDashboardPage() {
               {/* Edit Profile Form */}
               <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6 sm:p-8">
                 <h2 className="font-heading text-2xl font-bold text-text-dark mb-6">Edit Profile</h2>
-                {profileSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{profileSuccess}</div>}
-                {profileError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{profileError}</div>}
-                <form onSubmit={handleProfileSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Full Name</label>
-                      <input type="text" name="name" value={profileForm.name} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+                <form onSubmit={handleProfileSubmit} className="space-y-6">
+                  <div className="space-y-6">
+                    {/* ── STEP 1: PERSONAL INFORMATION ── */}
+                    <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                      <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                        <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">1</span>
+                        Personal Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Full Name *</label>
+                          <input type="text" name="studentName" value={profileForm.studentName} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Father Name *</label>
+                          <input type="text" name="fatherName" value={profileForm.fatherName} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Date of Birth *</label>
+                          <input type="date" name="dateOfBirth" value={profileForm.dateOfBirth} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Gender *</label>
+                          <select name="gender" value={profileForm.gender} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none text-sm">
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Nationality *</label>
+                          <input type="text" name="nationality" value={profileForm.nationality} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Email</label>
-                      <input type="email" name="email" value={profileForm.email} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none bg-gray-50" readOnly />
+
+                    {/* ── STEP 2: CONTACT & ADDRESS ── */}
+                    <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                      <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                        <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">2</span>
+                        Contact & Address
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Phone Number *</label>
+                          <input type="tel" name="phone" value={profileForm.phone} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">WhatsApp Number *</label>
+                          <input type="tel" name="whatsapp" value={profileForm.whatsapp} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Email (Read Only)</label>
+                          <input type="email" name="email" value={profileForm.email} readOnly
+                            className="w-full px-4 py-2 border border-border-light rounded-xl bg-gray-50 outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Country *</label>
+                          <input type="text" name="country" value={profileForm.country} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">City *</label>
+                          <input type="text" name="city" value={profileForm.city} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Postal Code</label>
+                          <input type="text" name="postalCode" value={profileForm.postalCode} onChange={handleProfileChange}
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-text-dark mb-1">Address *</label>
+                          <textarea name="address" value={profileForm.address} onChange={handleProfileChange} rows={2} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact Name *</label>
+                          <input type="text" name="emergencyContact" value={profileForm.emergencyContact} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Emergency Contact Phone *</label>
+                          <input type="tel" name="emergencyPhone" value={profileForm.emergencyPhone} onChange={handleProfileChange} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Phone</label>
-                      <input type="tel" name="phone" value={profileForm.phone} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+
+                    {/* ── STEP 3: EDUCATION & COURSES ── */}
+                    <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                      <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                        <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">3</span>
+                        Education & Courses
+                      </h3>
+                      
+                      {/* Preferred Courses Selection */}
+                      <div>
+                        <label className="block text-sm font-semibold text-text-dark mb-2">
+                          Preferred Courses *
+                          <span className="text-xs text-text-light font-normal ml-2">(Choose courses you wish to study)</span>
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-border-light rounded-xl bg-white">
+                          {availableCourses.map(course => {
+                            const isSelected = selectedCourses.includes(course._id);
+                            return (
+                              <button
+                                key={course._id}
+                                type="button"
+                                onClick={() => toggleCourse(course._id)}
+                                className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
+                                  isSelected ? 'border-primary bg-primary/5' : 'border-border-light hover:border-primary/50'
+                                }`}
+                              >
+                                <div className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
+                                  isSelected ? 'bg-primary text-white' : 'border border-border-light'
+                                }`}>
+                                  {isSelected && <FiCheck className="w-3 h-3" />}
+                                </div>
+                                <span className="text-xs font-semibold text-text-dark truncate">{course.title}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Previous Institute / School (Optional)</label>
+                          <textarea name="previousEducation" value={profileForm.previousEducation} onChange={handleProfileChange} rows={2}
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Current Qualification (Optional)</label>
+                          <textarea name="currentQualification" value={profileForm.currentQualification} onChange={handleProfileChange} rows={2}
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Gender</label>
-                      <select name="gender" value={profileForm.gender} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none">
-                        <option value="">Select</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                      </select>
+
+                    {/* ── STEP 4: DOCUMENTS ── */}
+                    <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                      <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                        <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">4</span>
+                        Documents
+                      </h3>
+                      <div>
+                        <label className="block text-sm font-medium text-text-dark mb-2">Student Photo</label>
+                        {profileForm.studentPhoto && (
+                          <div className="mb-2 relative inline-block">
+                            <img src={profileForm.studentPhoto} alt="Preview" className="w-24 h-24 object-cover rounded-lg" />
+                            <button type="button" onClick={() => removeSingleFile('studentPhoto')}
+                              className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow">
+                              <FiTrash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                        <label className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-border-light hover:border-primary hover:bg-primary/5 cursor-pointer transition-all">
+                          {uploading.studentPhoto ? (
+                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <FiUpload className="w-4 h-4 text-text-light" />
+                          )}
+                          <span className="text-xs text-text-light">{profileForm.studentPhoto ? 'Replace' : 'Upload'} Photo</span>
+                          <input type="file" accept="image/*" onChange={(e) => handleFileUpload('studentPhoto', e.target.files[0])} className="hidden" disabled={uploading.studentPhoto} />
+                        </label>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">Country</label>
-                      <input type="text" name="country" value={profileForm.country} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-text-dark mb-1">City</label>
-                      <input type="text" name="city" value={profileForm.city} onChange={handleProfileChange} className="w-full px-4 py-2.5 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none" />
+
+                    {/* ── STEP 5: BIO & SKILLS ── */}
+                    <div className="bg-bg-light/40 p-4 rounded-xl border border-border-light space-y-4">
+                      <h3 className="font-heading font-semibold text-text-dark text-sm flex items-center gap-2 border-b border-border-light pb-2">
+                        <span className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs">5</span>
+                        Bio & Skills
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-text-dark mb-1">Bio *</label>
+                          <textarea name="bio" value={profileForm.bio} onChange={handleProfileChange} rows={3} required
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary outline-none resize-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Languages *</label>
+                          <input type="text" value={profileForm.languages.join(', ')} onChange={(e) => handleArrayChange('languages', e.target.value)} required placeholder="e.g. Urdu, English, Arabic"
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-text-dark mb-1">Skills *</label>
+                          <input type="text" value={profileForm.skills.join(', ')} onChange={(e) => handleArrayChange('skills', e.target.value)} required placeholder="e.g. Quran recitation, Tajweed"
+                            className="w-full px-4 py-2 border border-border-light rounded-xl focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm" />
+                        </div>
+                      </div>
                     </div>
                   </div>
+
                   <div className="flex items-center gap-4 pt-4 border-t border-border-light">
                     <button type="submit" disabled={saving} className="px-6 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark disabled:opacity-50 transition-colors">
                       {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button type="button" onClick={() => setProfileForm({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '', country: user?.country || '', city: user?.city || '', gender: user?.gender || '' })} className="px-6 py-2.5 border border-border-light text-text-light rounded-xl hover:bg-bg-light transition-colors">
-                      Reset
                     </button>
                   </div>
                 </form>
@@ -326,8 +575,6 @@ export default function StudentDashboardPage() {
                 {/* Change Password */}
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Change Password</h3>
-                  {passwordSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{passwordSuccess}</div>}
-                  {passwordError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{passwordError}</div>}
                   <form onSubmit={handlePasswordSubmit} className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-text-dark mb-1">Current Password</label>
@@ -351,8 +598,6 @@ export default function StudentDashboardPage() {
                 <div className="bg-white rounded-2xl shadow-lg p-6">
                   <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Change Email</h3>
                   <p className="text-sm text-text-light mb-4">Current email: <strong>{user?.email}</strong></p>
-                  {emailSuccess && <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">{emailSuccess}</div>}
-                  {emailError && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{emailError}</div>}
                   <form onSubmit={handleEmailSubmit} className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-text-dark mb-1">New Email Address</label>

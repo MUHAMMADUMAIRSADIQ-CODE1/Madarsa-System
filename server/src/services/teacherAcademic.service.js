@@ -160,7 +160,8 @@ class TeacherAcademicService {
   // =================== MESSAGES ===================
 
   async getConversations(teacherId, query = {}) {
-    const teacher = await Teacher.findById(teacherId).lean();
+    let teacher = await Teacher.findById(teacherId).lean();
+    if (!teacher) teacher = await Teacher.findOne({ user: teacherId }).lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const filter = { participants: { $elemMatch: { user: teacher.user } }, isActive: true };
@@ -199,7 +200,8 @@ class TeacherAcademicService {
   }
 
   async getMessages(conversationId, teacherId, query = {}) {
-    const teacher = await Teacher.findById(teacherId).lean();
+    let teacher = await Teacher.findById(teacherId).lean();
+    if (!teacher) teacher = await Teacher.findOne({ user: teacherId }).lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const conversation = await TeacherConversation.findOne({
@@ -288,7 +290,8 @@ class TeacherAcademicService {
   }
 
   async deleteConversation(conversationId, teacherId) {
-    const teacher = await Teacher.findById(teacherId).lean();
+    let teacher = await Teacher.findById(teacherId).lean();
+    if (!teacher) teacher = await Teacher.findOne({ user: teacherId }).lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const conversation = await TeacherConversation.findOne({
@@ -349,7 +352,8 @@ class TeacherAcademicService {
   // =================== DASHBOARD ANALYTICS ===================
 
   async getDashboardAnalytics(teacherId) {
-    const teacher = await Teacher.findById(teacherId).select('assignedCourses user assignedStudents').lean();
+    let teacher = await Teacher.findById(teacherId).select('assignedCourses user assignedStudents').lean();
+    if (!teacher) teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses user assignedStudents').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const courseIds = teacher.assignedCourses || [];

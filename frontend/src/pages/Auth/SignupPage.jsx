@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FiCheckCircle } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -20,7 +20,6 @@ export default function SignupPage() {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
   const validateForm = () => {
     const newErrors = {};
@@ -94,20 +93,14 @@ export default function SignupPage() {
 
       await signup({ ...userData, role });
 
-      setSuccessMessage(
-        <span className="flex items-center gap-2">
-          <FiCheckCircle className="text-green-500" size={20} />
-          Account created successfully! Your account is pending admin approval.
-          You will be notified via email once approved.
-        </span>
-      );
+      toast.success('Account created successfully! Your account is pending admin approval. You will be notified via email once approved.');
 
       setTimeout(() => {
         navigate('/');
       }, 3000);
 
     } catch (err) {
-      setErrors({ submit: err.message });
+      toast.error(err.message || 'Failed to create account. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -148,18 +141,6 @@ export default function SignupPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 sm:p-10">
-          {successMessage && (
-            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 animate-fade-in">
-              {successMessage}
-            </div>
-          )}
-
-          {errors.submit && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 animate-fade-in">
-              {errors.submit}
-            </div>
-          )}
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Full Name */}
             <div className="sm:col-span-2 animate-fade-in-up">

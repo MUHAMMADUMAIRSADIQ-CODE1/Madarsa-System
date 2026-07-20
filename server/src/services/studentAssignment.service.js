@@ -546,7 +546,7 @@ class StudentAssignmentService {
     let teacher = await Teacher.findById(teacherId)
       .populate({
         path: 'assignedStudents',
-        populate: { path: 'user', select: 'fullName email profileImage status' },
+        populate: { path: 'user' },
       });
 
     // Fallback: look up by user field if direct _id didn't match (User._id vs Teacher._id)
@@ -554,7 +554,7 @@ class StudentAssignmentService {
       teacher = await Teacher.findOne({ user: teacherId })
         .populate({
           path: 'assignedStudents',
-          populate: { path: 'user', select: 'fullName email profileImage status' },
+          populate: { path: 'user' },
         });
     }
 
@@ -563,6 +563,17 @@ class StudentAssignmentService {
     }
 
     let students = teacher.assignedStudents || [];
+
+    // DEBUG: Log first student's user fields to verify populate
+    if (students.length > 0) {
+      const firstStudent = students[0];
+      const userFields = firstStudent.user ? Object.keys(firstStudent.user.toObject ? firstStudent.user.toObject() : firstStudent.user) : 'NO USER OBJECT';
+      console.log('[DEBUG getAssignedStudents] First student user keys:', userFields);
+      console.log('[DEBUG getAssignedStudents] First student user.status:', firstStudent.user?.status);
+      console.log('[DEBUG getAssignedStudents] First student user.profileVerificationStatus:', firstStudent.user?.profileVerificationStatus);
+      console.log('[DEBUG getAssignedStudents] First student user.completionPercentage:', firstStudent.user?.completionPercentage);
+      console.log('[DEBUG getAssignedStudents] First student user.profileComplete:', firstStudent.user?.profileComplete);
+    }
 
     // Filter by search query
     if (query.search) {

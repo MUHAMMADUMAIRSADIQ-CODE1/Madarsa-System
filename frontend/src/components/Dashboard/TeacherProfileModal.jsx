@@ -75,7 +75,6 @@ export default function TeacherProfileModal({ teacher, onClose }) {
   const subjects = teacher.subjects || [];
   const teachingLanguages = teacher.teachingLanguages || teacher.languages || [];
   const certificates = teacher.certificates || [];
-  const awards = teacher.awards || [];
   const isVerified = teacher.user?.profileVerificationStatus === 'verified' || teacher.profileVerified;
   const name = teacher.fullName || 'Teacher';
 
@@ -89,7 +88,7 @@ export default function TeacherProfileModal({ teacher, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white z-10 border-b border-border-light px-6 sm:px-8 py-4 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky -top-6 bg-white z-100 border-b border-border-light px-6 sm:px-8 py-4 flex items-center justify-between rounded-t-2xl">
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -185,10 +184,10 @@ export default function TeacherProfileModal({ teacher, onClose }) {
           </div>
 
           {/* Biography */}
-          {(teacher.biography || teacher.shortBio) && (
-            <SectionCard title="Biography" icon={FiHeart} cols={1}>
+          {teacher.shortBio && (
+            <SectionCard title="Short Biography" icon={FiHeart} cols={1}>
               <p className="text-sm text-text-body leading-relaxed">
-                {teacher.biography || teacher.shortBio}
+                {teacher.shortBio}
               </p>
             </SectionCard>
           )}
@@ -220,41 +219,26 @@ export default function TeacherProfileModal({ teacher, onClose }) {
           </SectionCard>
 
           {/* Certificates & Awards */}
-          {(certificates.length > 0 || awards.length > 0) && (
-            <SectionCard title="Certificates & Awards" icon={FiAward} cols={1}>
-              {certificates.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-text-light">Certificates</p>
-                  {certificates.map((cert, i) => {
-                    const url = typeof cert === 'string' ? cert : cert?.url || '';
-                    const name = typeof cert === 'string' ? `Certificate ${i + 1}` : cert?.name || `Certificate ${i + 1}`;
-                    return (
-                      <div key={i} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
-                        <span className="text-sm font-semibold text-text-dark">{name}</span>
-                        {url && (
-                          <a href={url} target="_blank" rel="noopener noreferrer"
-                            className="text-xs text-primary font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
-                            View
-                          </a>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {awards.length > 0 && (
-                <div className="space-y-2 mt-4">
-                  <p className="text-xs font-bold uppercase tracking-wider text-text-light">Awards</p>
-                  <div className="flex flex-wrap gap-2">
-                    {awards.map((award, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-50 text-yellow-800 rounded-lg text-xs font-semibold border border-yellow-200">
-                        <FiStar size={12} />
-                        {typeof award === 'string' ? award : award?.title || `Award ${i + 1}`}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {certificates.length > 0 && (
+            <SectionCard title="Certificates" icon={FiAward} cols={1}>
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-text-light">Certificates</p>
+                {certificates.map((cert, i) => {
+                  const url = typeof cert === 'string' ? cert : cert?.url || '';
+                  const name = typeof cert === 'string' ? `Certificate ${i + 1}` : cert?.name || `Certificate ${i + 1}`;
+                  return (
+                    <div key={i} className="flex items-center justify-between p-3 bg-bg-light rounded-xl">
+                      <span className="text-sm font-semibold text-text-dark">{name}</span>
+                      {url && (
+                        <a href={url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs text-primary font-bold hover:underline px-3 py-1.5 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+                          View
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </SectionCard>
           )}
 
@@ -298,15 +282,8 @@ export default function TeacherProfileModal({ teacher, onClose }) {
           </SectionCard>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white border-t border-border-light px-6 sm:px-8 py-4 rounded-b-2xl">
-          <button
-            onClick={onClose}
-            className="w-full px-6 py-3 border-2 border-border-light text-text-body rounded-xl font-semibold hover:bg-bg-light transition-colors"
-          >
-            Close
-          </button>
-        </div>
+        
+        
       </div>
     </div>
   );

@@ -31,14 +31,10 @@ const STEPS = [
 const INITIAL_FORM = {
   studentName: '',
   fatherName: '',
-  motherName: '',
-  guardianName: '',
   guardianRelation: '',
   dateOfBirth: '',
   gender: 'male',
   nationality: '',
-  religion: '',
-  bloodGroup: '',
   phone: '',
   whatsapp: '',
   email: '',
@@ -54,11 +50,6 @@ const INITIAL_FORM = {
   languages: [],
   skills: [],
   studentPhoto: '',
-  cnicFront: '',
-  cnicBack: '',
-  passport: '',
-  educationalCertificates: [],
-  additionalDocuments: [],
 };
 
 export default function StudentProfileComplete() {
@@ -71,11 +62,11 @@ export default function StudentProfileComplete() {
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState({});
-const [direction, setDirection] = useState('next');
+  const [direction, setDirection] = useState('next');
 
-const [availableCourses, setAvailableCourses] = useState([]);
-const [selectedCourses, setSelectedCourses] = useState([]);
-const [coursesLoading, setCoursesLoading] = useState(false);
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
 
   useEffect(() => {
     if (user?.profileComplete && user?.profileVerified) {
@@ -92,7 +83,7 @@ const [coursesLoading, setCoursesLoading] = useState(false);
         if (res?.data?.data) {
           setAvailableCourses(res.data.data);
         }
-      } catch (_) {}
+      } catch (_) { }
       setCoursesLoading(false);
     };
     loadCourses();
@@ -113,14 +104,10 @@ const [coursesLoading, setCoursesLoading] = useState(false);
             ...prev,
             studentName: existing.studentName || user?.fullName || '',
             fatherName: existing.fatherName || '',
-            motherName: existing.motherName || '',
-            guardianName: existing.guardianName || '',
             guardianRelation: existing.guardianRelation || '',
             dateOfBirth: existing.dateOfBirth ? existing.dateOfBirth.split('T')[0] : '',
             gender: existing.gender || 'male',
             nationality: existing.nationality || '',
-            religion: existing.religion || '',
-            bloodGroup: existing.bloodGroup || '',
             phone: existing.phone || user?.phone || '',
             whatsapp: existing.whatsapp || '',
             email: existing.email || user?.email || '',
@@ -136,11 +123,6 @@ const [coursesLoading, setCoursesLoading] = useState(false);
             languages: existing.languages || [],
             skills: existing.skills || [],
             studentPhoto: existing.studentPhoto || '',
-            cnicFront: existing.cnicFront || '',
-            cnicBack: existing.cnicBack || '',
-            passport: existing.passport || '',
-            educationalCertificates: existing.educationalCertificates || [],
-            additionalDocuments: existing.additionalDocuments || [],
           }));
         } else {
           setFormData(prev => ({
@@ -247,14 +229,20 @@ const [coursesLoading, setCoursesLoading] = useState(false);
       if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
       if (!formData.gender) newErrors.gender = 'Gender is required';
       if (!formData.nationality.trim()) newErrors.nationality = 'Nationality is required';
-      if (!formData.religion.trim()) newErrors.religion = 'Religion is required';
     } else if (step === 1) {
       if (!formData.phone.match(/^[\d\s\-+()]{7,30}$/)) newErrors.phone = 'Valid phone number is required';
+      if (!formData.whatsapp.match(/^[\d\s\-+()]{7,30}$/)) newErrors.whatsapp = 'Valid WhatsApp number is required';
       if (!formData.city.trim()) newErrors.city = 'City is required';
       if (!formData.country.trim()) newErrors.country = 'Country is required';
       if (!formData.address.trim()) newErrors.address = 'Address is required';
       if (!formData.emergencyContact.trim()) newErrors.emergencyContact = 'Emergency contact name is required';
       if (!formData.emergencyPhone.match(/^[\d\s\-+()]{7,30}$/)) newErrors.emergencyPhone = 'Valid emergency phone is required';
+    } else if (step === 2) {
+      if (selectedCourses.length === 0) newErrors.courses = 'Please select at least one course';
+    } else if (step === 4) {
+      if (!formData.bio.trim()) newErrors.bio = 'Bio is required';
+      if (formData.languages.length === 0) newErrors.languages = 'At least one language is required';
+      if (formData.skills.length === 0) newErrors.skills = 'At least one skill is required';
     }
 
     return newErrors;
@@ -280,6 +268,7 @@ const [coursesLoading, setCoursesLoading] = useState(false);
 
 
   const handleSubmit = async () => {
+    // Validate last step before submit
     const stepErrors = validateStep(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
@@ -294,7 +283,7 @@ const [coursesLoading, setCoursesLoading] = useState(false);
         if (profileRes?.data?._id) {
           studentId = profileRes.data._id;
         }
-      } catch (err) {}
+      } catch (err) { }
 
       // Add selectedCourses to submission data
       const submitData = {
@@ -357,13 +346,12 @@ const [coursesLoading, setCoursesLoading] = useState(false);
                     onClick={() => idx < currentStep ? setCurrentStep(idx) : null}
                     aria-current={isActive ? 'step' : undefined}
                     disabled={idx > currentStep}
-                    className={`relative z-10 flex items-center justify-center rounded-full transition-all duration-500 ease-out ${
-                      isCompleted
+                    className={`relative z-10 flex items-center justify-center rounded-full transition-all duration-500 ease-out ${isCompleted
                         ? 'w-8 h-8 sm:w-10 sm:h-10 bg-primary text-white shadow-md'
                         : isActive
                           ? 'w-[34px] h-[34px] sm:w-11 sm:h-11 bg-primary text-white shadow-lg shadow-primary/30 animate-pulse-ring'
                           : 'w-8 h-8 sm:w-10 sm:h-10 bg-white text-text-light border-2 border-border-light'
-                    } ${idx > currentStep ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      } ${idx > currentStep ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     title={step.label}
                   >
                     {isCompleted ? (
@@ -374,13 +362,12 @@ const [coursesLoading, setCoursesLoading] = useState(false);
                   </button>
 
                   {/* Label — shown on sm+ only */}
-                  <span className={`hidden sm:block text-center leading-tight transition-all duration-300 ${
-                    isActive
+                  <span className={`hidden sm:block text-center leading-tight transition-all duration-300 ${isActive
                       ? 'text-primary font-bold text-[10px] md:text-xs lg:text-sm'
                       : isCompleted
                         ? 'text-text-dark font-semibold text-[10px] md:text-xs lg:text-sm'
                         : 'text-text-light font-medium text-[10px] md:text-xs lg:text-sm'
-                  }`}>
+                    }`}>
                     {step.label}
                   </span>
                 </div>
@@ -507,22 +494,6 @@ const [coursesLoading, setCoursesLoading] = useState(false);
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Mother Name</label>
-        <input type="text" name="motherName" value={formData.motherName} onChange={handleChange} placeholder="Mother's full name"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Guardian Name</label>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input type="text" name="guardianRelation" value={formData.guardianRelation} onChange={handleChange} placeholder="Relation (e.g. Father)"
-            className="w-full sm:w-2/5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-          <input type="text" name="guardianName" value={formData.guardianName} onChange={handleChange} placeholder="Guardian name"
-            className="w-full sm:flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
-        </div>
-      </div>
-
-      <div>
         <label className="block text-sm font-semibold text-text-dark mb-2">Date of Birth *</label>
         <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange}
           className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.dateOfBirth ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
@@ -545,29 +516,6 @@ const [coursesLoading, setCoursesLoading] = useState(false);
         <input type="text" name="nationality" value={formData.nationality} onChange={handleChange} placeholder="e.g. Pakistani"
           className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.nationality ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
         {errors.nationality && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.nationality}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Religion *</label>
-        <input type="text" name="religion" value={formData.religion} onChange={handleChange} placeholder="e.g. Islam"
-          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.religion ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
-        {errors.religion && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.religion}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">Blood Group</label>
-        <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange}
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base">
-          <option value="">Select Blood Group</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
-        </select>
       </div>
     </div>
   );
@@ -595,9 +543,10 @@ const [coursesLoading, setCoursesLoading] = useState(false);
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp Number</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">WhatsApp Number *</label>
         <input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} placeholder="+1-555-123-4567"
-          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all text-sm sm:text-base" />
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 outline-none transition-all text-sm sm:text-base ${errors.whatsapp ? 'border-red-400' : 'border-border-light focus:border-primary'} focus:ring-2 focus:ring-primary/10`} />
+        {errors.whatsapp && <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.whatsapp}</p>}
       </div>
 
       <div>
@@ -661,19 +610,18 @@ const [coursesLoading, setCoursesLoading] = useState(false);
   const renderEducation = () => (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <div className="sm:col-span-2">
-<div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
-  <FiBook size={24} className="sm:w-8 sm:h-8 flex-shrink-0 text-primary" />
-  <div className="min-w-0">
-    <h3 className="font-semibold text-text-dark text-sm sm:text-base">
-      Education & Courses
-    </h3>
-    <p className="text-xs sm:text-sm text-text-light">
-      Tell us about your education and select courses
-    </p>
-  </div>
-</div>
+        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-primary-light rounded-xl">
+          <FiBook size={24} className="sm:w-8 sm:h-8 flex-shrink-0 text-primary" />
+          <div className="min-w-0">
+            <h3 className="font-semibold text-text-dark text-sm sm:text-base">
+              Education & Courses
+            </h3>
+            <p className="text-xs sm:text-sm text-text-light">
+              Tell us about your education and select courses
+            </p>
           </div>
         </div>
+
       </div>
 
       {/* Dynamic Course Selection */}
@@ -682,6 +630,7 @@ const [coursesLoading, setCoursesLoading] = useState(false);
           Select Courses *
           <span className="text-xs text-text-light ml-2 font-normal">(Choose the courses you want to study)</span>
         </label>
+        {errors.courses && <p className="text-red-600 text-xs sm:text-sm mb-2">{errors.courses}</p>}
         {coursesLoading ? (
           <div className="flex items-center gap-3 p-4 bg-bg-light rounded-xl">
             <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -700,15 +649,13 @@ const [coursesLoading, setCoursesLoading] = useState(false);
                   key={course._id}
                   type="button"
                   onClick={() => toggleCourse(course._id)}
-                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
-                    isSelected
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${isSelected
                       ? 'border-primary bg-primary/5 shadow-sm'
                       : 'border-border-light hover:border-primary/50 hover:bg-primary/[0.02]'
-                  }`}
+                    }`}
                 >
-                  <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all flex-shrink-0 ${
-                    isSelected ? 'bg-primary text-white' : 'border-2 border-border-light'
-                  }`}>
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all flex-shrink-0 ${isSelected ? 'bg-primary text-white' : 'border-2 border-border-light'
+                    }`}>
                     {isSelected && <FiCheck className="w-3.5 h-3.5" />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -734,13 +681,13 @@ const [coursesLoading, setCoursesLoading] = useState(false);
       </div>
 
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Previous Institute / School</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Previous Institute / School (Optional)</label>
         <textarea name="previousEducation" value={formData.previousEducation} onChange={handleChange} rows={3} placeholder="Name of your previous school, college or institute"
           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
       </div>
 
       <div className="sm:col-span-2">
-        <label className="block text-sm font-semibold text-text-dark mb-2">Current Qualification</label>
+        <label className="block text-sm font-semibold text-text-dark mb-2">Current Qualification (Optional)</label>
         <textarea name="currentQualification" value={formData.currentQualification} onChange={handleChange} rows={3} placeholder="Your current educational qualification"
           className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all resize-none text-sm sm:text-base" />
       </div>
@@ -754,25 +701,15 @@ const [coursesLoading, setCoursesLoading] = useState(false);
           <FiFile size={24} className="sm:w-8 sm:h-8 flex-shrink-0" />
           <div className="min-w-0">
             <h3 className="font-semibold text-text-dark text-sm sm:text-base">Documents</h3>
-            <p className="text-xs sm:text-sm text-text-light">Upload your required documents</p>
+            <p className="text-xs sm:text-sm text-text-light">Upload your profile photo</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {renderFileUpload('studentPhoto', 'Profile Photo', 'image/*')}
-        {renderFileUpload('cnicFront', 'CNIC Front', 'image/*,.pdf')}
-        {renderFileUpload('cnicBack', 'CNIC Back', 'image/*,.pdf')}
-        {renderFileUpload('passport', 'Passport', 'image/*,.pdf')}
       </div>
 
-      <div>
-        {renderFileUpload('educationalCertificates', 'Certificates', 'image/*,.pdf', true)}
-      </div>
-
-      <div>
-        {renderFileUpload('additionalDocuments', 'Additional Documents', 'image/*,.pdf', true)}
-      </div>
     </div>
   );
 
