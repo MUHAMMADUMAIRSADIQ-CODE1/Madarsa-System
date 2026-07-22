@@ -1,6 +1,7 @@
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
 import TeacherCard from '../common/TeacherCard';
+import ScrollReveal from '../common/ScrollReveal';
 
 export default function Teachers() {
   const { teachers } = homeData;
@@ -16,7 +17,9 @@ export default function Teachers() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6">
           {teachers.map((teacher, i) => (
-            <TeacherCard key={teacher.id} teacher={teacher} index={i} />
+            <ScrollReveal key={teacher.id} delay={i * 120}>
+              <TeacherCard teacher={teacher} />
+            </ScrollReveal>
           ))}
         </div>
 

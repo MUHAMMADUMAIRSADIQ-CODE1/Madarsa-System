@@ -1,23 +1,41 @@
+import { useState, useCallback } from 'react';
+import { getGalleryPlaceholderSVG } from './GalleryPlaceholderSVGs';
+import ScrollReveal from '../common/ScrollReveal';
+
 export default function FeaturedEvent({ featured }) {
+  const [imgError, setImgError] = useState(false);
+
+  const handleError = useCallback(() => setImgError(true), []);
+
   return (
     <section className="py-12 lg:py-16 bg-gradient-to-br from-primary-light via-white to-accent-soft">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Image */}
-          <div className="relative order-2 lg:order-1 animate-fade-in-up">
+          <ScrollReveal>
+            <div className="relative order-2 lg:order-1">
             <div className="absolute -inset-2 bg-gradient-to-br from-gold/20 to-primary/20 rounded-3xl blur-2xl opacity-50" />
             <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
-                src={featured.image}
-                alt={featured.title}
-                className="w-full h-[400px] object-cover"
-              />
+              {imgError || !featured.image ? (
+                <div className="w-full h-[400px]">
+                  {getGalleryPlaceholderSVG('convocation')}
+                </div>
+              ) : (
+                <img
+                  src={featured.image}
+                  alt={featured.title}
+                  className="w-full h-[400px] object-cover"
+                  onError={handleError}
+                />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
-          </div>
+            </div>
+          </ScrollReveal>
 
           {/* Content */}
-          <div className="order-1 lg:order-2 animate-fade-in-up stagger-2">
+          <ScrollReveal delay={200}>
+            <div className="order-1 lg:order-2">
             <div className="inline-block px-4 py-2 bg-gold/10 border border-gold/30 rounded-full mb-6">
               <span className="text-gold font-semibold text-sm uppercase tracking-wider">Featured Event</span>
             </div>
@@ -77,9 +95,10 @@ export default function FeaturedEvent({ featured }) {
                 Learn More
               </a>
             </div>
-          </div>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
   );
-}
+}

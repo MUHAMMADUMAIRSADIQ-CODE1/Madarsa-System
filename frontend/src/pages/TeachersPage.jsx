@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import PageBanner from '../components/common/PageBanner';
 import SectionTitle from '../components/common/SectionTitle';
 import Teachers from '../components/Teachers/Teachers';
@@ -6,6 +6,7 @@ import TeacherCard from '../components/common/TeacherCard';
 import Testimonials from '../components/Testimonials/Testimonials';
 import CTA from '../components/CTA/CTA';
 import homeData from '../data/homeData';
+import { getGalleryPlaceholderSVG } from '../components/Gallery/GalleryPlaceholderSVGs';
 
 function SearchBar({ value, onChange }) {
   return (
@@ -51,6 +52,8 @@ function FilterButtons({ categories, active, onChange }) {
 
 export default function TeachersPage() {
   const { teachers } = homeData;
+  const [featuredImgError, setFeaturedImgError] = useState(false);
+  const handleFeaturedError = useCallback(() => setFeaturedImgError(true), []);
   const categories = [
     { id: 'all', label: 'All Teachers' },
     { id: 'male', label: 'Male Teachers' },
@@ -117,7 +120,13 @@ export default function TeachersPage() {
           <SectionTitle title="Featured Scholar" description="A showcase of our most distinguished scholar." />
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div className="w-full rounded-2xl overflow-hidden shadow-lg">
-              <img src="/assets/featured-scholar.jpg" alt="Featured Scholar" className="w-full h-96 object-cover" loading="lazy" decoding="async" />
+              {featuredImgError ? (
+                <div className="w-full h-96">
+                  {getGalleryPlaceholderSVG('teachers')}
+                </div>
+              ) : (
+                <img src="/assets/featured-scholar.jpg" alt="Featured Scholar" className="w-full h-96 object-cover" loading="lazy" decoding="async" onError={handleFeaturedError} />
+              )}
             </div>
             <div>
               <h3 className="font-heading text-3xl lg:text-4xl font-bold text-text-dark">Sheikh Dr. Abdullah</h3>

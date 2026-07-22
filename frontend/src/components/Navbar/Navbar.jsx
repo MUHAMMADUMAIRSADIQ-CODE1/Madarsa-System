@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useScrollPosition } from '../../hooks/useScrollPosition';
 import { useAuth } from '../../context/AuthContext';
@@ -6,15 +6,18 @@ import MobileMenu from './MobileMenu';
 import settingsService from '../../services/settingsService';
 import logo from '../../assets/logo.png';
 
-const navLinks = [
+const visibleLinks = [
   { label: 'Home', path: '/' },
-  { label: 'About', path: '/about' },
   { label: 'Courses', path: '/courses' },
-  { label: 'Teachers', path: '/teachers' },
   { label: 'Admissions', path: '/admissions' },
-  { label: 'News', path: '/news' },
-  { label: 'Gallery', path: '/gallery' },
   { label: 'Contact', path: '/contact' },
+];
+
+const dropdownLinks = [
+  { label: 'About', path: '/about' },
+  { label: 'Teachers', path: '/teachers' },
+  { label: 'Gallery', path: '/gallery' },
+  { label: 'News', path: '/news' },
 ];
 
 export default function Navbar() {
@@ -22,9 +25,11 @@ export default function Navbar() {
   const location = useLocation();
   const scrolled = useScrollPosition(40);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [settings, setSettings] = useState(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
+  const moreRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +71,41 @@ export default function Navbar() {
 
   const isHome = currentPath === '/';
 
+  // Check if any dropdown item matches the current page
+  const moreActive = dropdownLinks.some(
+    (link) => link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path))
+  );
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [moreOpen]);
+
+  // Close dropdown on Escape
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e) => {
+      if (e.key === 'Escape') {
+        setMoreOpen(false);
+        moreRef.current?.querySelector('button')?.focus();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [moreOpen]);
+
+  // Close dropdown when navigating
+  const handleMoreNav = useCallback(() => {
+    setMoreOpen(false);
+  }, []);
+
   return (
     <>
       <header
@@ -98,7 +138,7 @@ export default function Navbar() {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center" aria-label="Main navigation">
               <ul className="flex items-center gap-1">
-                {navLinks.map((link) => {
+                {visibleLinks.map((link) => {
                   const isActive = link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path));
                   return (
                     <li key={link.label}>
@@ -117,6 +157,72 @@ export default function Navbar() {
                     </li>
                   );
                 })}
+
+                {/* More Dropdown */}
+                <li ref={moreRef} className="relative">
+                  <button
+                    onClick={() => setMoreOpen((prev) => !prev)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setMoreOpen(true);
+                      }
+                    }}
+                    aria-expanded={moreOpen}
+                    aria-haspopup="true"
+                    className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-300 ${
+                      moreActive || moreOpen
+                        ? 'text-primary bg-primary-light'
+                        : scrolled || !isHome
+                          ? 'text-text-body hover:text-primary hover:bg-primary-light'
+                          : 'text-text-dark/85 hover:text-primary hover:bg-primary-light/60'
+                    }`}
+                  >
+                    <span>More</span>
+                    <svg
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown Panel */}
+                  <div
+                    className={`absolute top-full right-0 mt-2 w-52 bg-white rounded-2xl border border-border-light shadow-[0_8px_40px_rgba(11,79,48,0.12)] overflow-hidden transition-all duration-200 origin-top-right ${
+                      moreOpen
+                        ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+                        : 'opacity-0 scale-95 -translate-y-2 pointer-events-none'
+                    }`}
+                    role="menu"
+                    aria-label="More navigation"
+                  >
+                    <div className="py-2">                      {dropdownLinks.map((link) => {
+                        const isActive = link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path));
+                        return (
+                          <Link
+                            key={link.label}
+                            to={link.path}
+                            onClick={handleMoreNav}
+                            role="menuitem"
+                            className={`flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                              isActive
+                                ? 'text-primary bg-primary-light border-l-[3px] border-primary'
+                                : 'text-text-body hover:text-primary hover:bg-primary-light/60 border-l-[3px] border-transparent hover:border-l-primary/50'
+                            }`}
+                          >
+                            {link.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </li>
               </ul>
             </nav>
 

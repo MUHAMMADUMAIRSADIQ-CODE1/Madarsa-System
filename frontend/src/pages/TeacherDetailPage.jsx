@@ -1,5 +1,7 @@
+import { useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { authData } from '../data/authData';
+import { getGalleryPlaceholderSVG } from '../components/Gallery/GalleryPlaceholderSVGs';
 
 // Sample teachers data - expanded from authData
 const teachersDirectory = [
@@ -8,7 +10,7 @@ const teachersDirectory = [
     name: 'Sheikh Muhammad Ali',
     slug: 'sheikh-muhammad-ali',
     email: 'teacher@example.com',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80',
+    image: '',
     bio: 'With over 10 years of experience in Islamic education, Sheikh Muhammad Ali is dedicated to teaching the Quran and Islamic studies with authentic methodologies.',
     qualification: 'MA Islamic Studies',
     specialization: 'Quranic Sciences',
@@ -27,7 +29,7 @@ const teachersDirectory = [
     id: 'teacher-002',
     name: 'Qari Abdul Rahman',
     slug: 'qari-abdul-rahman',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80',
+    image: '',
     bio: 'Certified Qari with expertise in Tajweed and Quranic recitation. Passionate about teaching proper pronunciation and articulation points.',
     qualification: 'Ijazah (Certification)',
     specialization: 'Tajweed & Quranic Recitation',
@@ -43,7 +45,7 @@ const teachersDirectory = [
     id: 'teacher-003',
     name: 'Dr. Syed Hassan',
     slug: 'dr-syed-hassan',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80',
+    image: '',
     bio: 'PhD in Islamic Studies with specialization in Quranic interpretation. Author of several books on Tafseer methodology.',
     qualification: 'PhD Islamic Studies',
     specialization: 'Tafseer & Islamic Jurisprudence',
@@ -59,6 +61,8 @@ const teachersDirectory = [
 
 export default function TeacherDetailPage() {
   const { slug } = useParams();
+  const [imgError, setImgError] = useState(false);
+  const handleError = useCallback(() => setImgError(true), []);
   
   // Find teacher by slug
   const teacher = teachersDirectory.find(t => t.slug === slug);
@@ -104,11 +108,18 @@ export default function TeacherDetailPage() {
               <div className="h-48 bg-gradient-to-r from-primary to-gold" />
               <div className="px-8 pb-8">
                 <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-24 mb-6">
-                  <img
-                    src={teacher.image}
-                    alt={teacher.name}
-                    className="w-32 h-32 rounded-2xl border-4 border-white shadow-lg object-cover"
-                  />
+                  {imgError || !teacher.image ? (
+                    <div className="w-32 h-32 rounded-2xl border-4 border-white shadow-lg overflow-hidden">
+                      {getGalleryPlaceholderSVG('profile', { initial: teacher.name?.charAt(0) || 'T' })}
+                    </div>
+                  ) : (
+                    <img
+                      src={teacher.image}
+                      alt={teacher.name}
+                      className="w-32 h-32 rounded-2xl border-4 border-white shadow-lg object-cover"
+                      onError={handleError}
+                    />
+                  )}
                   <div className="flex-1">
                     <h1 className="font-heading text-3xl font-bold text-text-dark mb-2">
                       {teacher.name}

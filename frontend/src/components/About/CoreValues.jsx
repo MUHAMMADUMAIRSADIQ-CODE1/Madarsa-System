@@ -1,5 +1,6 @@
 import aboutData from '../../data/aboutData';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 const valueIcons = {
   integrity: (
@@ -51,19 +52,17 @@ export default function CoreValues({ values }) {
           {items.map((value, i) => {
             const iconKey = value.icon || Object.keys(valueIcons)[i % Object.keys(valueIcons).length];
             return (
-              <div
-                key={value.id || i}
-                className="group bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className="w-14 h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
-                  {valueIcons[iconKey]}
+              <ScrollReveal key={value.id || i} delay={i * 80}>
+                <div className="group bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5">
+                  <div className="w-14 h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
+                    {valueIcons[iconKey]}
+                  </div>
+                  <h3 className="font-heading text-lg font-bold text-text-dark group-hover:text-primary transition-colors duration-300">
+                    {value.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-text-body/80 leading-relaxed">{value.description}</p>
                 </div>
-                <h3 className="font-heading text-lg font-bold text-text-dark group-hover:text-primary transition-colors duration-300">
-                  {value.title}
-                </h3>
-                <p className="mt-2 text-sm text-text-body/80 leading-relaxed">{value.description}</p>
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>

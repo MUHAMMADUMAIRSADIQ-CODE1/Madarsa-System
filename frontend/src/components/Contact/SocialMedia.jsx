@@ -1,4 +1,5 @@
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 function SocialMediaIcon({ social, index }) {
   const s = social || {};
@@ -28,18 +29,18 @@ function SocialMediaIcon({ social, index }) {
   };
 
   return (
-    <a
-      href={s.url || '#'}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-      title={s.name || ''}
-    >
-      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg">
-        {iconMap[s.icon] || iconMap.facebook}
-      </div>
-    </a>
+    <ScrollReveal delay={index * 50}>
+      <a
+        href={s.url || '#'}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={s.name || ''}
+      >
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg">
+          {iconMap[s.icon] || iconMap.facebook}
+        </div>
+      </a>
+    </ScrollReveal>
   );
 }
 

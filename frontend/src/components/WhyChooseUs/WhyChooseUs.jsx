@@ -1,5 +1,6 @@
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 const iconMap = {
   scholar: (
@@ -48,11 +49,8 @@ export default function WhyChooseUs() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {whyChooseUs.map((item, i) => (
-            <div
-              key={item.id}
-              className="group relative bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
-              style={{ animationDelay: `${i * 100}ms` }}
-            >
+            <ScrollReveal key={item.id} delay={i * 100}>
+              <div className="group relative bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5">
               <div className="w-14 h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
                 {iconMap[item.icon]}
               </div>
@@ -63,6 +61,7 @@ export default function WhyChooseUs() {
                 {item.description}
               </p>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>
