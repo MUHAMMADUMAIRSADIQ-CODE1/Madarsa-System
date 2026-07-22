@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import ScrollReveal from '../../components/common/ScrollReveal';
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -143,7 +144,8 @@ export default function SignupPage() {
         <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl p-8 sm:p-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Full Name */}
-            <div className="sm:col-span-2 animate-fade-in-up">
+            <ScrollReveal>
+              <div className="sm:col-span-2">
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Full Name *
               </label>
@@ -159,10 +161,12 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.fullName && <p className="text-red-600 text-sm mt-1">{errors.fullName}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Email */}
-            <div className="animate-fade-in-up stagger-1">
+            <ScrollReveal delay={100}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Email Address *
               </label>
@@ -178,10 +182,12 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Phone */}
-            <div className="animate-fade-in-up stagger-2">
+            <ScrollReveal delay={200}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Phone Number *
               </label>
@@ -197,10 +203,12 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.phone && <p className="text-red-600 text-sm mt-1">{errors.phone}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Country */}
-            <div className="animate-fade-in-up stagger-3">
+            <ScrollReveal delay={300}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Country *
               </label>
@@ -211,10 +219,12 @@ export default function SignupPage() {
                 onChange={handleChange}
                 className="w-full px-5 py-3.5 rounded-xl border-2 border-border-light focus:border-primary outline-none focus:ring-2 focus:ring-primary/10 transition-all"
               />
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* City */}
-            <div className="animate-fade-in-up stagger-4">
+            <ScrollReveal delay={400}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 City *
               </label>
@@ -230,10 +240,12 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.city && <p className="text-red-600 text-sm mt-1">{errors.city}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Gender */}
-            <div className="animate-fade-in-up stagger-5">
+            <ScrollReveal delay={500}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Gender
               </label>
@@ -247,10 +259,12 @@ export default function SignupPage() {
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Password */}
-            <div className="animate-fade-in-up stagger-6">
+            <ScrollReveal delay={600}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Password *
               </label>
@@ -266,10 +280,12 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.password && <p className="text-red-600 text-sm mt-1">{errors.password}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Confirm Password */}
-            <div className="animate-fade-in-up stagger-7">
+            <ScrollReveal delay={700}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-2.5">
                 Confirm Password *
               </label>
@@ -285,11 +301,13 @@ export default function SignupPage() {
                   } focus:ring-2`}
               />
               {errors.confirmPassword && <p className="text-red-600 text-sm mt-1">{errors.confirmPassword}</p>}
-            </div>
+              </div>
+            </ScrollReveal>
           </div>
 
           {/* Terms */}
-          <div className="mb-8 p-4 bg-accent-soft rounded-xl animate-fade-in-up stagger-8">
+          <ScrollReveal delay={800}>
+            <div className="mb-8 p-4 bg-accent-soft rounded-xl">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -303,7 +321,8 @@ export default function SignupPage() {
               </span>
             </label>
             {errors.agreeTerms && <p className="text-red-600 text-sm mt-2">{errors.agreeTerms}</p>}
-          </div>
+            </div>
+          </ScrollReveal>
 
           {/* Create Button */}
           <button

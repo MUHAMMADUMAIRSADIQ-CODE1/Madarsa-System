@@ -1,23 +1,35 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { getGalleryPlaceholderSVG } from './GalleryPlaceholderSVGs';
+import ScrollReveal from '../common/ScrollReveal';
 
 function GalleryCard({ item, index }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  const handleError = useCallback(() => setImgError(true), []);
 
   return (
-    <div
-      className="group relative overflow-hidden rounded-2xl animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <ScrollReveal delay={index * 50}>
+      <div
+        className="group relative overflow-hidden rounded-2xl"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
       {/* Image Container */}
-      <div className="aspect-[4/3] overflow-hidden bg-accent-soft">
-        <img
-          src={item.image}
-          alt={item.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          loading="lazy"
-        />
+      <div className="aspect-[4/3] overflow-hidden bg-accent-soft relative">
+        {imgError || !item.image ? (
+          <div className="absolute inset-0">
+            {getGalleryPlaceholderSVG(item.categoryId)}
+          </div>
+        ) : (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+            onError={handleError}
+          />
+        )}
       </div>
 
       {/* Overlay */}
@@ -42,6 +54,7 @@ function GalleryCard({ item, index }) {
         </div>
       </div>
 
+      </div>
       {/* View Button - Always visible on mobile, on hover on desktop */}
       <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <button className="bg-gold hover:bg-gold-dark text-white rounded-full p-2.5 transition-all duration-300 shadow-lg hover:shadow-xl">
@@ -50,7 +63,7 @@ function GalleryCard({ item, index }) {
           </svg>
         </button>
       </div>
-    </div>
+    </ScrollReveal>
   );
 }
 
@@ -72,4 +85,4 @@ export default function GalleryGrid({ images }) {
       </div>
     </section>
   );
-}
+}

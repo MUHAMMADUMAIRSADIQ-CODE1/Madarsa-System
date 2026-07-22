@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import courseService from '../services/courseService';
 import {
@@ -6,6 +6,7 @@ import {
   FiCheckCircle, FiCalendar, FiAward, FiBarChart2,
   FiRefreshCw,
 } from 'react-icons/fi';
+import { getGalleryPlaceholderSVG } from '../components/Gallery/GalleryPlaceholderSVGs';
 
 function LoadingSkeleton() {
   return (
@@ -57,6 +58,10 @@ export default function CourseDetailPage() {
   const [courseDetail, setCourseDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [bannerError, setBannerError] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
+  const handleBannerError = useCallback(() => setBannerError(true), []);
+  const handleThumbnailError = useCallback(() => setThumbnailError(true), []);
 
   const fetchCourse = async () => {
     setLoading(true);
@@ -136,21 +141,33 @@ export default function CourseDetailPage() {
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             {/* Banner */}
             <div className="relative h-56 sm:h-72 md:h-96 rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg bg-gradient-to-br from-primary/20 to-primary-dark/20">
-              {course.banner ? (
+              {bannerError ? (
+                <div className="w-full h-full">
+                  {getGalleryPlaceholderSVG('course')}
+                </div>
+              ) : course.banner ? (
                 <img
                   src={course.banner}
                   alt={course.title}
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; }}
+                  onError={handleBannerError}
                 />
+              ) : thumbnailError ? (
+                <div className="w-full h-full">
+                  {getGalleryPlaceholderSVG('course')}
+                </div>
               ) : course.thumbnail ? (
                 <img
                   src={course.thumbnail}
                   alt={course.title}
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; }}
+                  onError={handleThumbnailError}
                 />
-              ) : null}
+              ) : (
+                <div className="w-full h-full">
+                  {getGalleryPlaceholderSVG('course')}
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -344,14 +361,18 @@ export default function CourseDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 sticky top-28 space-y-5 border border-border-light">
               {/* Course Image */}
-              {course.thumbnail && (
+              {course.thumbnail && !thumbnailError ? (
                 <div className="rounded-xl overflow-hidden border border-border-light">
                   <img
                     src={course.thumbnail}
                     alt={course.title}
                     className="w-full h-40 object-cover"
-                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onError={handleThumbnailError}
                   />
+                </div>
+              ) : (
+                <div className="rounded-xl overflow-hidden border border-border-light h-40">
+                  {getGalleryPlaceholderSVG('course')}
                 </div>
               )}
 

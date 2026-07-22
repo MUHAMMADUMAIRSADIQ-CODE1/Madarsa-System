@@ -1,21 +1,25 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.png';
 
-const navLinks = [
+const visibleLinks = [
   { label: 'Home', path: '/' },
-  { label: 'About', path: '/about' },
   { label: 'Courses', path: '/courses' },
-  { label: 'Teachers', path: '/teachers' },
   { label: 'Admissions', path: '/admissions' },
+  { label: 'Contact', path: '/contact' },
+];
+
+const dropdownLinks = [
+  { label: 'About', path: '/about' },
+  { label: 'Teachers', path: '/teachers' },
   { label: 'Gallery', path: '/gallery' },
   { label: 'News', path: '/news' },
-  { label: 'Contact', path: '/contact' },
 ];
 
 export default function MobileMenu({ isOpen, onClose }) {
   const menuRef = useRef(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, logout } = useAuth();
@@ -118,7 +122,7 @@ export default function MobileMenu({ isOpen, onClose }) {
         {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6" aria-label="Mobile navigation">
           <ul className="space-y-1">
-            {navLinks.map((link, i) => {
+            {visibleLinks.map((link, i) => {
               const isActive = link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path));
               return (
                 <li key={link.label}>
@@ -137,6 +141,60 @@ export default function MobileMenu({ isOpen, onClose }) {
                 </li>
               );
             })}
+
+            {/* More Section - Collapsible */}
+            <li>
+              <button
+                onClick={() => setMoreOpen((prev) => !prev)}
+                className={`w-full text-left flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
+                  dropdownLinks.some(
+                    (link) => link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path))
+                  )
+                    ? 'text-primary bg-primary-light border-l-[3px] border-primary'
+                    : 'text-text-body hover:text-primary hover:bg-primary-light/60 border-l-[3px] border-transparent'
+                }`}
+              >
+                <span>More</span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              {/* Dropdown Items inside Mobile */}
+              <div
+                className={`overflow-hidden transition-all duration-200 ${
+                  moreOpen ? 'max-h-80 opacity-100 mt-1' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <div className="ml-4 border-l-2 border-primary-light/60 pl-3 space-y-1">
+                  {dropdownLinks.map((link, j) => {
+                    const isActive = link.path === currentPath || (link.path !== '/' && currentPath.startsWith(link.path));
+                    return (
+                      <Link
+                        key={link.label}
+                        to={link.path}
+                        onClick={onClose}
+                        className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
+                          isActive
+                            ? 'text-primary bg-primary-light border-l-[3px] border-primary'
+                            : 'text-text-body hover:text-primary hover:bg-primary-light/60 border-l-[3px] border-transparent'
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </li>
           </ul>
         </nav>
 

@@ -5,9 +5,15 @@ const env = require('../config/env');
 const { ApiError } = require('../utils');
 const { httpStatus, messages } = require('../constants');
 
+const isVercel = process.env.VERCEL === '1';
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, path.resolve(__dirname, '../../uploads'));
+    // On Vercel, use the temp directory (ephemeral, but files get uploaded to Cloudinary)
+    const uploadDir = isVercel
+      ? '/tmp'
+      : path.resolve(__dirname, '../../uploads');
+    cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = crypto.randomBytes(16).toString('hex');

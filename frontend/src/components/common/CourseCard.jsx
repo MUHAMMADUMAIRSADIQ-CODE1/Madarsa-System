@@ -1,8 +1,7 @@
-export default function CourseCard({ course, index = 0, actionText = 'Enroll Now', actionLink, onAction }) {
+export default function CourseCard({ course, actionText = 'Enroll Now', actionLink, onAction }) {
   return (
     <article
-      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.12)] hover:-translate-y-1 animate-fade-in-up"
-      style={{ animationDelay: `${index * 100}ms` }}
+      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.12)] hover:-translate-y-1 flex flex-col"
     >
       {/* Course Image Placeholder */}
       <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${course.color}`}>
@@ -26,12 +25,12 @@ export default function CourseCard({ course, index = 0, actionText = 'Enroll Now
       </div>
 
       {/* Content */}
-      <div className="p-6 lg:p-7">
+      <div className="p-6 lg:p-7 flex flex-col flex-1">
         <h3 className="font-heading text-xl font-bold text-text-dark group-hover:text-primary transition-colors duration-300">
           {course.title}
         </h3>
 
-        <p className="mt-3 text-sm text-text-body/80 leading-relaxed line-clamp-2">
+        <p className="mt-3 text-sm text-text-body/80 leading-relaxed line-clamp-3">
           {course.description}
         </p>
 
@@ -59,8 +58,8 @@ export default function CourseCard({ course, index = 0, actionText = 'Enroll Now
           </span>
         </div>
 
-        {/* CTA */}
-        <div className="mt-6 pt-5 border-t border-border-light">
+        {/* CTA - pushed to bottom */}
+        <div className="mt-auto pt-5 border-t border-border-light">
           {onAction ? (
             <button
               onClick={(e) => {

@@ -1,5 +1,6 @@
 import aboutData from '../../data/aboutData';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 const facilityIcons = {
   classroom: (
@@ -48,11 +49,8 @@ export default function Facilities() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {facilities.map((facility, i) => (
-            <div
-              key={facility.id}
-              className="group bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
+            <ScrollReveal key={facility.id} delay={i * 80}>
+              <div className="group bg-white rounded-2xl border border-border-light p-6 lg:p-8 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5">
               <div className="w-14 h-14 rounded-xl bg-primary-light text-primary flex items-center justify-center mb-5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
                 {facilityIcons[facility.icon]}
               </div>
@@ -61,6 +59,7 @@ export default function Facilities() {
               </h3>
               <p className="mt-2 text-sm text-text-body/80 leading-relaxed">{facility.description}</p>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

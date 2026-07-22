@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -51,7 +52,8 @@ export default function ContactForm() {
         <form onSubmit={handleSubmit} className="mt-10 bg-white rounded-3xl shadow-lg p-8 sm:p-10">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Full Name */}
-            <div className="animate-fade-in-up">
+            <ScrollReveal>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Full Name *
               </label>
@@ -64,10 +66,12 @@ export default function ContactForm() {
                 placeholder="Your name"
                 className="w-full px-5 py-3.5 rounded-2xl border-2 border-border-light focus:border-primary outline-none transition-all duration-300 placeholder-text-light"
               />
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Email */}
-            <div className="animate-fade-in-up stagger-1">
+            <ScrollReveal delay={100}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Email Address *
               </label>
@@ -80,10 +84,12 @@ export default function ContactForm() {
                 placeholder="your@email.com"
                 className="w-full px-5 py-3.5 rounded-2xl border-2 border-border-light focus:border-primary outline-none transition-all duration-300 placeholder-text-light"
               />
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Phone */}
-            <div className="animate-fade-in-up stagger-2">
+            <ScrollReveal delay={200}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Phone Number
               </label>
@@ -95,10 +101,12 @@ export default function ContactForm() {
                 placeholder="+1 (555) 123-4567"
                 className="w-full px-5 py-3.5 rounded-2xl border-2 border-border-light focus:border-primary outline-none transition-all duration-300 placeholder-text-light"
               />
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Country */}
-            <div className="animate-fade-in-up stagger-3">
+            <ScrollReveal delay={300}>
+              <div>
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Country
               </label>
@@ -110,10 +118,12 @@ export default function ContactForm() {
                 placeholder="Your country"
                 className="w-full px-5 py-3.5 rounded-2xl border-2 border-border-light focus:border-primary outline-none transition-all duration-300 placeholder-text-light"
               />
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Course */}
-            <div className="animate-fade-in-up stagger-4 sm:col-span-2">
+            <ScrollReveal delay={400}>
+              <div className="sm:col-span-2">
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Interested Course
               </label>
@@ -131,10 +141,12 @@ export default function ContactForm() {
                 <option value="teacher">Teacher Training</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+              </div>
+            </ScrollReveal>
 
             {/* Message */}
-            <div className="animate-fade-in-up stagger-5 sm:col-span-2">
+            <ScrollReveal delay={500}>
+              <div className="sm:col-span-2">
               <label className="block text-sm font-semibold text-text-dark mb-3">
                 Message *
               </label>
@@ -147,7 +159,8 @@ export default function ContactForm() {
                 rows="5"
                 className="w-full px-5 py-3.5 rounded-2xl border-2 border-border-light focus:border-primary outline-none transition-all duration-300 resize-none placeholder-text-light"
               />
-            </div>
+              </div>
+            </ScrollReveal>
           </div>
 
           {/* Submit Button */}

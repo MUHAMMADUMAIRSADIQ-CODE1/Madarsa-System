@@ -1,58 +1,70 @@
 import SectionTitle from '../common/SectionTitle';
+import { useState, useCallback } from 'react';
+import { getGalleryPlaceholderSVG } from '../Gallery/GalleryPlaceholderSVGs';
+import ScrollReveal from '../common/ScrollReveal';
 
 function NewsCard({ article, index }) {
+  const [imgError, setImgError] = useState(false);
+  const handleError = useCallback(() => setImgError(true), []);
+
   return (
-    <div
-      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
-      {/* Image */}
-      <div className="relative overflow-hidden bg-accent-soft h-48 sm:h-56">
-        <img
-          src={article.image}
-          alt={article.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          loading="lazy"
-        />
-        <div className="absolute top-4 left-4">
-          <span className="px-3 py-1.5 bg-primary text-white text-xs font-semibold uppercase rounded-full tracking-wider">
-            {article.category}
-          </span>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-5 sm:p-6 flex flex-col">
-        <div className="flex items-center justify-between mb-3 pb-3 border-b border-border-light">
-          <span className="text-xs text-text-light font-medium">
-            {new Date(article.date).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })}
-          </span>
-          <span className="text-xs text-text-light font-medium">{article.readTime} min read</span>
+    <ScrollReveal delay={index * 50}>
+      <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+        {/* Image */}
+        <div className="relative overflow-hidden bg-accent-soft h-48 sm:h-56">
+          {imgError || !article.image ? (
+            <div className="w-full h-full">
+              {getGalleryPlaceholderSVG('news')}
+            </div>
+          ) : (
+            <img
+              src={article.image}
+              alt={article.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
+              onError={handleError}
+            />
+          )}
+          <div className="absolute top-4 left-4">
+            <span className="px-3 py-1.5 bg-primary text-white text-xs font-semibold uppercase rounded-full tracking-wider">
+              {article.category}
+            </span>
+          </div>
         </div>
 
-        <h3 className="font-heading font-semibold text-lg text-text-dark mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-          {article.title}
-        </h3>
+        {/* Content */}
+        <div className="flex-1 p-5 sm:p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-3 pb-3 border-b border-border-light">
+            <span className="text-xs text-text-light font-medium">
+              {new Date(article.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+            <span className="text-xs text-text-light font-medium">{article.readTime} min read</span>
+          </div>
 
-        <p className="text-text-body text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
-          {article.description}
-        </p>
+          <h3 className="font-heading font-semibold text-lg text-text-dark mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+            {article.title}
+          </h3>
 
-        <a
-          href="#"
-          className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group-hover:text-gold"
-        >
-          Read More
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </a>
+          <p className="text-text-body text-sm leading-relaxed line-clamp-2 mb-4 flex-1">
+            {article.description}
+          </p>
+
+          <a
+            href="#"
+            className="inline-flex items-center gap-2 text-primary font-semibold text-sm hover:gap-3 transition-all group-hover:text-gold"
+          >
+            Read More
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
       </div>
-    </div>
+    </ScrollReveal>
   );
 }
 

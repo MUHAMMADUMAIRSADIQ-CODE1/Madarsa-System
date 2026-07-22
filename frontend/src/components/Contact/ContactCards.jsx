@@ -1,4 +1,5 @@
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 function ContactCardItem({ contact, index }) {
   const c = contact || {};
@@ -29,30 +30,25 @@ function ContactCardItem({ contact, index }) {
   };
 
   return (
-    <div
-      className="group bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
-      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-        {iconMap[iconType] || iconMap.location}
+    <ScrollReveal delay={index * 50}>
+      <div className="group bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300">
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary-dark text-white flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+          {iconMap[iconType] || iconMap.location}
+        </div>
+        <h3 className="font-heading font-semibold text-lg text-text-dark mb-2">
+          {c.label || c.type || 'Contact'}
+        </h3>
+        <p className="text-gold font-semibold text-lg mb-2 break-all">
+          {c.value || ''}
+        </p>
+        <p className="text-text-body text-sm mb-3">
+          {c.description || ''}
+        </p>
+        <p className="text-text-light text-xs">
+          {c.hours || ''}
+        </p>
       </div>
-
-      <h3 className="font-heading font-semibold text-lg text-text-dark mb-2">
-        {c.label || c.type || 'Contact'}
-      </h3>
-
-      <p className="text-gold font-semibold text-lg mb-2 break-all">
-        {c.value || ''}
-      </p>
-
-      <p className="text-text-body text-sm mb-3">
-        {c.description || ''}
-      </p>
-
-      <p className="text-text-light text-xs">
-        {c.hours || ''}
-      </p>
-    </div>
+    </ScrollReveal>
   );
 }
 

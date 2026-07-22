@@ -577,7 +577,7 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
                 <div className="flex-shrink-0 relative">
                   {photo ? (
                     <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                      <img src={photo} alt="" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-gold/10"><span class="text-3xl font-bold text-primary">' + (entity?.fullName?.charAt(0)?.toUpperCase() || '?') + '</span></div>'; }} />
                     </div>
                   ) : (
                     <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center border-2 border-white/20 shadow-xl ring-4 ring-white/10">
@@ -764,7 +764,7 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
                   <div className="bg-white rounded-xl border border-border-light overflow-hidden hover:shadow-lg transition-all duration-200 p-4">
                     <p className="text-[11px] font-bold uppercase tracking-wider text-text-light mb-2">Profile Photo</p>
                     <div className="w-20 h-20 rounded-lg overflow-hidden border mb-2">
-                      <img src={entity.profilePhoto} alt="Profile Photo" className="w-full h-full object-cover" />
+                      <img src={entity.profilePhoto} alt="Profile Photo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                     </div>
                     <a href={entity.profilePhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
                       <FiExternalLink size={12} /> View Image
@@ -873,8 +873,7 @@ export default function AdminDetailView({ entity, type = 'teacher', statusMaps }
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl border border-border-light overflow-hidden hover:shadow-lg transition-all duration-200 p-4">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-text-light mb-2">Profile Photo</p>
-                  <div className="w-20 h-20 rounded-lg overflow-hidden border mb-2">
-                    <img src={entity.studentPhoto} alt="Profile Photo" className="w-full h-full object-cover" />
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border mb-2">                      <img src={entity.studentPhoto} alt="Profile Photo" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                   <a href={entity.studentPhoto} target="_blank" rel="noopener noreferrer" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
                     <FiExternalLink size={12} /> View Image

@@ -1,8 +1,7 @@
-export default function CourseDetailCard({ course, index = 0 }) {
+export default function CourseDetailCard({ course }) {
   return (
     <article
-      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.12)] hover:-translate-y-1 animate-fade-in-up"
-      style={{ animationDelay: `${index * 100}ms` }}
+      className="group relative bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 hover:shadow-[0_8px_40px_rgba(11,79,48,0.12)] hover:-translate-y-1"
     >
       {/* Image */}
       <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${course.color}`}>

@@ -23,12 +23,17 @@ const missingEnvVars = requiredEnvVars.filter(
   (envVar) => !process.env[envVar] || process.env[envVar].trim() === ''
 );
 
-if (missingEnvVars.length > 0 && process.env.NODE_ENV !== 'test') {
+if (missingEnvVars.length > 0 && process.env.NODE_ENV !== 'test' && process.env.VERCEL !== '1') {
   console.error(
     `Missing required environment variables: ${missingEnvVars.join(', ')}`
   );
   console.error('Please copy .env.example to .env and fill in the values.');
   process.exit(1);
+}
+
+// On Vercel, env vars are injected by the platform
+if (process.env.VERCEL === '1') {
+  console.log('Running on Vercel - environment variables provided by platform');
 }
 
 const env = {

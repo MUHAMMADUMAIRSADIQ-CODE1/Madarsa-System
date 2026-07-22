@@ -1,21 +1,38 @@
+import { useState, useCallback } from 'react';
+import { getGalleryPlaceholderSVG } from '../Gallery/GalleryPlaceholderSVGs';
+import ScrollReveal from '../common/ScrollReveal';
+
 export default function FeaturedAnnouncement({ featured }) {
+  const [imgError, setImgError] = useState(false);
+  const handleError = useCallback(() => setImgError(true), []);
+
   return (
     <section className="py-12 lg:py-16 bg-gradient-to-br from-gold-light via-white to-accent-soft">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center bg-white rounded-3xl shadow-lg border border-gold/20 p-6 sm:p-8 lg:p-12">
           {/* Image */}
-          <div className="relative animate-fade-in-up">
+          <ScrollReveal>
+            <div className="relative">
             <div className="rounded-2xl overflow-hidden shadow-xl">
-              <img
-                src={featured.image}
-                alt={featured.title}
-                className="w-full h-[280px] sm:h-[340px] lg:h-[400px] object-cover"
-              />
+              {imgError || !featured.image ? (
+                <div className="w-full h-[280px] sm:h-[340px] lg:h-[400px]">
+                  {getGalleryPlaceholderSVG('news')}
+                </div>
+              ) : (
+                <img
+                  src={featured.image}
+                  alt={featured.title}
+                  className="w-full h-[280px] sm:h-[340px] lg:h-[400px] object-cover"
+                  onError={handleError}
+                />
+              )}
             </div>
-          </div>
+            </div>
+          </ScrollReveal>
 
           {/* Content */}
-          <div className="relative animate-fade-in-up stagger-2">
+          <ScrollReveal delay={200}>
+            <div className="relative">
             <div className="inline-block px-4 py-2 bg-gold/15 border border-gold/40 rounded-full mb-5">
               <span className="text-gold font-semibold text-sm uppercase tracking-wider">Featured Announcement</span>
             </div>
@@ -56,7 +73,8 @@ export default function FeaturedAnnouncement({ featured }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             </a>
-          </div>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>

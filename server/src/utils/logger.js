@@ -21,11 +21,19 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-const logger = winston.createLogger({
-  level: env.nodeEnv === 'production' ? 'info' : 'debug',
-  format: logFormat,
-  defaultMeta: { service: 'jamia-api' },
-  transports: [
+const isVercel = process.env.VERCEL === '1';
+
+// Build transports array - file transports only when not on Vercel
+const transports = [
+  // Console transport is always available
+  new winston.transports.Console({
+    format: consoleFormat,
+  }),
+];
+
+// File transports are not available on Vercel (ephemeral filesystem)
+if (!isVercel) {
+  transports.push(
     new winston.transports.File({
       filename: path.join(logDir, 'error.log'),
       level: 'error',
@@ -36,24 +44,27 @@ const logger = winston.createLogger({
       filename: path.join(logDir, 'combined.log'),
       maxsize: 5242880,
       maxFiles: 5,
-    }),
-  ],
-  exceptionHandlers: [
-    new winston.transports.File({
-      filename: path.join(logDir, 'exceptions.log'),
-    }),
-  ],
-  rejectionHandlers: [
-    new winston.transports.File({
-      filename: path.join(logDir, 'rejections.log'),
-    }),
-  ],
+    })
+  );
+}
+
+const logger = winston.createLogger({
+  level: env.nodeEnv === 'production' ? 'info' : 'debug',
+  format: logFormat,
+  defaultMeta: { service: 'jamia-api' },
+  transports,
 });
 
-if (env.nodeEnv !== 'production') {
-  logger.add(
-    new winston.transports.Console({
-      format: consoleFormat,
+// Exception/rejection handlers - file-only, skip on Vercel
+if (!isVercel) {
+  logger.exceptions.handle(
+    new winston.transports.File({
+      filename: path.join(logDir, 'exceptions.log'),
+    })
+  );
+  logger.rejections.handle(
+    new winston.transports.File({
+      filename: path.join(logDir, 'rejections.log'),
     })
   );
 }

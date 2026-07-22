@@ -1,6 +1,7 @@
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
 import CourseCard from '../common/CourseCard';
+import ScrollReveal from '../common/ScrollReveal';
 
 export default function Courses() {
   const { courses } = homeData;
@@ -27,7 +28,9 @@ export default function Courses() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {courses.map((course, i) => (
-            <CourseCard key={course.id} course={course} index={i} />
+            <ScrollReveal key={course.id} delay={i * 100}>
+              <CourseCard course={course} />
+            </ScrollReveal>
           ))}
         </div>
 

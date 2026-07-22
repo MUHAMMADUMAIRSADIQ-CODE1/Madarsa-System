@@ -1,5 +1,6 @@
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 const typeColors = {
   Admission: 'bg-blue-100 text-blue-700',
@@ -21,11 +22,10 @@ export default function Announcements() {
 
         <div className="max-w-4xl mx-auto space-y-4 lg:space-y-5">
           {announcements.map((item, i) => (
+            <ScrollReveal key={item.id} delay={i * 120}>
             <a
-              key={item.id}
               href={item.href}
-              className="group block bg-white rounded-2xl border border-border-light p-5 lg:p-7 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5 animate-fade-in-up"
-              style={{ animationDelay: `${i * 120}ms` }}
+              className="group block bg-white rounded-2xl border border-border-light p-5 lg:p-7 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                 {/* Date Badge */}
@@ -45,19 +45,11 @@ export default function Announcements() {
                   <p className="mt-1 text-sm text-text-body/70 leading-relaxed">{item.excerpt}</p>
                 </div>
 
-                {/* Arrow */}
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-lg">
-                    <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
                 </div>
-              </div>
-            </a>
+              </a>
+            </ScrollReveal>
           ))}
         </div>
-      </div>
-    </section>
+      </div>    </section>
   );
 }

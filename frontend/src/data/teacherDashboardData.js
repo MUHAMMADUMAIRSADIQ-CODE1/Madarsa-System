@@ -264,6 +264,6 @@ export const teacherDashboardData = {
     subjects: ['Quran Recitation', 'Islamic Studies', 'Arabic Grammar'],
     languages: ['Arabic', 'English', 'Urdu'],
     experience: '8 years',
-    avatar: 'https://via.placeholder.com/150',
+    avatar: '',
   },
 };
