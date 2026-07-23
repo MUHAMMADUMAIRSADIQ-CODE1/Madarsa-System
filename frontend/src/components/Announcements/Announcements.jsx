@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
 import ScrollReveal from '../common/ScrollReveal';
@@ -23,8 +24,8 @@ export default function Announcements() {
         <div className="max-w-4xl mx-auto space-y-4 lg:space-y-5">
           {announcements.map((item, i) => (
             <ScrollReveal key={item.id} delay={i * 120}>
-            <a
-              href={item.href}
+            <Link
+              to={item.href}
               className="group block bg-white rounded-2xl border border-border-light p-5 lg:p-7 transition-all duration-500 hover:shadow-[0_8px_35px_rgba(11,79,48,0.1)] hover:-translate-y-0.5"
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
@@ -46,7 +47,7 @@ export default function Announcements() {
                 </div>
 
                 </div>
-              </a>
+              </Link>
             </ScrollReveal>
           ))}
         </div>

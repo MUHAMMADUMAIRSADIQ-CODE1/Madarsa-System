@@ -64,7 +64,7 @@ export function CoursesGrid({ activeCategory }) {
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
         {filtered.map((course, i) => (
           <CourseDetailCard key={course.id} course={course} index={i} />
         ))}

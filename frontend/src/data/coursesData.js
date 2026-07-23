@@ -1,3 +1,13 @@
+import img1 from '../assets/courses-images/istockphoto-505757382-612x612.webp';
+import img2 from '../assets/courses-images/photo-1521587760476-6c12a4b040da.avif';
+import img3 from '../assets/courses-images/photo-1542816417-0983c9c9ad53.avif';
+import img4 from '../assets/courses-images/photo-1575645513913-c002ea3b2e01.avif';
+import img5 from '../assets/courses-images/photo-1589995635011-078e0bb91d11.avif';
+import img6 from '../assets/courses-images/photo-1596125160970-6f02eeba00d3.avif';
+import img7 from '../assets/courses-images/premium_photo-1677587536653-0d02efbb70ee.avif';
+import img8 from '../assets/courses-images/premium_photo-1679952777234-f82a6b4b89f8.avif';
+import img9 from '../assets/courses-images/photo-1612207644086-243779ab1013.avif';
+
 const coursesData = {
   hero: {
     title: 'Explore Our Courses',
@@ -31,6 +41,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: 'Flexible - 3 sessions per week',
+      image: img1,
       color: 'from-emerald-500 to-primary',
     },
     {
@@ -48,6 +59,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: 'Daily - 2 hours',
+      image: img2,
       color: 'from-gold to-amber-600',
     },
     {
@@ -65,6 +77,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: '2 sessions per week',
+      image: img3,
       color: 'from-blue-600 to-indigo-700',
     },
     {
@@ -82,6 +95,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: '3 sessions per week',
+      image: img4,
       color: 'from-teal-500 to-emerald-600',
     },
     {
@@ -99,6 +113,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: '3 sessions per week',
+      image: img5,
       color: 'from-amber-600 to-orange-700',
     },
     {
@@ -116,6 +131,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: 'As arranged with teacher',
+      image: img6,
       color: 'from-primary to-emerald-700',
     },
     {
@@ -133,6 +149,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: 'Daily - 45 minutes',
+      image: img7,
       color: 'from-sky-500 to-blue-600',
     },
     {
@@ -150,6 +167,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: '2 sessions per week',
+      image: img8,
       color: 'from-rose-600 to-pink-700',
     },
     {
@@ -167,6 +185,7 @@ const coursesData = {
       certificate: true,
       price: 'Free / Donation Based',
       schedule: '1 session per week',
+      image: img9,
       color: 'from-violet-600 to-purple-700',
     },
   ],

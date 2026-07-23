@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
 import ScrollReveal from '../common/ScrollReveal';
+import { useNavigate } from 'react-router-dom';
 
 // Contextual SVG scene illustrations for gallery placeholder images
 const galleryIllustrations = {
@@ -248,6 +250,7 @@ const categoryLabels = {
 };
 
 export default function Gallery() {
+  const navigate = useNavigate();
   const { gallery } = homeData;
 
   return (
@@ -262,7 +265,7 @@ export default function Gallery() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {gallery.map((item, i) => (
             <ScrollReveal key={item.id} delay={i * 100}>
-              <div className="group relative rounded-2xl overflow-hidden cursor-pointer">
+              <div className="group relative rounded-2xl overflow-hidden cursor-pointer" onClick={() => navigate('/gallery')} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/gallery'); } }}>
               <div className="aspect-[4/3] relative overflow-hidden">
                 {/* Contextual SVG illustration */}
                 <div className="absolute inset-0">
@@ -302,15 +305,15 @@ export default function Gallery() {
         </div>
 
         <div className="mt-10 text-center">
-          <a
-            href="#gallery"
+          <Link
+            to="/gallery"
             className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-semibold rounded-2xl hover:bg-primary-dark transition-all duration-300 shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30"
           >
             View Full Gallery
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function CTA() {
   return (
     <section className="relative py-16 lg:py-20 bg-primary overflow-hidden">
@@ -29,17 +31,17 @@ export default function CTA() {
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-4">
-          <a
-            href="#apply"
+          <Link
+            to="/admissions"
             className="group inline-flex items-center gap-2 px-8 py-4 bg-gold text-white font-semibold rounded-2xl hover:bg-gold-dark transition-all duration-300 shadow-2xl shadow-gold/30 hover:shadow-gold/40 hover:-translate-y-0.5"
           >
             <span>Apply Now</span>
             <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </a>
-          <a
-            href="#contact"
+          </Link>
+          <Link
+            to="/contact"
             className="group inline-flex items-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 hover:-translate-y-0.5"
           >
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +49,7 @@ export default function CTA() {
               <path d="M3 3l7 6 7-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Contact Us</span>
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -23,20 +23,22 @@ export default function PremiumIllustration({ src, alt }) {
   // Show SVG fallback if no image src is provided, or if the image failed to load
   if (imgError || !src) {
     return (
-      <div className="w-full max-h-[40vh] sm:max-h-[48vh] lg:max-h-[52vh] xl:max-h-[55vh] rounded-2xl overflow-hidden">
+      <div className="w-full max-h-[50vh] sm:max-h-[58vh] lg:max-h-[64vh] xl:max-h-[70vh] rounded-2xl overflow-hidden bg-accent-soft">
         {getGalleryPlaceholderSVG('hero')}
       </div>
     );
   }
 
   return (
-    <img
-      src={getImageUrl(src)}
-      alt={alt || 'Premium Illustration'}
-      className="w-full h-auto max-h-[40vh] sm:max-h-[48vh] lg:max-h-[52vh] xl:max-h-[55vh] object-cover rounded-2xl"
-      loading="lazy"
-      decoding="async"
-      onError={handleError}
-    />
+    <div className="w-fit max-h-[50vh] sm:max-h-[58vh] lg:max-h-[64vh] xl:max-h-[70vh] rounded-2xl overflow-hidden shadow-2xl shadow-primary/15 ring-1 ring-accent/10">
+      <img
+        src={getImageUrl(src)}
+        alt={alt || 'Premium Illustration'}
+        className="max-h-[inherit] w-auto h-auto rounded-2xl"
+        loading="lazy"
+        decoding="async"
+        onError={handleError}
+      />
+    </div>
   );
 }

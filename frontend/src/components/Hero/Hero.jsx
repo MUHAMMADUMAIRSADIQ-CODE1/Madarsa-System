@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import PremiumIllustration from './PremiumIllustration';
 import heroService from '../../services/heroService';
 
@@ -101,12 +102,12 @@ export default function Hero() {
       <div className="absolute bottom-1/4 left-[5%] w-40 h-40 border border-gold/10 rounded-full pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 w-full py-6 sm:py-8 lg:py-0">
-        <div className="grid md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr] gap-6 sm:gap-8 lg:gap-10 xl:gap-14 md:items-center">
-          <div className="order-1 md:order-2 flex items-center justify-center animate-fade-in-up stagger-3 w-full">
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-7 xl:gap-10 md:items-center">
+          <div className="order-1 md:order-2 flex items-start justify-center animate-fade-in-up stagger-3 w-full">
             <PremiumIllustration src={imageUrl} alt={imageAlt} />
           </div>
 
-          <div className="order-2 md:order-1 mx-auto lg:mx-0 w-full">
+          <div className="order-2 md:order-1 mx-auto lg:mx-0 w-full min-w-0">
             <div className="animate-fade-in-up stagger-1">
               <span className="inline-flex items-center gap-2 px-3.5 py-2 bg-primary-light/80 backdrop-blur-sm border border-accent/50 rounded-full text-sm font-medium text-primary">
                 <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
@@ -114,7 +115,7 @@ export default function Hero() {
               </span>
             </div>
 
-            <h1 className="mt-3 sm:mt-4 font-heading text-3xl sm:text-4xl lg:text-[clamp(1.75rem,2.2vw,2.5rem)] xl:text-[clamp(2rem,2.6vw,2.85rem)] 2xl:text-[clamp(2.25rem,3vw,3.25rem)] font-bold leading-[1.12] tracking-[-0.01em] text-text-dark animate-fade-in-up stagger-2">
+            <h1 className="mt-3 sm:mt-4 font-heading text-3xl sm:text-4xl lg:text-[clamp(1.6rem,2vw,2.25rem)] xl:text-[clamp(1.8rem,2.3vw,2.5rem)] 2xl:text-[clamp(2rem,2.6vw,2.85rem)] font-bold leading-[1.12] tracking-[-0.01em] text-text-dark animate-fade-in-up stagger-2">
               {heading}
             </h1>
 
@@ -144,9 +145,9 @@ export default function Hero() {
                 const isPrimary = btn.isPrimary || btn.variant === 'primary' || idx === 0;
                 if (isPrimary) {
                   return (
-                    <a
+                    <Link
                       key={idx}
-                      href={btn.url || '#apply'}
+                      to={btn.url === '#apply' ? '/admissions' : btn.url || '/admissions'}
                       className="group relative inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold text-sm sm:text-base rounded-2xl overflow-hidden transition-all duration-300 shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5"
                     >
                       <span className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/15 to-gold/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
@@ -154,20 +155,20 @@ export default function Hero() {
                       <svg className="relative w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
-                    </a>
+                    </Link>
                   );
                 }
                 return (
-                  <a
+                  <Link
                     key={idx}
-                    href={btn.url || '#courses'}
+                    to={btn.url === '#courses' ? '/courses' : btn.url || '/courses'}
                     className="group relative inline-flex items-center gap-2 px-6 py-3 bg-transparent text-primary font-semibold text-sm sm:text-base rounded-2xl border-2 border-primary/30 hover:border-primary transition-all duration-300 hover:bg-primary-light/50 hover:-translate-y-0.5"
                   >
                     <span>{btn.label}</span>
                     <svg className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                  </a>
+                  </Link>
                 );
               })}
             </div>

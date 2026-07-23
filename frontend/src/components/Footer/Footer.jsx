@@ -30,6 +30,9 @@ const routeMap = {
   'Admissions': '/admissions',
   'News': '/news',
   'Contact': '/contact',
+  'FAQ': '/contact',
+  'Privacy Policy': '/contact',
+  'Terms of Service': '/contact',
 };
 
 export default function Footer() {
@@ -150,9 +153,7 @@ export default function Footer() {
             <h3 className="font-heading text-sm font-bold text-gold uppercase tracking-wider mb-5">Support</h3>
             <ul className="space-y-3">
               {supportLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.url || '#'} className="text-sm text-white/60 hover:text-gold transition-colors duration-300">{link.label}</a>
-                </li>
+                <li key={link.label}>{renderLink(link)}</li>
               ))}
             </ul>
           </div>

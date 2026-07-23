@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import homeData from '../../data/homeData';
 import SectionTitle from '../common/SectionTitle';
 import TeacherCard from '../common/TeacherCard';
@@ -24,15 +25,15 @@ export default function Teachers() {
         </div>
 
         <div className="mt-10 text-center">
-          <a
-            href="#all-teachers"
+          <Link
+            to="/teachers"
             className="inline-flex items-center gap-2 px-8 py-3.5 border-2 border-primary text-primary font-semibold rounded-2xl hover:bg-primary-light transition-all duration-300"
           >
             View All Scholars
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 10h12m0 0l-5-5m5 5l-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </a>
+          </Link>
         </div>
       </div>
     </section>
