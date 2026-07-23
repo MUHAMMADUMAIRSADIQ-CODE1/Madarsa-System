@@ -20,7 +20,7 @@ export const galleryData = {
       category: 'Classrooms',
       categoryId: 'classrooms',
       date: '2024-06-15',
-      image: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=800&q=80',
+      image: null,
       description: 'Students focused on Quran memorization with expert guidance in a dedicated Hifz classroom',
     },
     {
@@ -29,7 +29,7 @@ export const galleryData = {
       category: 'Classrooms',
       categoryId: 'classrooms',
       date: '2024-06-06',
-      image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80',
+      image: null,
       description: 'Modern teaching methods in Islamic education with interactive whiteboard sessions',
     },
 
@@ -40,7 +40,7 @@ export const galleryData = {
       category: 'Campus',
       categoryId: 'campus',
       date: '2024-06-14',
-      image: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&q=80',
+      image: null,
       description: 'Students gathered for daily morning assembly and announcements in the main courtyard',
     },
     {
@@ -49,7 +49,7 @@ export const galleryData = {
       category: 'Campus',
       categoryId: 'campus',
       date: '2024-06-05',
-      image: 'https://images.unsplash.com/photo-1562774053-701939374585?w=800&q=80',
+      image: null,
       description: 'Beautiful architecture of our main campus building with modern Islamic design',
     },
     {
@@ -58,7 +58,7 @@ export const galleryData = {
       category: 'Campus',
       categoryId: 'campus',
       date: '2024-06-03',
-      image: 'https://images.unsplash.com/photo-1607237138185-eedd9c632b0b?w=800&q=80',
+      image: null,
       description: 'The grand entrance of our campus library surrounded by lush greenery',
     },
 
@@ -69,7 +69,7 @@ export const galleryData = {
       category: 'Students',
       categoryId: 'students',
       date: '2024-06-07',
-      image: 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=800&q=80',
+      image: null,
       description: 'Collaborative Islamic studies project presentation by dedicated students',
     },
     {
@@ -78,7 +78,7 @@ export const galleryData = {
       category: 'Students',
       categoryId: 'students',
       date: '2024-06-02',
-      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80',
+      image: null,
       description: 'Students researching and studying together in our well-equipped library',
     },
 
@@ -89,7 +89,7 @@ export const galleryData = {
       category: 'Teachers',
       categoryId: 'teachers',
       date: '2024-06-08',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80',
+      image: null,
       description: 'Professional development session for faculty members enhancing teaching skills',
     },
     {
@@ -98,7 +98,7 @@ export const galleryData = {
       category: 'Teachers',
       categoryId: 'teachers',
       date: '2024-05-28',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80',
+      image: null,
       description: 'Senior faculty members discussing curriculum improvements and student progress',
     },
 
@@ -109,7 +109,7 @@ export const galleryData = {
       category: 'Events',
       categoryId: 'events',
       date: '2024-06-13',
-      image: 'https://images.unsplash.com/photo-1517457373614-b7152f5f1244?w=800&q=80',
+      image: null,
       description: 'Annual Quran recitation championship with students showcasing their Tajweed skills',
     },
     {
@@ -118,7 +118,7 @@ export const galleryData = {
       category: 'Events',
       categoryId: 'events',
       date: '2024-06-04',
-      image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+      image: null,
       description: 'Annual prize distribution ceremony honoring top-performing students',
     },
     {
@@ -127,7 +127,7 @@ export const galleryData = {
       category: 'Events',
       categoryId: 'events',
       date: '2024-05-20',
-      image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80',
+      image: null,
       description: 'Guest speakers delivering insightful talks at our Islamic awareness seminar',
     },
 
@@ -138,7 +138,7 @@ export const galleryData = {
       category: 'Convocation',
       categoryId: 'convocation',
       date: '2024-06-09',
-      image: 'https://images.unsplash.com/photo-1523338097099-512f4cda20df?w=800&q=80',
+      image: null,
       description: 'Annual graduation ceremony celebrating the achievements of our graduates',
     },
     {
@@ -147,7 +147,7 @@ export const galleryData = {
       category: 'Convocation',
       categoryId: 'convocation',
       date: '2024-06-09',
-      image: 'https://images.unsplash.com/photo-1523050854058-8df90110c7f1?w=800&q=80',
+      image: null,
       description: 'Graduates receiving their certificates and Ijazah in traditional ceremony',
     },
 
@@ -158,7 +158,7 @@ export const galleryData = {
       category: 'Online Classes',
       categoryId: 'online-classes',
       date: '2024-06-11',
-      image: 'https://images.unsplash.com/photo-1516321318423-f06f70a504f9?w=800&q=80',
+      image: null,
       description: 'Live online session with international students learning Arabic grammar',
     },
     {
@@ -167,7 +167,7 @@ export const galleryData = {
       category: 'Online Classes',
       categoryId: 'online-classes',
       date: '2024-05-25',
-      image: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80',
+      image: null,
       description: 'Interactive virtual classroom for Quran studies with live student participation from around the world',
     },
 
@@ -178,7 +178,7 @@ export const galleryData = {
       category: 'Mosque',
       categoryId: 'mosque',
       date: '2024-06-10',
-      image: 'https://images.unsplash.com/photo-1528714350294-637cdedb603f?w=800&q=80',
+      image: null,
       description: 'Congregational Jummah prayer at our beautiful campus mosque',
     },
     {
@@ -187,7 +187,7 @@ export const galleryData = {
       category: 'Mosque',
       categoryId: 'mosque',
       date: '2024-05-22',
-      image: 'https://images.unsplash.com/photo-1566140967404-b8b7192b2db4?w=800&q=80',
+      image: null,
       description: 'Beautiful interior of our mosque with intricate Islamic calligraphy and design',
     },
 
@@ -198,7 +198,7 @@ export const galleryData = {
       category: 'Library',
       categoryId: 'library',
       date: '2024-06-12',
-      image: 'https://images.unsplash.com/photo-1507842072343-583f20270319?w=800&q=80',
+      image: null,
       description: 'Spacious library with extensive collection of Islamic books and resources',
     },
     {
@@ -207,7 +207,7 @@ export const galleryData = {
       category: 'Library',
       categoryId: 'library',
       date: '2024-05-18',
-      image: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&q=80',
+      image: null,
       description: 'Rare collection of classical Islamic manuscripts and contemporary publications',
     },
   ],
@@ -217,7 +217,7 @@ export const galleryData = {
     description: 'Celebrating the achievements of our graduates and their journey in Islamic education. Join us as we honor the dedication and hard work of our students who have completed their programs and will now share their knowledge with communities worldwide.',
     date: '2024-06-09',
     location: 'Main Auditorium',
-    image: 'https://images.unsplash.com/photo-1523338097099-512f4cda20df?w=1200&q=80',
+    image: null,
     highlights: [
       'Certificate presentation to 250+ graduates',
       'Keynote speech by renowned Islamic scholars',
@@ -232,7 +232,7 @@ export const galleryData = {
       title: 'How to Memorize Quran Effectively',
       category: 'Tutorial',
       duration: '12:45',
-      thumbnail: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=400&q=80',
+      thumbnail: null,
       views: '15.2K',
     },
     {
@@ -240,7 +240,7 @@ export const galleryData = {
       title: 'Islamic History Explained - Part 1',
       category: 'Lecture',
       duration: '28:30',
-      thumbnail: 'https://images.unsplash.com/photo-1507842072343-583f20270319?w=400&q=80',
+      thumbnail: null,
       views: '8.9K',
     },
     {
@@ -248,7 +248,7 @@ export const galleryData = {
       title: 'Student Success Stories',
       category: 'Testimonial',
       duration: '8:15',
-      thumbnail: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=80',
+      thumbnail: null,
       views: '12.3K',
     },
     {
@@ -256,7 +256,7 @@ export const galleryData = {
       title: 'Academy Tour - Campus Overview',
       category: 'Tour',
       duration: '15:20',
-      thumbnail: 'https://images.unsplash.com/photo-1562774053-701939374585?w=400&q=80',
+      thumbnail: null,
       views: '22.1K',
     },
     {
@@ -264,7 +264,7 @@ export const galleryData = {
       title: 'Arabic Grammar Basics',
       category: 'Course',
       duration: '34:50',
-      thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f70a504f9?w=400&q=80',
+      thumbnail: null,
       views: '9.7K',
     },
     {
@@ -272,7 +272,7 @@ export const galleryData = {
       title: 'Understanding Islamic Law (Shariah)',
       category: 'Lecture',
       duration: '41:10',
-      thumbnail: 'https://images.unsplash.com/photo-1566140967404-b8b7192b2db4?w=400&q=80',
+      thumbnail: null,
       views: '18.5K',
     },
   ],

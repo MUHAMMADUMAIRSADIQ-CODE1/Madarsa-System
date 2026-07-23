@@ -1,3 +1,10 @@
+import img1 from '../assets/courses-images/istockphoto-505757382-612x612.webp';
+import img2 from '../assets/courses-images/photo-1521587760476-6c12a4b040da.avif';
+import img3 from '../assets/courses-images/photo-1542816417-0983c9c9ad53.avif';
+import img4 from '../assets/courses-images/photo-1575645513913-c002ea3b2e01.avif';
+import img5 from '../assets/courses-images/photo-1589995635011-078e0bb91d11.avif';
+import img6 from '../assets/courses-images/photo-1596125160970-6f02eeba00d3.avif';
+
 const homeData = {
   stats: [
     { id: 1, value: 5000, suffix: '+', label: 'Students Enrolled', icon: 'users' },
@@ -56,7 +63,7 @@ const homeData = {
       teacher: 'Qari Abdul Rahman',
       rating: 4.9,
       students: 1240,
-      image: null,
+      image: img1,
       color: 'from-emerald-500 to-primary',
     },
     {
@@ -68,7 +75,7 @@ const homeData = {
       teacher: 'Hafiz Muhammad Imran',
       rating: 4.9,
       students: 890,
-      image: null,
+      image: img2,
       color: 'from-gold to-amber-600',
     },
     {
@@ -80,7 +87,7 @@ const homeData = {
       teacher: 'Dr. Syed Hassan',
       rating: 4.8,
       students: 560,
-      image: null,
+      image: img3,
       color: 'from-blue-600 to-indigo-700',
     },
     {
@@ -92,7 +99,7 @@ const homeData = {
       teacher: 'Ustadh Ahmed Ali',
       rating: 4.7,
       students: 2100,
-      image: null,
+      image: img4,
       color: 'from-teal-500 to-emerald-600',
     },
     {
@@ -104,7 +111,7 @@ const homeData = {
       teacher: 'Maulana Yusuf Khan',
       rating: 4.8,
       students: 780,
-      image: null,
+      image: img5,
       color: 'from-amber-600 to-orange-700',
     },
     {
@@ -116,7 +123,7 @@ const homeData = {
       teacher: 'Sheikh Dr. Abdullah',
       rating: 4.9,
       students: 320,
-      image: null,
+      image: img6,
       color: 'from-primary to-emerald-700',
     },
   ],
@@ -241,7 +248,7 @@ const homeData = {
       excerpt: 'Applications are now being accepted for all programs. Early bird discounts available for limited time.',
       date: 'July 2026',
       type: 'Admission',
-      href: '#admissions',
+      href: '/admissions',
     },
     {
       id: 2,
@@ -249,7 +256,7 @@ const homeData = {
       excerpt: 'We are excited to announce a new specialized Tafseer course focusing on contemporary challenges.',
       date: 'June 2026',
       type: 'Course',
-      href: '#courses',
+      href: '/courses',
     },
     {
       id: 3,
@@ -257,7 +264,7 @@ const homeData = {
       excerpt: 'Apply for our summer teaching internship program. Open for senior students and graduates.',
       date: 'May 2026',
       type: 'Event',
-      href: '#events',
+      href: '/contact',
     },
   ],
 

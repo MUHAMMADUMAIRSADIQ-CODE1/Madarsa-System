@@ -1,6 +1,8 @@
+const cloudinary = require('cloudinary').v2;
 const { AuditService, AboutService } = require('../services');
-const { ApiResponse, asyncHandler } = require('../utils');
+const { ApiResponse, asyncHandler, logger } = require('../utils');
 const { CMS_AUDIT_ACTIONS, CMS_MODULES } = require('../constants/cms');
+const { httpStatus, ApiError } = require('../constants');
 
 const getAbout = asyncHandler(async (req, res) => {
   const content = await AboutService.getAbout();
@@ -11,11 +13,20 @@ const createAbout = asyncHandler(async (req, res) => {
   const data = { ...req.body, identifier: 'default' };
 
   if (req.file) {
-    data.images = [{
-      url: `/uploads/${req.file.filename}`,
-      alt: req.body.imageAlt || 'About image',
-      order: 0,
-    }];
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'about',
+        resource_type: 'image',
+      });
+      data.images = [{
+        url: result.secure_url,
+        alt: req.body.imageAlt || 'About image',
+        order: 0,
+      }];
+    } catch (uploadError) {
+      logger.error('Cloudinary upload failed for about image:', uploadError.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to upload about image');
+    }
   }
 
   const content = await AboutService.upsertAbout(data, req.user.id);
@@ -38,11 +49,20 @@ const updateAbout = asyncHandler(async (req, res) => {
   const data = { ...req.body };
 
   if (req.file) {
-    data.images = [{
-      url: `/uploads/${req.file.filename}`,
-      alt: req.body.imageAlt || 'About image',
-      order: 0,
-    }];
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'about',
+        resource_type: 'image',
+      });
+      data.images = [{
+        url: result.secure_url,
+        alt: req.body.imageAlt || 'About image',
+        order: 0,
+      }];
+    } catch (uploadError) {
+      logger.error('Cloudinary upload failed for about image:', uploadError.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to upload about image');
+    }
   }
 
   const content = await AboutService.upsertAbout(data, req.user.id);

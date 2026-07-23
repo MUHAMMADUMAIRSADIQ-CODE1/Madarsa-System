@@ -1,5 +1,6 @@
+const cloudinary = require('cloudinary').v2;
 const { CmsService, AuditService, HeroService } = require('../services');
-const { ApiResponse, asyncHandler, helpers } = require('../utils');
+const { ApiResponse, asyncHandler, helpers, logger } = require('../utils');
 const { httpStatus } = require('../constants');
 const { CMS_AUDIT_ACTIONS, CMS_MODULES } = require('../constants/cms');
 
@@ -15,11 +16,20 @@ const createHero = asyncHandler(async (req, res) => {
   const data = { ...req.body, identifier: 'default' };
 
   if (req.file) {
-    data.images = [{
-      url: `/uploads/${req.file.filename}`,
-      alt: req.body.imageAlt || 'Hero illustration',
-      order: 0,
-    }];
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'hero',
+        resource_type: 'image',
+      });
+      data.images = [{
+        url: result.secure_url,
+        alt: req.body.imageAlt || 'Hero illustration',
+        order: 0,
+      }];
+    } catch (uploadError) {
+      logger.error('Cloudinary upload failed for hero image:', uploadError.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to upload hero image');
+    }
   }
 
   const content = await HeroService.upsertHero(data, req.user.id);
@@ -44,11 +54,20 @@ const updateHero = asyncHandler(async (req, res) => {
   const data = { ...req.body };
 
   if (req.file) {
-    data.images = [{
-      url: `/uploads/${req.file.filename}`,
-      alt: req.body.imageAlt || 'Hero illustration',
-      order: 0,
-    }];
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'hero',
+        resource_type: 'image',
+      });
+      data.images = [{
+        url: result.secure_url,
+        alt: req.body.imageAlt || 'Hero illustration',
+        order: 0,
+      }];
+    } catch (uploadError) {
+      logger.error('Cloudinary upload failed for hero image:', uploadError.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to upload hero image');
+    }
   }
 
   const content = await HeroService.upsertHero(data, req.user.id);

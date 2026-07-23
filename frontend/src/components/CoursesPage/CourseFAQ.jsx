@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import coursesData from '../../data/coursesData';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 export default function CourseFAQ() {
   const { faqs } = coursesData;
@@ -21,10 +22,8 @@ export default function CourseFAQ() {
 
         <div className="max-w-3xl mx-auto space-y-3 lg:space-y-4">
           {faqs.map((faq) => (
-            <div
-              key={faq.id}
-              className="bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500 animate-fade-in-up"
-            >
+            <ScrollReveal key={faq.id}>
+              <div className="bg-white rounded-2xl border border-border-light overflow-hidden transition-all duration-500">
               <button
                 onClick={() => toggle(faq.id)}
                 className="w-full flex items-center justify-between px-6 lg:px-8 py-5 text-left transition-colors duration-300 hover:bg-primary-light/30"
@@ -54,6 +53,7 @@ export default function CourseFAQ() {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           ))}
         </div>
       </div>

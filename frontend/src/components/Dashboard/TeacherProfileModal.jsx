@@ -1,9 +1,11 @@
+import { useState, useCallback } from 'react';
 import {
   FiX, FiUser, FiMail, FiPhone, FiBookOpen,
   FiBriefcase, FiClock, FiStar, FiAward, FiGlobe,
   FiHeart, FiCheckCircle, FiCalendar,
   FiHome, FiPhoneCall, FiMonitor,
 } from 'react-icons/fi';
+import { getGalleryPlaceholderSVG } from '../Gallery/GalleryPlaceholderSVGs';
 
 function SectionCard({ title, icon: Icon, children, cols = 2 }) {
   if (!children) return null;
@@ -71,6 +73,8 @@ function StatPill({ label, value, icon: Icon }) {
 
 export default function TeacherProfileModal({ teacher, onClose }) {
   if (!teacher) return null;
+  const [photoError, setPhotoError] = useState(false);
+  const handlePhotoError = useCallback(() => setPhotoError(true), []);
 
   const subjects = teacher.subjects || [];
   const teachingLanguages = teacher.teachingLanguages || teacher.languages || [];
@@ -121,13 +125,13 @@ export default function TeacherProfileModal({ teacher, onClose }) {
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6">
                 {/* Photo */}
                 <div className="flex-shrink-0">
-                  {teacher.profilePhoto ? (
+                  {teacher.profilePhoto && !photoError ? (
                     <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                      <img src={teacher.profilePhoto} alt={name} className="w-full h-full object-cover" />
+                      <img src={teacher.profilePhoto} alt={name} className="w-full h-full object-cover" onError={handlePhotoError} />
                     </div>
                   ) : (
-                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center border-2 border-white/20 shadow-xl ring-4 ring-white/10">
-                      <FiUser size={48} className="text-white/60" />
+                    <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-white/20 shadow-xl ring-4 ring-white/10">
+                      {getGalleryPlaceholderSVG('profile', { initial: name?.charAt(0) || 'T' })}
                     </div>
                   )}
                   {isVerified && (

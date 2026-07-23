@@ -1,13 +1,11 @@
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 function EventTimelineItem({ event, isOdd, index }) {
   const registrationFill = (event.registered / event.capacity) * 100;
 
   return (
-    <div
-      className="animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
+    <ScrollReveal delay={index * 50}>
       <div className={`grid grid-cols-1 ${isOdd ? 'lg:grid-cols-[1fr_auto_1fr]' : 'lg:grid-cols-[1fr_auto_1fr]'} gap-6 items-center`}>
         {/* Left Content (alternates) */}
         <div className={isOdd ? 'lg:text-right order-1' : 'order-2'}>
@@ -75,7 +73,7 @@ function EventTimelineItem({ event, isOdd, index }) {
           </div>
         </div>
       </div>
-    </div>
+      </ScrollReveal>
   );
 }
 

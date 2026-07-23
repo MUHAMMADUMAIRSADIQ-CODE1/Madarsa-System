@@ -1,23 +1,32 @@
 import { useState } from 'react';
 import SectionTitle from '../common/SectionTitle';
+import { getGalleryPlaceholderSVG } from './GalleryPlaceholderSVGs';
+import ScrollReveal from '../common/ScrollReveal';
+
+// Map video categories to contextual SVG scenes
+const videoCategoryToSvg = {
+  'Tutorial': 'online-classes',
+  'Lecture': 'classrooms',
+  'Testimonial': 'international',
+  'Tour': 'campus',
+  'Course': 'studying',
+};
 
 function VideoCard({ video, index }) {
   const [isHovered, setIsHovered] = useState(false);
+  const svgCategory = videoCategoryToSvg[video.category] || 'library';
 
   return (
-    <div
-      className="group animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <ScrollReveal delay={index * 50}>
+      <div className="group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
       <div className="relative overflow-hidden rounded-2xl bg-black h-[280px] sm:h-[300px]">
-        {/* Thumbnail */}
-        <img
-          src={video.thumbnail}
-          alt={video.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
+        {/* SVG Thumbnail */}
+        <div className="w-full h-full">
+          {getGalleryPlaceholderSVG(svgCategory)}
+        </div>
 
         {/* Overlay */}
         <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent transition-opacity duration-300 ${
@@ -61,7 +70,8 @@ function VideoCard({ video, index }) {
           <span>{video.views} views</span>
         </div>
       </div>
-    </div>
+      </div>
+      </ScrollReveal>
   );
 }
 
@@ -96,4 +106,4 @@ export default function VideoGallery({ videos }) {
       </div>
     </section>
   );
-}
+}

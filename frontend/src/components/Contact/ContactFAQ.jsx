@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SectionTitle from '../common/SectionTitle';
+import ScrollReveal from '../common/ScrollReveal';
 
 const defaultFaqs = [
   {
@@ -22,10 +23,7 @@ const defaultFaqs = [
 function FAQItem({ faq, isOpen, onToggle, index }) {
   const f = faq || {};
   return (
-    <div
-      className="animate-fade-in-up"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
+    <ScrollReveal delay={index * 50}>
       <button
         onClick={onToggle}
         className="w-full bg-white rounded-2xl p-6 sm:p-7 shadow-sm hover:shadow-lg transition-all duration-300 text-left group"
@@ -49,12 +47,11 @@ function FAQItem({ faq, isOpen, onToggle, index }) {
         <div className={`overflow-hidden transition-all duration-300 ${
           isOpen ? 'max-h-96 mt-4' : 'max-h-0'
         }`}>
-          <p className="text-text-body leading-relaxed text-sm sm:text-base pr-8">
-            {f.answer || ''}
+          <p className="text-text-body leading-relaxed text-sm sm:text-base pr-8">              {f.answer || ''}
           </p>
         </div>
       </button>
-    </div>
+      </ScrollReveal>
   );
 }
 
