@@ -109,8 +109,7 @@ const updateAssignmentRules = [
     .isLength({ max: 5000 })
     .withMessage('Description must not exceed 5000 characters'),
   body('teacher')
-    .notEmpty()
-    .withMessage('Teacher ID is required')
+    .optional()
     .isMongoId()
     .withMessage('Invalid teacher ID'),
   body('dueDate')

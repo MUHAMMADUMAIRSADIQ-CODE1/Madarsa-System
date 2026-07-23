@@ -5,7 +5,7 @@ import {
   FiUsers, FiBook, FiCalendar, FiClock, FiSearch,
   FiChevronLeft, FiChevronRight, FiExternalLink
 } from 'react-icons/fi';
-import CourseCard from '../common/CourseCard';
+import LmsCourseCard from '../LMS/LmsCourseCard';
 
 export default function TeacherCoursesSection({ onViewCourse }) {
   const { user } = useAuth();
@@ -125,19 +125,14 @@ export default function TeacherCoursesSection({ onViewCourse }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, i) => (
-            <CourseCard
+            <LmsCourseCard
               key={course._id || course.id}
               course={{
                 ...course,
-                color: course.color || 'from-primary to-primary-dark',
-                rating: course.rating || '4.5',
-                duration: course.duration || '3 Months',
-                teacher: course.teacher || 'Admin Assigned',
-                students: course.enrolledCount || 0
+                teacher: user?.fullName || user?.name || 'You',
               }}
+              role="teacher"
               index={i}
-              actionText="View Details"
-              onAction={onViewCourse}
             />
           ))}
         </div>

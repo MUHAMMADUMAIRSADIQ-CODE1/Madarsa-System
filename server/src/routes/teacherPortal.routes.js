@@ -49,6 +49,16 @@ router.put(
   attendanceController.update
 );
 
+router.post(
+  '/attendance/bulk',
+  attendanceController.bulkMark
+);
+
+router.post(
+  '/attendance/mark-all-present',
+  attendanceController.markAll
+);
+
 // =================== ASSIGNMENTS ===================
 
 router.get(
@@ -80,6 +90,13 @@ router.delete(
   '/assignments/:id',
   validate(teacherPortalValidator.idParamRules),
   teacherPortalController.deleteAssignment
+);
+
+// ─── Grade Submission ───────────────────────────────────
+router.post(
+  '/assignments/:id/grade/:studentId',
+  validate(teacherPortalValidator.idParamRules),
+  teacherPortalController.gradeSubmission
 );
 
 // =================== COURSE DETAILS ===================

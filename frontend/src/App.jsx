@@ -32,6 +32,8 @@ const AccountBlockedPage = lazy(() => import('./pages/Auth/AccountBlockedPage'))
 const StudentDashboardPage = lazy(() => import('./pages/StudentDashboardPage'));
 const TeacherDashboardPage = lazy(() => import('./pages/TeacherDashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const CourseWorkspacePage = lazy(() => import('./components/LMS/CourseWorkspacePage'));
+const StudentWorkspaceLayout = lazy(() => import('./layouts/StudentWorkspaceLayout'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function PageLoader() {
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="results" element={<TeacherDashboardPage />} />
           <Route path="messages" element={<TeacherDashboardPage />} />
           <Route path="announcements" element={<TeacherDashboardPage />} />
+          <Route path="my-courses/:courseId" element={<CourseWorkspacePage />} />
           <Route path="profile" element={<TeacherDashboardPage />} />
           <Route path="settings" element={<TeacherDashboardPage />} />
         </Route>
@@ -141,6 +144,16 @@ export default function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path=":section" element={<StudentDashboardPage />} />
         </Route>
+
+        {/* Student Workspace Route - must come AFTER the /student group for correct matching */}
+        <Route
+          path="/student/my-courses/:courseId"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentWorkspaceLayout />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin Routes */}
         <Route

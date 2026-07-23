@@ -1,4 +1,5 @@
 const Student = require('../models/Student.model');
+const Assignment = require('../models/Assignment.model');
 const { ApiError } = require('../utils');
 const { httpStatus, messages } = require('../constants');
 
@@ -120,6 +121,129 @@ class StudentPortalService {
     }
 
     return student;
+  }
+
+  // =================== STUDENT ASSIGNMENTS ===================
+
+  async getCourseAssignments(courseId, userId) {
+    const student = await Student.findOne({ user: userId }).lean();
+    if (!student) throw new ApiError(httpStatus.NOT_FOUND, messages.STUDENT_NOT_FOUND);
+
+    const assignments = await Assignment.find({
+      course: courseId,
+      isPublished: true,
+    })
+      .select('title description dueDate totalMarks attachments submissions isPreviewFree')
+      .sort({ dueDate: -1 })
+      .lean();
+
+    // Attach the student's own submission status to each assignment
+    const studentId = student._id;
+    return assignments.map(a => {
+      const mySubmission = (a.submissions || []).find(
+        s => s.student && s.student.toString() === studentId.toString()
+      );
+      return {
+        _id: a._id,
+        title: a.title,
+        description: a.description,
+        dueDate: a.dueDate,
+        totalMarks: a.totalMarks,
+        attachments: a.attachments,
+        submissionCount: a.submissions?.length || 0,
+        mySubmission: mySubmission ? {
+          _id: mySubmission._id,
+          fileUrl: mySubmission.fileUrl,
+          notes: mySubmission.notes,
+          submittedAt: mySubmission.submittedAt,
+          score: mySubmission.score,
+          feedback: mySubmission.feedback,
+          status: mySubmission.status,
+          gradedAt: mySubmission.gradedAt,
+        } : null,
+      };
+    });
+  }
+
+  async submitAssignment(assignmentId, data, userId) {
+    const student = await Student.findOne({ user: userId }).lean();
+    if (!student) throw new ApiError(httpStatus.NOT_FOUND, messages.STUDENT_NOT_FOUND);
+
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Assignment not found');
+    }
+    if (!assignment.isPublished) {
+      throw new ApiError(httpStatus.FORBIDDEN, 'This assignment is not open for submissions');
+    }
+
+    const studentId = student._id;
+    const existingIndex = assignment.submissions.findIndex(
+      s => s.student && s.student.toString() === studentId.toString()
+    );
+
+    const submissionData = {
+      student: studentId,
+      submittedAt: new Date(),
+      fileUrl: data.fileUrl || '',
+      notes: data.notes || '',
+      status: 'submitted',
+    };
+
+    if (existingIndex >= 0) {
+      // Replace existing submission and reset grading on re-submission
+      assignment.submissions[existingIndex] = {
+        ...assignment.submissions[existingIndex].toObject(),
+        ...submissionData,
+        status: 'submitted',
+        score: undefined,
+        feedback: undefined,
+        gradedAt: undefined,
+        gradedBy: undefined,
+      };
+    } else {
+      assignment.submissions.push(submissionData);
+    }
+
+    await assignment.save();
+    return { message: 'Assignment submitted successfully' };
+  }
+
+  async getMySubmissions(userId) {
+    const student = await Student.findOne({ user: userId }).lean();
+    if (!student) throw new ApiError(httpStatus.NOT_FOUND, messages.STUDENT_NOT_FOUND);
+
+    const assignments = await Assignment.find({
+      'submissions.student': student._id,
+    })
+      .select('title description dueDate totalMarks isPublished course submissions')
+      .populate('course', 'title slug')
+      .sort({ dueDate: -1 })
+      .lean();
+
+    const studentId = student._id;
+    return assignments.map(a => {
+      const mySubmission = (a.submissions || []).find(
+        s => s.student && s.student.toString() === studentId.toString()
+      );
+      return {
+        _id: a._id,
+        title: a.title,
+        description: a.description,
+        dueDate: a.dueDate,
+        totalMarks: a.totalMarks,
+        course: a.course,
+        mySubmission: mySubmission ? {
+          fileUrl: mySubmission.fileUrl,
+          notes: mySubmission.notes,
+          submittedAt: mySubmission.submittedAt,
+          score: mySubmission.score,
+          feedback: mySubmission.feedback,
+          status: mySubmission.status,
+          gradedAt: mySubmission.gradedAt,
+        } : null,
+      };
+    });
   }
 
   async getDashboardData(studentId) {

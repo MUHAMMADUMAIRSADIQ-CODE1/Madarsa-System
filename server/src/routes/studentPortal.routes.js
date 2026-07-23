@@ -32,4 +32,35 @@ router.get(
   attendanceController.getStudentAttendance
 );
 
+// =================== ASSIGNMENTS ===================
+
+router.get(
+  '/assignments/course/:courseId',
+  studentPortalController.getCourseAssignments
+);
+
+router.post(
+  '/assignments/:id/submit',
+  studentPortalController.submitAssignment
+);
+
+router.get(
+  '/submissions',
+  studentPortalController.getMySubmissions
+);
+
+// =================== RESULTS ===================
+
+router.get(
+  '/results/course/:courseId',
+  studentPortalController.getCourseResults
+);
+
+// =================== ANNOUNCEMENTS ===================
+
+router.get(
+  '/announcements/course/:courseId',
+  studentPortalController.getCourseAnnouncements
+);
+
 module.exports = router;

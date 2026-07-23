@@ -16,6 +16,8 @@ const teacherPortalValidator = require('./teacherPortal.validator');
 const attendanceValidator = require('./attendance.validator');
 const teacherAcademicValidator = require('./teacherAcademic.validator');
 const assignmentValidator = require('./assignment.validator');
+const moduleValidator = require('./module.validator');
+const lessonValidator = require('./lesson.validator');
 
 module.exports = {
   authValidator,
@@ -36,4 +38,6 @@ module.exports = {
   attendanceValidator,
   teacherAcademicValidator,
   assignmentValidator,
+  moduleValidator,
+  lessonValidator,
 };

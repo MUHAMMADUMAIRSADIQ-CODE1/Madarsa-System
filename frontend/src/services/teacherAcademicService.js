@@ -39,6 +39,10 @@ export const teacherAcademicService = {
     return api.delete(`/teacher/assignments/${id}`);
   },
 
+  gradeSubmission: (assignmentId, studentId, data) => {
+    return api.post(`/teacher/assignments/${assignmentId}/grade/${studentId}`, data);
+  },
+
   // =================== SCHEDULE ===================
   getSchedule: (teacherId, params = {}) => {
     const q = new URLSearchParams(params).toString();
@@ -87,12 +91,24 @@ export const teacherAcademicService = {
     return api.get(`/teacher/academic/announcements/${teacherId}${q ? `?${q}` : ''}`);
   },
 
+  getCourseAnnouncements: (courseId) => {
+    return api.get(`/teacher/academic/announcements/course/${courseId}`);
+  },
+
   createAnnouncement: (data) => {
     return api.post('/teacher/academic/announcements', data);
   },
 
   updateAnnouncement: (id, data) => {
     return api.put(`/teacher/academic/announcements/${id}`, data);
+  },
+
+  pinAnnouncement: (id) => {
+    return api.patch(`/teacher/academic/announcements/${id}/pin`);
+  },
+
+  publishAnnouncement: (id) => {
+    return api.patch(`/teacher/academic/announcements/${id}/publish`);
   },
 
   deleteAnnouncement: (id) => {

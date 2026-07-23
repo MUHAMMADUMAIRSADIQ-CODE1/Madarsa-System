@@ -1,9 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  FiHome, FiBookOpen, FiUsers, FiCalendar, FiCheckSquare,
-  FiClipboard, FiBell, FiUser, FiSettings, FiLogOut, FiX,
-  FiAward, FiMessageCircle
+  FiHome, FiBookOpen, FiUsers, FiCalendar,
+  FiUser, FiSettings, FiLogOut, FiX,
+  FiMessageCircle
 } from 'react-icons/fi';
 
 const sidebarItems = [
@@ -11,11 +11,7 @@ const sidebarItems = [
   { id: 'courses', label: 'My Courses', icon: FiBookOpen, section: 'main', path: '/teacher/courses' },
   { id: 'students', label: 'My Students', icon: FiUsers, section: 'main', path: '/teacher/students' },
   { id: 'schedule', label: 'Schedule', icon: FiCalendar, section: 'main', path: '/teacher/schedule' },
-  { id: 'attendance', label: 'Attendance', icon: FiCheckSquare, section: 'main', path: '/teacher/attendance' },
-  { id: 'assignments', label: 'Assignments', icon: FiClipboard, section: 'main', path: '/teacher/assignments' },
-  { id: 'results', label: 'Results', icon: FiAward, section: 'main', path: '/teacher/results' },
   { id: 'messages', label: 'Messages', icon: FiMessageCircle, section: 'main', path: '/teacher/messages' },
-  { id: 'announcements', label: 'Announcements', icon: FiBell, section: 'main', path: '/teacher/announcements' },
   { id: 'profile', label: 'Profile', icon: FiUser, section: 'account', path: '/teacher/profile' },
   { id: 'settings', label: 'Settings', icon: FiSettings, section: 'account', path: '/teacher/settings' },
 ];

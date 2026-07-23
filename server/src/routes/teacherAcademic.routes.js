@@ -17,9 +17,12 @@ router.delete('/results/:id', teacherAcademicController.deleteResult);
 router.patch('/results/:id/publish', teacherAcademicController.publishResult);
 
 // =================== ANNOUNCEMENTS ===================
+router.get('/announcements/course/:courseId', teacherAcademicController.getCourseAnnouncements);
 router.get('/announcements/:teacherId', teacherAcademicController.getAnnouncements);
 router.post('/announcements', validate(teacherAcademicValidator.createAnnouncementRules), teacherAcademicController.createAnnouncement);
 router.put('/announcements/:id', teacherAcademicController.updateAnnouncement);
+router.patch('/announcements/:id/pin', teacherAcademicController.togglePinAnnouncement);
+router.patch('/announcements/:id/publish', teacherAcademicController.togglePublishAnnouncement);
 router.delete('/announcements/:id', teacherAcademicController.deleteAnnouncement);
 
 // =================== MESSAGES ===================

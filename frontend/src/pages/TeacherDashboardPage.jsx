@@ -2,9 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import TeacherWelcomeSection from '../components/Dashboard/TeacherWelcomeSection';
-import TeacherTodaysClassesSection from '../components/Dashboard/TeacherTodaysClassesSection';
-import TeacherCoursesSection from '../components/Dashboard/TeacherCoursesSection';
 import TeacherAssignedStudentsSection from '../components/Dashboard/TeacherAssignedStudentsSection';
 import TeacherAssignmentsSection from '../components/Dashboard/TeacherAssignmentsSection';
 import TeacherScheduleSection from '../components/Dashboard/TeacherScheduleSection';
@@ -13,8 +10,14 @@ import TeacherResultsSection from '../components/Dashboard/TeacherResultsSection
 import TeacherAnnouncementsSection from '../components/Dashboard/TeacherAnnouncementsSection';
 import TeacherMessagesSection from '../components/Dashboard/TeacherMessagesSection';
 import TeacherNotificationsSection from '../components/Dashboard/TeacherNotificationsSection';
+import TeacherCoursesSection from '../components/Dashboard/TeacherCoursesSection';
+import TeacherDashboardMain from '../components/Dashboard/TeacherDashboardMain';
+import ProfessionalMyCoursesPage from '../components/TeacherManagement/ProfessionalMyCoursesPage';
+import ProfessionalAttendancePage from '../components/TeacherManagement/ProfessionalAttendancePage';
+import ProfessionalResultsPage from '../components/TeacherManagement/ProfessionalResultsPage';
+import ProfessionalAssignmentsPage from '../components/TeacherManagement/ProfessionalAssignmentsPage';
+import ProfessionalAnnouncementsPage from '../components/TeacherManagement/ProfessionalAnnouncementsPage';
 import { useAuth } from '../context/AuthContext';
-import { teacherDashboardData } from '../data/teacherDashboardData';
 import teacherPortalService from '../services/teacherPortalService';
 import teacherAcademicService from '../services/teacherAcademicService';
 import attendanceService from '../services/attendanceService';
@@ -292,7 +295,7 @@ export default function TeacherDashboardPage() {
     }
   }, []);
 
-  // Analytics state
+  // Analytics state (used only by non-dashboard sections)
   const [analytics, setAnalytics] = useState(null);
 
   // Force re-login countdown after password/email change
@@ -322,11 +325,8 @@ export default function TeacherDashboardPage() {
       if (activeSection === 'courses') fetchCourses(profile._id);
       if (activeSection === 'students') fetchStudents(profile._id, studentPage);
       if (activeSection === 'attendance') fetchTeacherAttendance(profile._id, attendanceDate);
-      if (activeSection === 'dashboard') {
-        teacherAcademicService.getDashboardAnalytics(profile._id)
-          .then(res => setAnalytics(res?.data || res))
-          .catch(() => {});
-      }
+      // New management pages fetch their own data internally
+      // Dashboard analytics now fetched inside TeacherDashboardMain component
     }
   }, [activeSection, profile?._id, studentPage, attendanceDate, fetchCourses, fetchStudents, fetchTeacherAttendance]);
 
@@ -690,165 +690,7 @@ export default function TeacherDashboardPage() {
   };
 
   const renderDashboard = () => {
-    const a = analytics || {};
-    const courseCount = a.totalCourses || dashboardData?.courses?.length || dashboardData?.assignedCourses?.length || '-';
-    const studentCount = a.totalStudents || dashboardData?.totalStudents || dashboardData?.assignedStudents?.length || '-';
-    const welcomeStats = {
-      totalCourses: courseCount,
-      totalStudents: studentCount,
-      todaysClasses: a.todaysClasses || '-',
-      pendingReviews: a.pendingReviews || '-',
-    };
-
-    const statItems = [
-      { label: 'My Courses', value: courseCount, icon: FiBook, color: 'text-blue-600 bg-blue-100' },
-      { label: 'Students', value: studentCount, icon: FiUsers, color: 'text-green-600 bg-green-100' },
-      { label: 'Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle, color: 'text-purple-600 bg-purple-100' },
-      { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText, color: 'text-orange-600 bg-orange-100' },
-      { label: 'Announcements', value: a.totalAnnouncements || '-', icon: FiBell, color: 'text-red-600 bg-red-100' },
-      { label: 'Upcoming', value: a.upcomingClasses || '0', icon: FiCalendar, color: 'text-indigo-600 bg-indigo-100' },
-    ];
-
-    return (
-    <div className="space-y-8">
-      <TeacherWelcomeSection stats={welcomeStats} />
-
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        {statItems.map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <div key={idx} className={`rounded-xl p-4 ${stat.color}`}>
-              <Icon className="w-5 h-5 mb-2 opacity-80" />
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs font-medium opacity-75 mt-0.5">{stat.label}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <TeacherTodaysClassesSection />
-          <TeacherCoursesSection />
-        </div>
-        <div className="space-y-6">
-          {/* Quick Stats */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="font-heading text-lg font-bold text-text-dark mb-6">Quick Stats</h3>
-            <div className="space-y-4">
-              {[
-                { label: 'Active Students', value: studentCount, icon: FiUsers },
-                { label: 'My Courses', value: courseCount, icon: FiBook },
-                { label: 'Assignments', value: a.totalAssignments || '-', icon: FiFileText },
-                { label: 'Avg Attendance', value: a.attendancePercentage ? `${a.attendancePercentage}%` : '-', icon: FiCheckCircle },
-              ].map((stat, idx) => {
-                const Icon = stat.icon;
-                return (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-bg-light rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="p-2 bg-primary/10 text-primary rounded-lg"><Icon className="w-5 h-5" /></span>
-                      <span className="text-sm text-text-light">{stat.label}</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-primary">{stat.value}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button
-                onClick={() => navigateTo('/teacher/courses')}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
-              >
-                <FiBook className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-text-body">View My Courses</span>
-              </button>
-              <button
-                onClick={() => navigateTo('/teacher/students')}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
-              >
-                <FiUsers className="w-5 h-5 text-green-500" />
-                <span className="text-sm font-medium text-text-body">My Assigned Students</span>
-              </button>
-              <button
-                onClick={() => navigateTo('/teacher/attendance')}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
-              >
-                <FiCheckCircle className="w-5 h-5 text-purple-500" />
-                <span className="text-sm font-medium text-text-body">Take Attendance</span>
-              </button>
-              <button
-                onClick={() => navigateTo('/teacher/schedule')}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
-              >
-                <FiCalendar className="w-5 h-5 text-blue-500" />
-                <span className="text-sm font-medium text-text-body">View Schedule</span>
-              </button>
-              <button
-                onClick={() => navigateTo('/teacher/assignments')}
-                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-primary-light transition-colors text-left"
-              >
-                <FiFileText className="w-5 h-5 text-orange-500" />
-                <span className="text-sm font-medium text-text-body">Manage Assignments</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h3 className="font-heading text-lg font-bold text-text-dark mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              {teacherDashboardData.dashboard.recentActivity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-3 p-3 rounded-xl border border-border-light hover:border-primary transition-all"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <FiClock className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-body">{activity.text}</p>
-                    <p className="text-xs text-text-light mt-1">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Notifications */}
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-heading text-lg font-bold text-text-dark">Recent Notifications</h3>
-              <button
-                onClick={() => navigateTo('/teacher/announcements')}
-                className="text-primary text-sm font-semibold hover:underline"
-              >
-                View All
-              </button>
-            </div>
-            <div className="space-y-3">
-              {teacherDashboardData.dashboard.recentActivity.slice(0, 3).map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 p-3 rounded-xl border border-border-light">
-                  <div className="w-2 h-2 mt-2 rounded-full bg-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-body">{activity.text}</p>
-                    <p className="text-xs text-text-light mt-0.5">{activity.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    return <TeacherDashboardMain />;
   };
 
   const renderAttendance = () => (
@@ -1370,10 +1212,10 @@ export default function TeacherDashboardPage() {
       return <TeacherAssignedStudentsSection />;
 
     case 'assignments':
-      return <TeacherAssignmentsSection />;
+      return <ProfessionalAssignmentsPage />;
 
     case 'attendance':
-      return renderAttendance();
+      return <ProfessionalAttendancePage />;
 
     case 'schedule':
       return <TeacherScheduleSection />;
@@ -1382,10 +1224,10 @@ export default function TeacherDashboardPage() {
       return <TeacherMessagesSection />;
 
     case 'announcements':
-      return <TeacherAnnouncementsSection />;
+      return <ProfessionalAnnouncementsPage />;
 
     case 'results':
-      return <TeacherResultsSection />;
+      return <ProfessionalResultsPage />;
 
     case 'profile':
       return renderProfile();

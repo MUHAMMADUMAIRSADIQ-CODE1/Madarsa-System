@@ -46,7 +46,18 @@ const getStudentAttendance = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Student attendance fetched successfully', result));
 });
 
+const bulkMark = asyncHandler(async (req, res) => {
+  const result = await attendanceService.bulkMarkAttendance(req.body.records, req.user.id);
+  res.status(200).json(ApiResponse.success('Attendance marked successfully', result));
+});
+
+const markAll = asyncHandler(async (req, res) => {
+  const result = await attendanceService.markAllPresent(req.body.records, req.user.id);
+  res.status(200).json(ApiResponse.success('All marked present successfully', result));
+});
+
 module.exports = {
   getAll, getById, create, update, remove, restore, getStats,
   getTeacherAttendance, getStudentAttendance,
+  bulkMark, markAll,
 };

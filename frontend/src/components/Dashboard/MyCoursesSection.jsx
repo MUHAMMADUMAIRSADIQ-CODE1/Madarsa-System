@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import studentPortalService from '../../services/studentPortalService';
+import courseService from '../../services/courseService';
+import LmsCourseCard from '../LMS/LmsCourseCard';
 
 export default function MyCoursesSection({ courses: propCourses }) {
   const { user } = useAuth();
   const [fetchedCourses, setFetchedCourses] = useState([]);
+  const [assignedTeacherName, setAssignedTeacherName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -15,9 +18,48 @@ export default function MyCoursesSection({ courses: propCourses }) {
     setLoading(true);
     setError(null);
     try {
+      // STEP 1: Fetch dashboard to get student's enrolled courses and assigned teacher
       const res = await studentPortalService.getDashboard(studentId);
       const data = res?.data || res;
-      setFetchedCourses(data?.courses || []);
+      const dashboardCourses = data?.courses || [];
+
+      // Get assigned teacher name from the existing assignment relationship
+      if (data?.assignedTeacher?.fullName) {
+        setAssignedTeacherName(data.assignedTeacher.fullName);
+      }
+
+      // STEP 2: Enrich courses with full data from published courses
+      // Dashboard only populates courses with minimal fields (title, slug)
+      // Published courses API returns full fields via toPublicJSON()
+      let enrichedCourses = dashboardCourses;
+      try {
+        const pubRes = await courseService.getPublishedCourses();
+        const pubCourses = pubRes?.data?.data || [];
+
+        enrichedCourses = dashboardCourses.map((enrollment) => {
+          const ref = enrollment.course || enrollment;
+          const refId = ref._id || ref.id;
+          const fullCourse = pubCourses.find(c => (c._id === refId || c.id === refId));
+
+          if (fullCourse) {
+            return {
+              ...enrollment,
+              course: {
+                ...fullCourse,
+                // Preserve enrollment-specific data
+                status: enrollment.status || fullCourse.status || 'active',
+                progress: enrollment.progress || 0,
+              },
+            };
+          }
+          return enrollment;
+        });
+      } catch (_) {
+        // Fallback: use dashboard data if enrichment fails
+        console.warn('Could not enrich course data, using dashboard data');
+      }
+
+      setFetchedCourses(enrichedCourses);
     } catch (err) {
       setError(err.message || 'Failed to load courses');
     } finally {
@@ -33,6 +75,7 @@ export default function MyCoursesSection({ courses: propCourses }) {
 
   const courses = propCourses !== undefined ? propCourses : fetchedCourses;
   const isEmpty = !loading && !error && courses.length === 0;
+  const teacherName = assignedTeacherName;
 
   return (
     <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
@@ -72,70 +115,20 @@ export default function MyCoursesSection({ courses: propCourses }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => {
+          {courses.map((course, i) => {
             const courseData = course.course || course;
-            const courseId = courseData._id || course.id;
-            const progress = course.progress || 0;
+            const enrichedCourse = {
+              ...courseData,
+              teacher: courseData.instructor || course.instructor || courseData.teacher || course.teacher || '',
+            };
             return (
-              <div
-                key={courseId}
-                className="group rounded-xl overflow-hidden shadow-md border border-border-light hover:shadow-xl hover:border-primary transition-all duration-300"
-              >
-                <div className="relative h-40 bg-gradient-to-br from-primary/20 to-primary-dark/20 overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <svg className="w-16 h-16 text-primary opacity-20" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17.25m20-11c5.5 0 10 4.745 10 11m-15-6.25c0-4.418-3.582-8-8-8" />
-                    </svg>
-                  </div>
-                  <div className="absolute top-3 right-3 bg-white/90 px-3 py-1 rounded-full">
-                    <p className="text-xs font-bold text-primary">{progress}%</p>
-                  </div>
-                </div>
-
-                <div className="p-4">
-                  <h3 className="font-semibold text-text-dark text-lg group-hover:text-primary transition-colors">
-                    {courseData.title || courseData.name || 'Course'}
-                  </h3>
-                  <p className="text-sm text-text-light mt-1">
-                    {courseData.instructor || course.instructor || courseData.level || ''}
-                  </p>
-
-                  {progress > 0 && (
-                    <div className="mt-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="text-xs text-text-light">Progress</p>
-                        <p className="text-xs font-semibold text-primary">{progress}%</p>
-                      </div>
-                      <div className="h-2 bg-bg-light rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-primary to-primary-dark transition-all duration-300"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 mt-4">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold capitalize ${
-                      (course.status || 'active') === 'active' ? 'bg-green-100 text-green-800' :
-                      (course.status || 'active') === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      (course.status || 'active') === 'completed' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {course.status || 'active'}
-                    </span>
-                    {courseData.level && (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold capitalize bg-primary/10 text-primary">
-                        {courseData.level}
-                      </span>
-                    )}
-                  </div>
-
-                  <button className="w-full mt-3 py-2 px-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors text-sm">
-                    Continue Learning
-                  </button>
-                </div>
-              </div>
+              <LmsCourseCard
+                key={courseData._id || courseData.id || i}
+                course={enrichedCourse}
+                role="student"
+                index={i}
+                teacherName={teacherName}
+              />
             );
           })}
         </div>

@@ -191,14 +191,20 @@ class TeacherPortalService {
     const limit = parseInt(query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses').lean();
+    const teacher = await Teacher.findOne({ user: teacherId }).select('assignedCourses assignedStudents').lean();
     if (!teacher) throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
 
     const courseIds = teacher.assignedCourses || [];
+    const assignedStudentIds = teacher.assignedStudents || [];
 
     const filter = { isDeleted: false };
 
-    // Filter by assigned courses
+    // Only return students that are assigned to this teacher
+    if (assignedStudentIds.length > 0) {
+      filter._id = { $in: assignedStudentIds };
+    }
+
+    // Filter by assigned courses (only used when no specific course filter)
     if (courseIds.length > 0) {
       filter['courses.course'] = { $in: courseIds };
     }
@@ -356,6 +362,38 @@ class TeacherPortalService {
     return assignment;
   }
 
+  // =================== SUBMISSION GRADING ===================
+
+  async gradeSubmission(assignmentId, studentId, data, userId) {
+    // Verify the teacher is the owner of this assignment
+    const teacher = await Teacher.findOne({ user: userId });
+    if (!teacher) {
+      throw new ApiError(httpStatus.NOT_FOUND, messages.TEACHER_NOT_FOUND);
+    }
+
+    const assignment = await Assignment.findOne({ _id: assignmentId, teacher: teacher._id });
+    if (!assignment) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Assignment not found');
+    }
+
+    const submission = assignment.submissions.find(
+      s => s.student.toString() === studentId
+    );
+
+    if (!submission) {
+      throw new ApiError(httpStatus.NOT_FOUND, 'Submission not found for this student');
+    }
+
+    if (data.score !== undefined) submission.score = data.score;
+    if (data.feedback !== undefined) submission.feedback = data.feedback;
+    submission.status = 'graded';
+    submission.gradedAt = new Date();
+    submission.gradedBy = userId;
+
+    await assignment.save();
+    return assignment.populate('submissions.student', 'studentName studentId studentPhoto');
+  }
+
   // =================== COURSE DETAILS ===================
 
   async getCourseDetails(teacherId, courseId) {
@@ -375,7 +413,7 @@ class TeacherPortalService {
       'courses.course': courseId,
       isDeleted: false,
     })
-      .select('studentName studentId studentPhoto email phone status')
+      .select('studentName studentId studentPhoto email phone status courses')
       .lean();
 
     // Get attendance summary for this course
@@ -416,6 +454,10 @@ class TeacherPortalService {
         email: s.email,
         phone: s.phone,
         status: s.status,
+        // Extract enrollment date for this specific course from the courses array
+        enrolledAt: (s.courses || []).find(
+          c => c.course && c.course.toString() === courseId.toString()
+        )?.enrolledAt || null,
       })),
       attendanceSummary: attendanceSummary[0] || { total: 0, present: 0, absent: 0, late: 0, excused: 0 },
       assignments: courseAssignments.map(a => ({

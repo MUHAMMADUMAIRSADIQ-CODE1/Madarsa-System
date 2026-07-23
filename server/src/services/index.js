@@ -18,10 +18,15 @@ const AdminService = require('./admin.service');
 const StudentAssignmentService = require('./studentAssignment.service');
 const EmailService = require('./email.service');
 
+const ModuleService = require('./module.service');
+const LessonService = require('./lesson.service');
+
 module.exports = {
   AuthService,
   UserService,
   CourseService,
+  ModuleService,
+  LessonService,
   StudentService,
   TeacherService,
   GalleryService,

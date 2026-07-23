@@ -1,6 +1,7 @@
 const Teacher = require('../models/Teacher.model');
 const Student = require('../models/Student.model');
 const User = require('../models/User.model');
+const Course = require('../models/Course.model');
 const AuditService = require('./audit.service');
 const { ApiError } = require('../utils');
 const { httpStatus, messages, roles, USER_STATUS } = require('../constants');
@@ -279,6 +280,15 @@ class StudentAssignmentService {
       },
     });
 
+    // Increment enrolledCount for each overlapping course
+    if (overlap.overlappingCourseIds.length > 0) {
+      await Promise.all(
+        overlap.overlappingCourseIds.map(courseId =>
+          Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: 1 } })
+        )
+      );
+    }
+
     return { teacher: updatedTeacher, student: updatedStudent };
   }
 
@@ -389,6 +399,25 @@ class StudentAssignmentService {
       },
     });
 
+    // Decrement enrolledCount for each course the student was enrolled in
+    try {
+      const fullStudent = await Student.findById(studentId).populate('courses.course', '_id').lean();
+      if (fullStudent && fullStudent.courses) {
+        const studentCourseIds = fullStudent.courses
+          .filter(c => c.course)
+          .map(c => c.course._id.toString());
+        if (studentCourseIds.length > 0) {
+          await Promise.all(
+            studentCourseIds.map(courseId =>
+              Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: -1 } })
+            )
+          );
+        }
+      }
+    } catch {
+      // Silently skip — non-critical
+    }
+
     return { teacher, student };
   }
 
@@ -493,9 +522,37 @@ class StudentAssignmentService {
       }
     }
 
+    // Track per-course enrollment counts for bulk assign
+    const courseEnrollCounts = {};
+    for (const courseId of teacherCourseIds) {
+      courseEnrollCounts[courseId] = 0;
+    }
+
     // Batch update all students and teacher in single atomic operations
     if (results.assigned.length > 0) {
       const assignedIds = results.assigned.map((r) => r.studentId);
+
+      // Count how many assigned students have each overlapping course
+      for (const r of results.assigned) {
+        try {
+          const s = await Student.findById(r.studentId)
+            .select('courses')
+            .populate('courses.course', '_id')
+            .lean();
+          if (s && s.courses) {
+            const studentCourseIds = s.courses
+              .filter(c => c.course)
+              .map(c => c.course._id.toString());
+            for (const scId of studentCourseIds) {
+              if (courseEnrollCounts[scId] !== undefined) {
+                courseEnrollCounts[scId]++;
+              }
+            }
+          }
+        } catch {
+          // Silently skip — non-critical for enrolled count
+        }
+      }
 
       await Promise.all([
         Teacher.findByIdAndUpdate(teacherId, {
@@ -505,6 +562,12 @@ class StudentAssignmentService {
           { _id: { $in: assignedIds } },
           { assignedTeacher: teacherId }
         ),
+        // Increment enrolledCount for each course
+        ...Object.entries(courseEnrollCounts)
+          .filter(([_, count]) => count > 0)
+          .map(([courseId, count]) =>
+            Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: count } })
+          ),
       ]);
     }
 
@@ -899,21 +962,36 @@ class StudentAssignmentService {
    * Uses atomic $pull to avoid double-save on the student document.
    */
   async removeAssignmentOnStudentDelete(studentId) {
-    const student = await Student.findById(studentId).select('assignedTeacher').lean();
+    const student = await Student.findById(studentId).populate('courses.course', '_id').lean();
     if (!student) return;
 
     const teacherId = student.assignedTeacher;
-    if (!teacherId) return;
 
-    // Atomic operations - no need to load full documents
-    await Promise.all([
-      Teacher.findByIdAndUpdate(teacherId, {
-        $pull: { assignedStudents: studentId },
-      }),
-      Student.findByIdAndUpdate(studentId, {
-        assignedTeacher: null,
-      }),
-    ]);
+    // Atomic operations - remove teacher/student references first
+    if (teacherId) {
+      await Promise.all([
+        Teacher.findByIdAndUpdate(teacherId, {
+          $pull: { assignedStudents: studentId },
+        }),
+        Student.findByIdAndUpdate(studentId, {
+          assignedTeacher: null,
+        }),
+      ]);
+    }
+
+    // Then decrement enrolledCount for each course (non-critical)
+    if (student.courses) {
+      const studentCourseIds = student.courses
+        .filter(c => c.course)
+        .map(c => c.course._id.toString());
+      if (studentCourseIds.length > 0) {
+        Promise.all(
+          studentCourseIds.map(courseId =>
+            Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: -1 } })
+          )
+        ).catch(() => {});
+      }
+    }
   }
 }
 

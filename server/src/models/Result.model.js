@@ -16,7 +16,7 @@ const resultSchema = createBaseSchema({
   },
   teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Teacher',
+    ref: 'User',
     required: [true, 'Teacher is required'],
     index: true,
   },

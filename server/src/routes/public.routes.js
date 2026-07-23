@@ -7,6 +7,8 @@ const footerController = require('../controllers/footer.controller');
 const courseController = require('../controllers/course.controller');
 const teacherController = require('../controllers/teacher.controller');
 const admissionController = require('../controllers/admission.controller');
+const moduleController = require('../controllers/module.controller');
+const lessonController = require('../controllers/lesson.controller');
 const { uploadFields } = require('../middlewares/upload');
 const validate = require('../middlewares/validate');
 const { admissionValidator } = require('../validators');
@@ -22,6 +24,8 @@ router.get('/courses', courseController.getPublished);
 router.get('/courses/:slug', courseController.getBySlug);
 router.get('/teachers', teacherController.getPublished);
 router.get('/teachers/:slug', teacherController.getBySlug);
+router.get('/courses/:courseId/modules', moduleController.getPublished);
+router.get('/modules/:moduleId/lessons', lessonController.getPublished);
 
 router.post(
   '/admissions/apply',

@@ -1,21 +1,16 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  FiHome, FiBookOpen, FiVideo, FiClipboard, FiCalendar,
-  FiAward, FiCreditCard, FiMail, FiBell, FiUser, FiSettings, FiLogOut, FiX
+  FiHome, FiBookOpen,
+  FiAward, FiCreditCard, FiMail, FiUser, FiSettings, FiLogOut, FiX
 } from 'react-icons/fi';
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Dashboard', icon: FiHome, section: 'main', path: '/student/dashboard' },
   { id: 'courses', label: 'My Courses', icon: FiBookOpen, section: 'main', path: '/student/courses' },
-  { id: 'live-classes', label: 'Live Classes', icon: FiVideo, section: 'main', path: '/student/live-classes' },
-  { id: 'assignments', label: 'Assignments', icon: FiClipboard, section: 'main', path: '/student/assignments' },
-  { id: 'attendance', label: 'Attendance', icon: FiCalendar, section: 'main', path: '/student/attendance' },
   { id: 'certificates', label: 'Certificates', icon: FiAward, section: 'main', path: '/student/certificates' },
   { id: 'fees', label: 'Fee Status', icon: FiCreditCard, section: 'main', path: '/student/fees' },
   { id: 'messages', label: 'Messages', icon: FiMail, section: 'main', path: '/student/messages', badge: 3 },
-  { id: 'notifications', label: 'Notifications', icon: FiBell, section: 'main', path: '/student/notifications', badge: 2 },
-  { id: 'teacher', label: 'My Teacher', icon: FiUser, section: 'main', path: '/student/teacher' },
   { id: 'profile', label: 'Profile', icon: FiUser, section: 'account', path: '/student/profile' },
   { id: 'settings', label: 'Settings', icon: FiSettings, section: 'account', path: '/student/settings' },
 ];
@@ -23,13 +18,9 @@ const sidebarItems = [
 const iconComponents = {
   home: <FiHome className="w-5 h-5" />,
   book: <FiBookOpen className="w-5 h-5" />,
-  video: <FiVideo className="w-5 h-5" />,
-  tasks: <FiClipboard className="w-5 h-5" />,
-  calendar: <FiCalendar className="w-5 h-5" />,
   award: <FiAward className="w-5 h-5" />,
   wallet: <FiCreditCard className="w-5 h-5" />,
   mail: <FiMail className="w-5 h-5" />,
-  bell: <FiBell className="w-5 h-5" />,
   user: <FiUser className="w-5 h-5" />,
   settings: <FiSettings className="w-5 h-5" />,
   logout: <FiLogOut className="w-5 h-5" />,

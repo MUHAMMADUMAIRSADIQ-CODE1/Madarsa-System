@@ -93,7 +93,7 @@ class AttendanceService {
     const existing = await Attendance.findOne({
       student: data.student,
       course: data.course,
-      classDate: new Date(data.classDate).setHours(0, 0, 0, 0),
+      classDate: new Date(data.classDate),
       isDeleted: false,
     });
 
@@ -165,6 +165,7 @@ class AttendanceService {
 
     if (query.course) filter.course = query.course;
     if (query.teacher) filter.teacher = query.teacher;
+    if (query.student) filter.student = query.student;
     if (query.batch) filter.batch = query.batch;
     if (query.dateFrom || query.dateTo) {
       filter.classDate = {};
@@ -206,6 +207,7 @@ class AttendanceService {
     }
 
     if (query.course) filter.course = query.course;
+    if (query.student) filter.student = query.student;
     if (query.status) filter.status = query.status;
 
     const page = Math.max(1, parseInt(query.page, 10) || 1);
@@ -237,6 +239,88 @@ class AttendanceService {
         hasPrevPage: page > 1,
       },
     };
+  }
+
+  async bulkMarkAttendance(records, userId) {
+    const results = { created: 0, updated: 0, errors: [] };
+
+    for (const record of records) {
+      try {
+        const existing = await Attendance.findOne({
+          student: record.student,
+          course: record.course,
+          classDate: new Date(record.classDate),
+          isDeleted: false,
+        });
+
+        if (existing) {
+          // Update existing record
+          existing.status = record.status || existing.status;
+          if (record.remarks !== undefined) existing.remarks = record.remarks;
+          existing.updatedBy = userId;
+          await existing.save();
+          results.updated++;
+        } else {
+          // Create new record
+          await Attendance.create({
+            student: record.student,
+            course: record.course,
+            teacher: record.teacher,
+            classDate: new Date(record.classDate),
+            status: record.status || 'present',
+            remarks: record.remarks || '',
+            markedBy: userId,
+            createdBy: userId,
+          });
+          results.created++;
+        }
+      } catch (err) {
+        results.errors.push({
+          student: record.student,
+          error: err.message,
+        });
+      }
+    }
+
+    return results;
+  }
+
+  async markAllPresent(records, userId) {
+    const results = { created: 0, updated: 0 };
+
+    for (const record of records) {
+      try {
+        const existing = await Attendance.findOne({
+          student: record.student,
+          course: record.course,
+          classDate: new Date(record.classDate),
+          isDeleted: false,
+        });
+
+        if (existing) {
+          existing.status = 'present';
+          existing.updatedBy = userId;
+          await existing.save();
+          results.updated++;
+        } else {
+          await Attendance.create({
+            student: record.student,
+            course: record.course,
+            teacher: record.teacher,
+            classDate: new Date(record.classDate),
+            status: 'present',
+            remarks: '',
+            markedBy: userId,
+            createdBy: userId,
+          });
+          results.created++;
+        }
+      } catch {
+        results.updated++;
+      }
+    }
+
+    return results;
   }
 
   async getStudentAttendance(studentId, query = {}) {
@@ -273,7 +357,15 @@ class AttendanceService {
       Attendance.countDocuments(filter),
     ]);
 
-    const stats = await this.getStats({ ...query, student: studentId });
+    // Build stats query with the same date range as the data query
+    const statsQuery = { ...query, student: studentId };
+    if (query.month && query.year) {
+      const year = parseInt(query.year);
+      const month = parseInt(query.month) - 1;
+      statsQuery.dateFrom = new Date(year, month, 1).toISOString();
+      statsQuery.dateTo = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+    }
+    const stats = await this.getStats(statsQuery);
 
     return {
       data,

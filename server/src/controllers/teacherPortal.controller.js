@@ -59,6 +59,18 @@ const deleteAssignment = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Assignment deleted successfully', data));
 });
 
+// =================== SUBMISSION GRADING ===================
+
+const gradeSubmission = asyncHandler(async (req, res) => {
+  const data = await teacherPortalService.gradeSubmission(
+    req.params.id,
+    req.params.studentId,
+    req.body,
+    req.user.id
+  );
+  res.status(200).json(ApiResponse.success('Submission graded successfully', data));
+});
+
 // =================== COURSE DETAILS ===================
 
 const getCourseDetails = asyncHandler(async (req, res) => {
@@ -106,4 +118,5 @@ module.exports = {
   getCourseDetails, getSchedule,
   getCourseMaterials, addCourseMaterial, deleteCourseMaterial,
   getAssignedStudents,
+  gradeSubmission,
 };

@@ -158,6 +158,16 @@ class StudentService extends BaseService {
     });
 
     await student.save();
+
+    // Keep the enrolled count on the Course model in sync
+    // This ensures the public courses API returns the real count for all users
+    try {
+      const Course = require('../models/Course.model');
+      await Course.findByIdAndUpdate(courseId, { $inc: { enrolledCount: 1 } });
+    } catch (_) {
+      // Non-critical: enrolledCount will be corrected on next enrollment
+    }
+
     return student;
   }
 

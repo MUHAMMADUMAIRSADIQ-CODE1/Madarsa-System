@@ -48,6 +48,21 @@ const deleteAnnouncement = asyncHandler(async (req, res) => {
   res.status(200).json(ApiResponse.success('Announcement deleted successfully', data));
 });
 
+const togglePinAnnouncement = asyncHandler(async (req, res) => {
+  const data = await teacherAcademicService.togglePin(req.params.id, req.user.id);
+  res.status(200).json(ApiResponse.success('Announcement pin status toggled successfully', data));
+});
+
+const togglePublishAnnouncement = asyncHandler(async (req, res) => {
+  const data = await teacherAcademicService.togglePublish(req.params.id, req.user.id);
+  res.status(200).json(ApiResponse.success('Announcement publish status toggled successfully', data));
+});
+
+const getCourseAnnouncements = asyncHandler(async (req, res) => {
+  const data = await teacherAcademicService.getCourseAnnouncements(req.params.courseId);
+  res.status(200).json(ApiResponse.success('Course announcements fetched successfully', data));
+});
+
 // =================== MESSAGES ===================
 const getConversations = asyncHandler(async (req, res) => {
   const data = await teacherAcademicService.getConversations(req.params.teacherId, req.query);
@@ -99,6 +114,7 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
 module.exports = {
   getResults, createResult, updateResult, deleteResult, publishResult,
   getAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement,
+  togglePinAnnouncement, togglePublishAnnouncement, getCourseAnnouncements,
   getConversations, getMessages, sendMessage, deleteConversation,
   getNotifications, markNotificationRead, markAllNotificationsRead, getUnreadCount,
   getDashboardAnalytics,

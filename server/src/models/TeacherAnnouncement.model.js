@@ -44,14 +44,23 @@ const teacherAnnouncementSchema = createBaseSchema({
     url: { type: String },
     type: { type: String },
   }],
+  resourceLink: {
+    type: String,
+    trim: true,
+    maxlength: 2000,
+  },
   isPublished: {
     type: Boolean,
     default: true,
     index: true,
   },
+  isPinned: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   publishedAt: {
     type: Date,
-    default: Date.now,
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -74,6 +83,7 @@ const teacherAnnouncementSchema = createBaseSchema({
     { fields: { teacher: 1, createdAt: -1 } },
     { fields: { targetType: 1, targetCourse: 1 } },
     { fields: { isPublished: 1, createdAt: -1 } },
+    { fields: { isPinned: 1, publishedAt: -1 } },
   ],
 });
 

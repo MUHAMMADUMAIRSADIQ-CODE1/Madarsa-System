@@ -34,6 +34,10 @@ export const attendanceService = {
     const q = new URLSearchParams(params || {}).toString();
     return api.get(`/student/attendance/${studentId}${q ? `?${q}` : ''}`);
   },
+
+  bulkMarkAttendance: (data) => api.post('/teacher/attendance/bulk', data),
+
+  markAllPresent: (data) => api.post('/teacher/attendance/mark-all-present', data),
 };
 
 export default attendanceService;

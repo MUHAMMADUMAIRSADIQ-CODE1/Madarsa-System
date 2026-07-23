@@ -40,6 +40,10 @@ class TeacherAcademicService {
   }
 
   async createResult(data, userId) {
+    // Auto-set publishedAt when creating with 'published' status
+    if (data.status === 'published' && !data.publishedAt) {
+      data.publishedAt = new Date();
+    }
     const result = await Result.create({ ...data, createdBy: userId });
     return result.populate(['student', 'course']);
   }
@@ -75,6 +79,23 @@ class TeacherAcademicService {
     return result.populate(['student', 'course']);
   }
 
+  // =================== STUDENT RESULTS ===================
+
+  async getStudentResults(studentId, courseId) {
+    const filter = {
+      student: studentId,
+      course: courseId,
+      status: 'published',
+      isDeleted: false,
+    };
+
+    return Result.find(filter)
+      .populate('course', 'title slug code')
+      .populate('teacher', 'fullName')
+      .sort({ examDate: -1, createdAt: -1 })
+      .lean();
+  }
+
   // =================== ANNOUNCEMENTS ===================
 
   async getAnnouncements(teacherId, query = {}) {
@@ -83,16 +104,27 @@ class TeacherAcademicService {
     if (query.isPublished === 'true') filter.isPublished = true;
     if (query.isPublished === 'false') filter.isPublished = false;
     if (query.targetType) filter.targetType = query.targetType;
-    if (query.course) filter.targetCourse = query.course;
+    if (query.course) {
+      // When filtering by course, include announcements that:
+      // 1. Target this specific course (targetCourse set correctly)
+      // 2. Target 'all' students (no targetCourse needed)
+      // 3. Have targetType 'course' but missing targetCourse (data fix for existing broken data)
+      filter.$or = [
+        { targetCourse: query.course },
+        { targetType: 'all' },
+        { targetType: 'course', targetCourse: { $exists: false } },
+      ];
+    }
 
     const page = parseInt(query.page) || 1;
-    const limit = parseInt(query.limit) || 20;
+    const limit = parseInt(query.limit) || 50;
     const skip = (page - 1) * limit;
 
     const [announcements, total] = await Promise.all([
       TeacherAnnouncement.find(filter)
+        .populate({ path: 'teacher', select: 'fullName', model: 'User' })
         .populate('targetCourse', 'title slug code')
-        .sort({ createdAt: -1 })
+        .sort({ isPinned: -1, createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -115,7 +147,7 @@ class TeacherAcademicService {
     const announcement = await TeacherAnnouncement.findOne({ _id: id, isDeleted: false });
     if (!announcement) throw new ApiError(httpStatus.NOT_FOUND, 'Announcement not found');
 
-    const allowedFields = ['title', 'content', 'targetType', 'targetCourse', 'targetBatch', 'priority', 'isPublished', 'attachments'];
+    const allowedFields = ['title', 'content', 'targetType', 'targetCourse', 'targetBatch', 'priority', 'isPublished', 'isPinned', 'attachments', 'resourceLink'];
     for (const field of allowedFields) {
       if (data[field] !== undefined) announcement[field] = data[field];
     }
@@ -134,6 +166,41 @@ class TeacherAcademicService {
     return announcement;
   }
 
+  async togglePin(id, teacherId) {
+    const announcement = await TeacherAnnouncement.findOne({ _id: id, teacher: teacherId, isDeleted: false });
+    if (!announcement) throw new ApiError(httpStatus.NOT_FOUND, 'Announcement not found');
+    announcement.isPinned = !announcement.isPinned;
+    await announcement.save();
+    return announcement;
+  }
+
+  async togglePublish(id, teacherId) {
+    const announcement = await TeacherAnnouncement.findOne({ _id: id, teacher: teacherId, isDeleted: false });
+    if (!announcement) throw new ApiError(httpStatus.NOT_FOUND, 'Announcement not found');
+    announcement.isPublished = !announcement.isPublished;
+    if (announcement.isPublished) announcement.publishedAt = new Date();
+    await announcement.save();
+    return announcement;
+  }
+
+  async getCourseAnnouncements(courseId) {
+    const filter = {
+      $or: [
+        { targetType: 'all' },
+        { targetCourse: courseId },
+        { targetType: 'course', targetCourse: { $exists: false } },
+      ],
+      isPublished: true,
+      isDeleted: false,
+    };
+
+    return TeacherAnnouncement.find(filter)
+      .populate({ path: 'teacher', select: 'fullName', model: 'User' })
+      .populate('targetCourse', 'title')
+      .sort({ isPinned: -1, publishedAt: -1 })
+      .lean();
+  }
+
   async getStudentAnnouncements(studentId) {
     const student = await Student.findById(studentId).lean();
     if (!student) throw new ApiError(httpStatus.NOT_FOUND, messages.STUDENT_NOT_FOUND);
@@ -150,9 +217,9 @@ class TeacherAcademicService {
     };
 
     return TeacherAnnouncement.find(filter)
-      .populate('teacher', 'fullName')
+      .populate({ path: 'teacher', select: 'fullName', model: 'User' })
       .populate('targetCourse', 'title')
-      .sort({ publishedAt: -1 })
+      .sort({ isPinned: -1, publishedAt: -1 })
       .limit(50)
       .lean();
   }
@@ -375,7 +442,8 @@ class TeacherAcademicService {
       Attendance.getStats ? Attendance.getStats({ teacher: teacherId }) : Promise.resolve({ total: 0, present: 0, absent: 0, late: 0, excused: 0, percentage: 0 }),
       Assignment.countDocuments({ teacher: teacherId }),
       LiveClass.countDocuments({ teacher: teacherId, scheduledAt: { $gte: new Date() }, status: { $ne: 'cancelled' } }),
-      TeacherAnnouncement.countDocuments({ teacher: teacherId, isDeleted: false }),
+      // Announcements store User._id in the teacher field (Course Workspace pattern)
+      TeacherAnnouncement.countDocuments({ teacher: userId, isDeleted: false }),
       TeacherConversation.countDocuments({ participants: { $elemMatch: { user: userId } }, 'lastMessage.sentAt': { $ne: null } }),
       Notification.countDocuments({ recipient: userId, isRead: false }),
     ]);
